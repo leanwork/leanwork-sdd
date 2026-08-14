@@ -1,0 +1,111 @@
+# Convenções de IDs — Pipeline SDD Leanwork
+
+Este documento é a referência única para os IDs usados pelo pipeline. Todas as três skills (`architect-leanwork`, `prd-leanwork`, `planner-leanwork`) e o comando `/leanwork-trace` dependem deste padrão.
+
+## Os cinco tipos de ID
+
+| ID | Significado | Onde nasce | Onde é referenciado |
+|----|-------------|------------|---------------------|
+| `ADR-XX` | Architecture Decision Record | Proposta arquitetural (seção 5) | PRD (regras, citações inline), Plano (campo `Decisões base`), Review (verificação de conformidade) |
+| `RN-XX` | Regra de Negócio | PRD (seção 8) | PRD (passos Gherkin entre parênteses), Plano (campo `Implementa`), Review (cobertura por RN) |
+| `CA-XX` | Critério de Aceite (cenário Gherkin) | PRD (seção 9, no nome do cenário) | Plano (campo `Valida`), código de teste (nome do teste), Review (cobertura por CA) |
+| `T-XX` | Tarefa de execução | Plano (cada tarefa numerada) | Outras tarefas (campo `Depende de`), histórico de execução, Review (cada relatório referencia 1 tarefa) |
+| `R-XX` | Finding de review (Review-XX) | Relatório de review | Round subsequente de review (referência a findings anteriores), histórico de qualidade |
+
+## Regras de numeração
+
+### Comuns aos quatro
+
+- **Numeração sequencial global** ao documento. `T-01`, `T-02`, ..., `T-NN` — **não** reiniciar a numeração por fase ou seção.
+- **Largura mínima de 2 dígitos** com zero à esquerda (`RN-01`, `RN-02`, ..., `RN-10`, `RN-11`). Facilita ordenação alfabética e busca em editor.
+- **Sem reúso**: uma vez que um ID foi atribuído, ele nunca é reciclado, mesmo que o item original seja revogado. Use marcação de revogação (ver abaixo).
+- **IDs persistem entre versões do documento**. Renumeração quebra o ciclo de rastreabilidade — se você precisar reorganizar, adicione novos IDs no final em vez de renumerar os existentes.
+
+### Específicas
+
+**ADR-XX**: máximo recomendado de 7-12 ADRs por proposta arquitetural. Se passar disso, provavelmente há decisões triviais entrando na lista — só decisões com trade-off real merecem ADR.
+
+**RN-XX**: cada regra deve ser **verificável**. Se uma regra precisa de mais de um cenário Gherkin para ser provada, considere quebrar em duas regras.
+
+**CA-XX**: aparece dentro do bloco Gherkin como `Cenário [CA-01]: nome do cenário`. Os colchetes são parte da sintaxe — não omitir. Numeração é global ao PRD, não por funcionalidade.
+
+**T-XX**: granularidade calibrada (1 commit a meio dia de trabalho). Tarefa que precisa de mais de 3 critérios de aceite provavelmente é grande demais.
+
+**R-XX**: numeração sequencial por relatório (cada `REVIEW-T-XX-*.md` começa do R-01). **Não** numeração global ao projeto. Round subsequente de review da mesma tarefa começa novo relatório com nova numeração; comparar com round anterior pela referência cruzada explícita na seção "Round anterior" do relatório, não pelos IDs.
+
+## Marcação de itens revogados
+
+Quando uma decisão ou regra precisa ser revogada (não excluída), use a marcação:
+
+```markdown
+### ADR-003: ~~Usar Redis como cache distribuído~~ (revogada por ADR-009)
+
+[manter o conteúdo original como histórico]
+```
+
+Isso preserva o ID, mantém a rastreabilidade reversa e documenta a evolução do pensamento.
+
+## Referências cruzadas
+
+### Sintaxe padrão
+
+Sempre que um documento citar um ID de outro documento, use **parênteses inline**:
+
+- No PRD: `RN-05: estoque decrementado atomicamente (ADR-002)` — indica que a regra existe por causa da decisão arquitetural ADR-002
+- No Gherkin: `Dado que existe oferta ativa (RN-03)` — indica que o passo valida a regra RN-03
+- No plano (tarefa T-07):
+  - `Implementa: RN-03, RN-05` — esta tarefa concretiza essas regras
+  - `Valida: CA-01, CA-03` — após essa tarefa, esses cenários ficam verdes
+  - `Decisões base: ADR-002` — esta tarefa materializa essa decisão arquitetural
+
+### Direção das setas
+
+A rastreabilidade flui do macro ao micro:
+
+```
+ADR-XX (decisão arquitetural)
+   ↓ justifica a existência de
+RN-XX (regra de negócio)
+   ↓ é provada por
+CA-XX (cenário Gherkin)
+   ↓ é implementada por
+T-XX (tarefa de código)
+   ↓ é validada por
+R-XX (findings do review)
+   ↓ é verificada por
+Teste_CA-XX_* (no código)
+```
+
+Quando o `/leanwork-trace` percorre os artefatos, ele sobe e desce essa cadeia para identificar gaps.
+
+## Convenções de nomenclatura de testes
+
+Para fechar o último elo da cadeia, recomenda-se que testes automatizados carreguem o ID do CA que validam no próprio nome:
+
+```csharp
+// xUnit
+[Fact]
+public void CA_01_Cliente_compra_produto_em_flash_sale_com_sucesso()
+{
+    // arrange / act / assert
+}
+
+[Theory]
+[InlineData("CA-02", 0)]
+[InlineData("CA-02", -1)]
+public void CA_02_Compra_falha_quando_estoque_insuficiente(string ca, int estoque)
+{
+    // ...
+}
+```
+
+```typescript
+// Jest / Vitest
+describe('CA-01 — Cliente compra produto em flash sale com sucesso', () => {
+    it('deve persistir pedido e decrementar estoque atomicamente', () => {
+        // ...
+    });
+});
+```
+
+Isso permite ao `/leanwork-trace` rodar um grep simples (`grep -r "CA-01" tests/`) e confirmar que o cenário tem cobertura de teste real, não apenas referência teórica no plano.

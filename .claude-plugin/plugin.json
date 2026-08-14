@@ -1,0 +1,22 @@
+{
+  "name": "leanwork-sdd",
+  "version": "1.2.0",
+  "description": "Pipeline Spec-Driven Development da Leanwork: architect → PRD → planner → reviewer, mais geração de contexto (CLAUDE.md) para agentes de IA. Skills stack-agnósticas, comandos de orquestração e rastreabilidade cruzada ADR ↔ RN ↔ CA ↔ T ↔ R.",
+  "author": {
+    "name": "Mick Banagouro / Leanwork",
+    "url": "https://mbanagouro.com.br"
+  },
+  "homepage": "https://mbanagouro.com.br",
+  "keywords": [
+    "sdd",
+    "spec-driven-development",
+    "prd",
+    "architecture",
+    "planning",
+    "code-review",
+    "claude-md",
+    "leanwork",
+    "portuguese",
+    "brazilian"
+  ]
+}

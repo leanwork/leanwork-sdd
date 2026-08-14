@@ -1,0 +1,109 @@
+---
+description: Gera a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ T ↔ R a partir dos artefatos do pipeline SDD.
+argument-hint: [arquivo do PRD, opcional — se omitido, tenta descobrir]
+---
+
+# Matriz de rastreabilidade SDD
+
+Gerar a matriz cruzada que conecta arquitetura (ADRs) → regras de negócio (RNs) → critérios de aceite (CAs) → tarefas (Ts) → reviews (Rs) → testes.
+
+Artefato alvo: $ARGUMENTS
+
+## O que fazer
+
+### Passo 1 — Localizar os artefatos
+
+Se o usuário não passou um PRD específico, procure no projeto:
+
+- **Arquitetura**: `docs/architecture/*.md` ou similares
+- **PRDs**: `docs/prds/*.md` ou `PRD-*.md`
+- **Planos**: `docs/plans/*.md` ou `PLAN-*.md`
+- **Reviews**: `docs/reviews/*.md` ou `REVIEW-*.md`
+
+Se houver mais de um PRD, pergunte qual analisar. Não tente fazer todos de uma vez.
+
+### Passo 2 — Extrair IDs
+
+Para o PRD escolhido:
+
+- **Regras de negócio**: `RN-01`, `RN-02`, ... (procurar padrão `RN-\d+`)
+- **Cenários Gherkin**: `Cenário [CA-01]:`, `Cenário [CA-02]:`, ...
+- **ADRs referenciados**: ocorrências de `ADR-\d+` no PRD
+
+Para o plano correspondente:
+
+- **Tarefas**: `T-01`, `T-02`, ...
+- **Campos de rastreabilidade**: `**Implementa:** RN-XX`, `**Valida:** CA-XX`, `**Decisões base:** ADR-XX`
+- **Status de cada tarefa** (Pendente / Em andamento / Concluído / Bloqueado)
+
+Para a arquitetura:
+
+- **ADRs definidos**: `ADR-\d+`
+
+Para os reviews (em `docs/reviews/`):
+
+- **Relatórios existentes**: arquivos `REVIEW-T-XX-*.md`
+- **Findings**: `R-01`, `R-02`, ... com severidade (Bloqueante / Importante / Sugestão)
+- **Recomendação final**: Aprovado / Aprovado com ressalvas / Bloqueado
+- **Tarefas associadas**: cada review carrega `T-XX` no nome
+
+### Passo 3 — Construir e mostrar a matriz
+
+Apresente em três tabelas + um diagrama Mermaid:
+
+#### Tabela 1: Rastreabilidade direta (do RN ao review)
+
+| RN | Descrição (truncada) | Validado por (CA) | Implementado em (T) | Decisão base (ADR) | Status do review |
+|----|---------------------|-------------------|---------------------|---------------------|------------------|
+| RN-01 | Estoque atômico... | CA-01, CA-03 | T-04, T-07 | ADR-002 | T-04 ✅ Aprovado, T-07 ⚠️ R-02 pendente |
+| RN-02 | Limite de compra... | CA-02 | T-05 | — | T-05 ⛔ Bloqueado (R-01) |
+
+#### Tabela 2: Cobertura reversa (do critério de aceite ao review)
+
+| CA | Cenário | Valida (RN) | Implementado em (T) | Tem teste? | Review |
+|----|---------|-------------|---------------------|------------|--------|
+| CA-01 | Compra com sucesso | RN-01 | T-04 | sim (integration) | ✅ |
+| CA-02 | Limite excedido | RN-02 | T-05 | sim (unit) | ⛔ R-03 |
+
+#### Tabela 3: Estado de execução por tarefa
+
+| Tarefa | Status no plano | Review existe? | Severidade máxima | Findings abertos |
+|--------|-----------------|----------------|-------------------|------------------|
+| T-01 | ✅ Done | Sim | — | 0 |
+| T-04 | ✅ Done | Sim | Sugestão | R-04 |
+| T-05 | ⛔ Blocked | Sim | Bloqueante | R-01, R-03 |
+| T-07 | 🔄 Doing | Não | — | — |
+
+#### Diagrama de rastreabilidade (Mermaid)
+
+```mermaid
+graph LR
+    ADR002[ADR-002<br/>Lock pessimista] --> RN01[RN-01<br/>Estoque atômico]
+    RN01 --> CA01[CA-01]
+    RN01 --> CA03[CA-03]
+    CA01 --> T04[T-04 ✅]
+    CA03 --> T07[T-07 🔄]
+    T04 --> Rev04[REVIEW T-04<br/>✅ Aprovado]
+    T07 --> RevPending[Review pendente]
+```
+
+### Passo 4 — Apontar lacunas
+
+Listar explicitamente:
+
+- **RNs sem cenário**: regras declaradas no PRD que nenhum cenário Gherkin valida → **risco: regra não testada**
+- **CAs sem tarefa**: cenários que nenhuma tarefa do plano se compromete a validar → **risco: critério órfão**
+- **Ts sem rastro**: tarefas que não preencheram `Implementa:` nem `Valida:` → **risco: tarefa sem propósito claro** (pode ser legítimo se for estrutural — investigar)
+- **ADRs citados mas inexistentes**: PRD ou plano cita ADR-X que não está na proposta arquitetural → **risco: referência quebrada**
+- **ADRs nunca referenciados**: decisão arquitetural que nenhuma regra ou tarefa invoca → **risco: decisão sem impacto rastreável** (pode indicar over-engineering)
+- **Tarefas Done sem review**: tarefas com `Status: Done` no plano mas sem arquivo `REVIEW-T-XX-*.md` correspondente → **risco: entrega não validada**
+- **Reviews bloqueados em aberto**: tarefas com review `⛔ Bloqueado` sem round subsequente → **risco: trabalho parado sem ação**
+- **Findings Bloqueantes em tarefas marcadas como Done**: tarefa fechada mas review aponta bloqueio não resolvido → **inconsistência grave entre estado declarado e estado real**
+
+### Passo 5 — Salvar (opcional)
+
+Pergunte ao usuário se quer salvar a matriz como `docs/traceability/MATRIX-{nome_do_prd}.md` para versionar junto com os outros artefatos.
+
+## Regra de ouro
+
+Esta é uma análise estática dos artefatos — não invente links que não estão escritos. Se o plano não preencheu `Implementa:` em uma tarefa, marque como gap, não adivinhe a regra. Se uma tarefa Done não tem review, marque como gap — não assuma que está OK.
