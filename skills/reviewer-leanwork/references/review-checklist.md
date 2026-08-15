@@ -207,7 +207,7 @@ Divergência visual sem impacto funcional é assunto de design review, não de c
 
 ## Eixos transversais (registrar como nota se aplicar)
 
-Não são parte dos 5 eixos mas vale registrar quando aparece:
+Não são parte dos 6 eixos mas vale registrar quando aparece:
 
 - **Plano precisa de atualização**: implementação revelou que T-XX foi mal dimensionada ou que outras tarefas precisam ser criadas
 - **PRD ambíguo**: a redação de RN-XX ou CA-XX permitiu interpretação dupla, e a divergência só apareceu agora

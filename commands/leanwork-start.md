@@ -1,5 +1,5 @@
 ---
-description: Inicia o pipeline SDD da Leanwork (architect → PRD → planner) para uma nova demanda.
+description: Inicia o pipeline SDD da Leanwork (architect → PRD → protótipo → planner → review) para uma nova demanda.
 argument-hint: [descrição curta da demanda, opcional]
 ---
 
@@ -58,4 +58,4 @@ Não impor essa estrutura se o usuário já tiver outra — apenas sugerir quand
 
 ## Regra de ouro
 
-Não tente fazer as 3 fases num único disparo sem checkpoint. O pipeline SDD funciona porque cada fase produz um artefato revisável antes da próxima começar. Ao concluir cada fase, pare, mostre o resultado e pergunte se pode seguir.
+Não tente encadear as fases num único disparo sem checkpoint. O pipeline SDD funciona porque cada fase produz um artefato revisável antes da próxima começar. Ao concluir cada fase, pare, mostre o resultado e pergunte se pode seguir.

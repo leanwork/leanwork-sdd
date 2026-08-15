@@ -45,7 +45,7 @@ Documente a stack descoberta e a fonte no preâmbulo do relatório.
 
 A partir daqui, a skill assume. Ela vai:
 
-1. Aplicar os 5 eixos de review (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código)
+1. Aplicar os 5 eixos de review (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código), mais o 6º eixo de conformidade de interface quando o projeto tem SPEC-UI
 2. Gerar findings numerados `R-XX` com severidade
 3. Produzir o documento `REVIEW-T-XX-YYYY-MM-DD.md` seguindo o template
 

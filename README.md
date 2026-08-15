@@ -1,6 +1,14 @@
 # Leanwork SDD Plugin
 
-Pipeline **Spec-Driven Development** para projetos Leanwork. Empacota arquitetura, levantamento de requisitos, planejamento técnico e code review em quatro skills coordenadas, com templates segregados em arquivos de referência, comandos de orquestração e rastreabilidade cruzada por IDs.
+Pipeline **Spec-Driven Development** para projetos Leanwork. Empacota arquitetura, levantamento de requisitos, especificação de interface, planejamento técnico e code review em seis skills coordenadas, com templates segregados em arquivos de referência, comandos de orquestração e rastreabilidade cruzada por IDs.
+
+```
+1. Architect  →  2. PRD  →  3. Protótipo*  →  4. Planner  →  [execução]  →  5. Review
+                                                    ↑
+                              context-leanwork (transversal, sempre opt-in)
+
+* opcional — só para PRDs com interface
+```
 
 ## Estrutura
 
@@ -9,6 +17,7 @@ leanwork-sdd/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── README.md
+├── REFERENCES.md                   # fontes de engenharia por trás de cada fase
 ├── commands/
 │   ├── leanwork-start.md           # /leanwork-start
 │   ├── leanwork-next.md            # /leanwork-next
@@ -78,11 +87,12 @@ Padrão **progressive disclosure** do Claude Code: a SKILL.md fica curta (instru
 |-------|------|---------|-------|----------------|
 | `architect-leanwork` | 1 — Arquitetura | Briefing de negócio | Proposta arquitetural + ADRs + C4 | `ADR-XX` |
 | `prd-leanwork` | 2 — Requisitos | Demanda (com ou sem arquitetura) | PRD com regras + Gherkin | `RN-XX`, `CA-XX` |
-| `planner-leanwork` | 3 — Plano | PRD aprovado | Plano com tarefas executáveis | `T-XX` |
-| `reviewer-leanwork` | 5 — Review | Diff/PR + plano + PRD + arquitetura | Relatório de review por tarefa | `R-XX` |
-| `context-leanwork` | Transversal | Artefatos do pipeline + repositório | `CLAUDE.md` raiz e módulos | — |
+| `prototype-leanwork` | 3 — Interface *(opcional)* | PRD com interface + protótipo (se houver) | SPEC-UI com telas e estados | `UI-XX`, `UI-XX.estado` |
+| `planner-leanwork` | 4 — Plano | PRD aprovado (+ SPEC-UI, se houver) | Plano com tarefas executáveis | `T-XX` |
+| `reviewer-leanwork` | 5 — Review | Diff/PR + plano + PRD + arquitetura + SPEC-UI | Relatório de review por tarefa | `R-XX` |
+| `context-leanwork` | Transversal | Artefatos do pipeline + repositório | `CLAUDE.md` raiz e módulos, `settings.json` | — |
 
-Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural e do `CLAUDE.md` do projeto, nunca da skill.
+Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural e do `CLAUDE.md` do projeto, nunca da skill. A fase 3 é ainda **design-agnóstica**: decide quais telas e estados existem, e delega o craft visual para skills de frontend do ambiente.
 
 ### Comandos
 
@@ -90,9 +100,10 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 |---------|-----------|
 | `/leanwork-start` | Inicia o pipeline e identifica em que fase começar |
 | `/leanwork-next` | Inspeciona artefatos existentes e sugere a próxima ação (incluindo reviews pendentes) |
+| `/leanwork-prototype` | Invoca `prototype-leanwork`: indexa protótipo existente ou gera um, e produz a SPEC-UI |
 | `/leanwork-review` | Invoca `reviewer-leanwork` sobre uma tarefa específica |
-| `/leanwork-trace` | Gera a matriz de rastreabilidade `ADR ↔ RN ↔ CA ↔ T ↔ R` e aponta gaps |
-| `/leanwork-context` | Gera ou atualiza `CLAUDE.md` (raiz e módulos). Nunca automático, nunca destrutivo |
+| `/leanwork-trace` | Gera a matriz de rastreabilidade `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e aponta gaps |
+| `/leanwork-context` | Gera ou atualiza `CLAUDE.md` (raiz e módulos) e `.claude/settings.json`. Nunca automático, nunca destrutivo |
 
 ### Templates de referência (skill-specific)
 
@@ -107,20 +118,20 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 - `prd-template.md` — template completo do PRD com 17 seções
 - `gherkin-examples.md` — 5 exemplos calibrados de Gherkin com IDs cruzados
 
+**prototype-leanwork/references/**
+- `spec-ui-template.md` — template do documento SPEC-UI
+- `ingestion-guide.md` — extração por formato (HTML, imagens, Figma via MCP, Lovable/v0)
+- `generation-guide.md` — arquétipos de interface, entrevista e delegação do craft visual
+- `screen-states.md` — catálogo de estados de tela e quais são obrigatórios por tipo
+
 **planner-leanwork/references/**
 - `plan-template.md` — template completo do plano com fases e estrutura de tarefa
 - `task-examples.md` — 5 exemplos de tarefas + guia de granularidade
 
 **reviewer-leanwork/references/**
 - `review-template.md` — template completo do relatório de review
-- `review-checklist.md` — perguntas-guia detalhadas por eixo + tabela de severidade
+- `review-checklist.md` — perguntas-guia detalhadas pelos 6 eixos + tabela de severidade
 - `stack-detection.md` — cascata de descoberta da stack do projeto
-
-**prototype-leanwork/references/**
-- `spec-ui-template.md` — template do documento SPEC-UI
-- `ingestion-guide.md` — extração por formato (HTML, imagens, Figma via MCP, Lovable/v0)
-- `generation-guide.md` — arquétipos de interface, entrevista e delegação do craft visual
-- `screen-states.md` — catálogo de estados de tela e quais são obrigatórios por tipo
 
 **context-leanwork/references/**
 - `claude-md-root-template.md` — template do `CLAUDE.md` da raiz
@@ -130,9 +141,13 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 
 ### Convenções compartilhadas (raiz `templates/`)
 
-- `id-conventions.md` — como numerar `ADR-XX`, `RN-XX`, `CA-XX`, `T-XX`, `R-XX`, regras de revogação, convenção de nome de teste
-- `folder-conventions.md` — estrutura `docs/architecture/`, `docs/prds/`, `docs/plans/`, `docs/reviews/`, `docs/traceability/`, mais variantes para mono-repo
+- `id-conventions.md` — como numerar `ADR-XX`, `RN-XX`, `CA-XX`, `UI-XX`, `T-XX`, `R-XX`, sufixo de estado (`UI-02.erro`), regras de revogação, convenção de nome de teste
+- `folder-conventions.md` — estrutura `docs/architecture/`, `docs/prds/`, `docs/prototype/`, `docs/plans/`, `docs/reviews/`, `docs/traceability/`, mais variantes para mono-repo
 - `pipeline-example.md` — exemplo end-to-end completo (Ofertas Relâmpago da Ultrafarma)
+
+### Documentação de referência
+
+- [`REFERENCES.md`](REFERENCES.md) — a base de engenharia de software por trás de cada fase, marcando o que é reprodução, adaptação ou contribuição própria, mais as divergências deliberadas com a literatura e as lacunas conhecidas
 
 ## A ideia central — rastreabilidade cruzada completa
 
@@ -141,21 +156,24 @@ ADR-002 (arquitetura: lock pessimista para estoque)
    ↓ justifica
 RN-05 (PRD: estoque decrementado atomicamente)
    ↓ valida em
-CA-01 (PRD: Cenário Gherkin de compra com sucesso)
+CA-06 (PRD: Cenário Gherkin de estoque esgotando durante compras concorrentes)
+   ↓ acontece em
+UI-02.esgotado (SPEC-UI: estado da tela de confirmação)   ← opcional
    ↓ implementado em
 T-07 (plano: handler de compra em flash sale)
    ↓ validado por
 R-XX (review: findings da implementação de T-07)
    ↓ verificado por
-Teste CA_01_compra_com_sucesso (código)
+Teste CA_06_estoque_esgota_durante_compra (código)
 ```
 
 Cada artefato declara seus elos explicitamente:
 
 - **Proposta arquitetural**: `ADR-001`, `ADR-002`, ... numerados, sem reúso
 - **PRD**: cenários começam com `Cenário [CA-01]: ...`, passos citam `(RN-XX)` e `(ADR-XX)`
-- **Plano**: cada tarefa preenche `**Implementa:** RN-XX`, `**Valida:** CA-XX`, `**Decisões base:** ADR-XX`
-- **Review**: cada finding `R-XX` cita o eixo e as referências cruzadas (RN/CA/ADR) afetadas
+- **SPEC-UI**: cada tela `UI-XX` mapeia as `RN-XX` e `CA-XX` que manifesta, e cada estado ganha sufixo (`UI-02.esgotado`)
+- **Plano**: cada tarefa preenche `**Implementa:** RN-XX`, `**Valida:** CA-XX`, `**Decisões base:** ADR-XX` e, em tarefas de interface, `**Telas:** UI-XX (estados)`
+- **Review**: cada finding `R-XX` cita o eixo e as referências cruzadas (RN/CA/UI/ADR) afetadas
 
 O `/leanwork-trace` percorre todos esses elos e monta a matriz completa, incluindo estado de execução e status de review por tarefa.
 
@@ -168,13 +186,16 @@ O `/leanwork-trace` percorre todos esses elos e monta a matriz completa, incluin
 - **Baseada em evidência.** Cada finding cita arquivo e linha. Sem "achismos".
 - **Calibrada por severidade.** `Bloqueante` (merge negado), `Importante` (resolver agora ou na próxima), `Sugestão` (opcional).
 
-### Os 5 eixos de avaliação
+### Os 6 eixos de avaliação
+
+Os eixos 1 a 5 aplicam sempre. O eixo 6 só entra quando o projeto tem SPEC-UI e a tarefa é de interface.
 
 1. **Aderência ao plano** — a tarefa T-XX foi entregue como prometida?
 2. **Rastreabilidade** — commits, testes e código preservam os IDs?
 3. **Aderência ao spec** — cada RN listada em `Implementa:` foi concretizada? Cada CA em `Valida:` tem teste? ADR em `Decisões base:` foi respeitada?
 4. **Cobertura de teste** — testes prometidos foram criados? Casos de borda cobertos?
 5. **Qualidade do código** — princípios universais + padrões específicos lidos do `CLAUDE.md` do projeto.
+6. **Conformidade de interface** *(condicional)* — todos os estados listados em `Telas:` existem no código? Componentes reutilizáveis foram consumidos ou reimplementados? **Estrutura, estados e comportamento — nunca estética.** Estado ausente é Bloqueante; detalhe visual não vira finding.
 
 ### O reviewer não faz
 
@@ -212,7 +233,7 @@ Projeto sem interface — API, worker, CLI, biblioteca — pula a fase inteira, 
 
 ## A skill `context-leanwork` — contexto para o agente
 
-As quatro skills do pipeline produzem documentos escritos **para humanos**. O `CLAUDE.md` é a ponte para o agente: o que ele precisa saber em toda sessão sem reler 400 linhas de proposta arquitetural.
+As cinco skills do pipeline produzem documentos escritos **para humanos**. O `CLAUDE.md` é a ponte para o agente: o que ele precisa saber em toda sessão sem reler 400 linhas de proposta arquitetural.
 
 ### Sempre opt-in
 
@@ -234,6 +255,12 @@ Blocos delimitados por `<!-- leanwork-context:start -->` e `<!-- leanwork-contex
 
 A seção **Comandos** é a única sem fonte nos artefatos do pipeline. A skill extrai de `package.json`, `Makefile`, `.csproj`, `pyproject.toml`, `go.mod` e afins — nunca inventa. Sem comando de teste no repo, o resultado é um TODO explícito, não um `dotnet test` chutado.
 
+### Permissões também saem daqui
+
+`/leanwork-context permissoes` gera um `.claude/settings.json` calibrado pela stack detectada — os comandos reais de build e teste já entram no `allow`. A classificação em `allow` / `ask` / `deny` segue reversibilidade e blast radius: leitura ou operação local reversível libera; altera estado externo mas recuperável pergunta; irreversível, destrutivo ou que expõe segredo bloqueia.
+
+Lista `ask` grande demais é contraproducente — treina o dev a aprovar no automático e anula a proteção. Sempre em `.claude/settings.json` versionado: é política do time, não preferência pessoal.
+
 ### Módulos são opt-in
 
 Projeto LMA com 8 módulos renderia 8 arquivos, vários deles ruído. A skill detecta, lista e deixa o usuário escolher. Módulo que ficaria com menos de ~15 linhas úteis recebe recomendação de não criar.
@@ -250,6 +277,7 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 /leanwork-start "Sistema de gestão de tickets multi-tenant"
   → architect → ADR-001..ADR-005
   → prd → RN-01..RN-08, CA-01..CA-15
+  → /leanwork-prototype → UI-01..UI-06 + estados   (opcional — tem interface)
   → planner → T-01..T-12
 
 [dev/agente executa T-04]
@@ -273,13 +301,16 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 
 ```
 /leanwork-trace docs/prds/PRD-001-flash-sales.md
-  → gera matriz ADR ↔ RN ↔ CA ↔ T ↔ R
+  → gera matriz ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R
   → aponta:
     - T-04 marcada como Done mas review pendente
     - T-05 com review Bloqueado em aberto
     - CA-09 sem tarefa que valide
+    - UI-03.erroEnvio especificado mas nenhuma tarefa declara em Telas:
     - ADR-003 nunca referenciado
 ```
+
+Sem SPEC-UI no projeto, as colunas de UI são omitidas da matriz — ausência não vira gap.
 
 ## Filosofia geral
 
@@ -287,8 +318,10 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 - **Português é padrão.** Todos os artefatos saem em PT-BR. Termos técnicos consagrados podem ficar em inglês.
 - **IA-friendly por design.** Cada artefato é otimizado para ser consumido por agente de IA, com IDs estáveis, pontos de validação humana explícitos e critérios de aceite testáveis.
 - **Sem cronograma, sem estimativa.** O pipeline produz "o quê", "por quê" e "em que ordem". "Quando" e "quanto" são responsabilidade do planejamento de sprint.
-- **Stack-agnóstico onde dá.** Nenhuma das 4 skills traz tecnologia pré-definida. Stack vem do projeto.
+- **Stack-agnóstico onde dá.** Nenhuma skill traz tecnologia pré-definida. Stack vem do projeto — e design vem das skills de frontend do ambiente.
 - **Progressive disclosure.** SKILL.md curta = conversa e direção. References carregadas sob demanda = templates e catálogos.
+- **Lacuna declarada vale mais que lacuna preenchida.** Nenhuma skill inventa para fechar matriz, e toda informação gerada declara a origem. Matriz honestamente incompleta é informação; matriz fechada com suposição é armadilha.
+- **Fontes na mesa.** O [`REFERENCES.md`](REFERENCES.md) credita a literatura por trás de cada fase e registra onde o pipeline diverge dela de propósito.
 
 ## Instalação
 
@@ -300,14 +333,21 @@ claude --plugin-dir /caminho/para/leanwork-sdd
 claude plugin install leanwork-sdd
 ```
 
-Depois de instalar, abrir o Claude Code e rodar `/plugin` para confirmar que as skills foram carregadas. As 4 skills aparecem com prefixo `(leanwork-sdd)` quando autoinvocadas.
+Depois de instalar, abrir o Claude Code e rodar `/plugin` para confirmar que as skills foram carregadas. As 6 skills aparecem com prefixo `(leanwork-sdd)` quando autoinvocadas.
 
 ## Versionamento
 
 - `1.0.0` — três skills (architect, prd, planner) + três comandos + rastreabilidade ADR/RN/CA/T + templates segregados
 - `1.1.0` — adição da skill `reviewer-leanwork` + comando `/leanwork-review` + extensão de `/leanwork-trace` e `/leanwork-next` para considerar reviews + rastreabilidade estendida com `R-XX`
 - `1.2.0` — adição da skill `context-leanwork` + comando `/leanwork-context` para gerar `CLAUDE.md` (raiz e módulos). Sempre opt-in: `architect-leanwork`, `reviewer-leanwork` e `/leanwork-next` apenas sugerem, nunca geram automaticamente
+- `1.3.0` — geração de permissões: `.claude/settings.json` calibrado pela stack via `/leanwork-context permissoes`, com o catálogo `allow`/`ask`/`deny` por ecossistema e detecção de drift entre o `CLAUDE.md` e a realidade do repositório
+- `1.4.0` — adição da skill `prototype-leanwork` + comando `/leanwork-prototype`: protótipo vira especificação rastreável (SPEC-UI) com `UI-XX` e estados. Rastreabilidade estendida para `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R`, novo eixo 6 no reviewer, campo `Telas:` no plano. Fase opcional — projeto sem interface pula inteira e o `/leanwork-trace` não reclama
+- `1.5.0` — adição do `REFERENCES.md`: as fontes de engenharia de software por trás de cada fase, com marcação de reprodução/adaptação/autoria, divergências deliberadas com a literatura e lacunas conhecidas. README realinhado ao pipeline de seis skills
 
 ## Crédito e inspiração
 
-Pipeline desenhado por Mick Banagouro (Leanwork). Princípios SDD inspirados em GitHub Spec Kit e Amazon Kiro. Filosofia arquitetural inspirada no Manual do Arquiteto de Software de Elemar Júnior.
+Pipeline desenhado por Mick Banagouro (Leanwork). Princípios SDD inspirados em [GitHub Spec Kit](https://github.com/github/spec-kit) e [AWS Kiro](https://kiro.dev). Filosofia arquitetural inspirada no *Manual do Arquiteto de Software* de Elemar Júnior.
+
+Nenhuma fase deste pipeline foi inventada do zero. **[REFERENCES.md](REFERENCES.md)** documenta a base de engenharia de software por trás de cada uma — C4 e ADR na arquitetura, BDD/Gherkin e rastreabilidade ISO 29148 nos requisitos, a UI Stack de Scott Hurff no catálogo de estados de tela, Google Engineering Practices no review, Saltzer & Schroeder no catálogo de permissões — marcando o que é reprodução, o que é adaptação e o que é contribuição própria.
+
+O mesmo documento registra, de propósito, onde o pipeline **diverge** da literatura (fatiamento horizontal contra vertical slice, ID no nome do cenário em vez de tag do Cucumber) e onde ele ainda tem **lacunas** (fitness functions, deployment view, método de threat modeling). Discordar é mais fácil quando a fonte está na mesa.
