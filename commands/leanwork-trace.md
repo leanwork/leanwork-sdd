@@ -1,11 +1,11 @@
 ---
-description: Gera a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ T ↔ R a partir dos artefatos do pipeline SDD.
+description: Gera a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R a partir dos artefatos do pipeline SDD.
 argument-hint: [arquivo do PRD, opcional — se omitido, tenta descobrir]
 ---
 
 # Matriz de rastreabilidade SDD
 
-Gerar a matriz cruzada que conecta arquitetura (ADRs) → regras de negócio (RNs) → critérios de aceite (CAs) → tarefas (Ts) → reviews (Rs) → testes.
+Gerar a matriz cruzada que conecta arquitetura (ADRs) → regras de negócio (RNs) → critérios de aceite (CAs) → telas (UIs, quando houver) → tarefas (Ts) → reviews (Rs) → testes.
 
 Artefato alvo: $ARGUMENTS
 
@@ -17,6 +17,7 @@ Se o usuário não passou um PRD específico, procure no projeto:
 
 - **Arquitetura**: `docs/architecture/*.md` ou similares
 - **PRDs**: `docs/prds/*.md` ou `PRD-*.md`
+- **SPEC-UI**: `docs/prototype/SPEC-UI-*.md` — opcional, só existe em projetos com interface
 - **Planos**: `docs/plans/*.md` ou `PLAN-*.md`
 - **Reviews**: `docs/reviews/*.md` ou `REVIEW-*.md`
 
@@ -40,6 +41,15 @@ Para a arquitetura:
 
 - **ADRs definidos**: `ADR-\d+`
 
+Para a SPEC-UI, quando existir:
+
+- **Telas**: `UI-01`, `UI-02`, ...
+- **Estados**: sufixos como `UI-02.erro`, `UI-02.vazio`
+- **Mapeamento declarado**: quais `RN-XX` e `CA-XX` cada tela cobre
+- **Lacunas já registradas** na seção 8 do documento
+
+Se não houver SPEC-UI, **não tratar como lacuna** — projetos sem interface legitimamente não têm. Omitir as colunas de UI da matriz.
+
 Para os reviews (em `docs/reviews/`):
 
 - **Relatórios existentes**: arquivos `REVIEW-T-XX-*.md`
@@ -60,10 +70,12 @@ Apresente em três tabelas + um diagrama Mermaid:
 
 #### Tabela 2: Cobertura reversa (do critério de aceite ao review)
 
-| CA | Cenário | Valida (RN) | Implementado em (T) | Tem teste? | Review |
-|----|---------|-------------|---------------------|------------|--------|
-| CA-01 | Compra com sucesso | RN-01 | T-04 | sim (integration) | ✅ |
-| CA-02 | Limite excedido | RN-02 | T-05 | sim (unit) | ⛔ R-03 |
+| CA | Cenário | Valida (RN) | Acontece em (UI) | Implementado em (T) | Tem teste? | Review |
+|----|---------|-------------|------------------|---------------------|------------|--------|
+| CA-01 | Compra com sucesso | RN-01 | UI-02.default | T-04 | sim (integration) | ✅ |
+| CA-02 | Limite excedido | RN-02 | UI-02.limite | T-05 | sim (unit) | ⛔ R-03 |
+
+> A coluna **Acontece em (UI)** só aparece quando o projeto tem SPEC-UI. Omitir inteiramente caso contrário.
 
 #### Tabela 3: Estado de execução por tarefa
 
@@ -81,8 +93,10 @@ graph LR
     ADR002[ADR-002<br/>Lock pessimista] --> RN01[RN-01<br/>Estoque atômico]
     RN01 --> CA01[CA-01]
     RN01 --> CA03[CA-03]
-    CA01 --> T04[T-04 ✅]
-    CA03 --> T07[T-07 🔄]
+    CA01 --> UI02[UI-02.default]
+    CA03 --> UI02e[UI-02.esgotado]
+    UI02 --> T04[T-04 ✅]
+    UI02e --> T07[T-07 🔄]
     T04 --> Rev04[REVIEW T-04<br/>✅ Aprovado]
     T07 --> RevPending[Review pendente]
 ```
@@ -99,6 +113,14 @@ Listar explicitamente:
 - **Tarefas Done sem review**: tarefas com `Status: Done` no plano mas sem arquivo `REVIEW-T-XX-*.md` correspondente → **risco: entrega não validada**
 - **Reviews bloqueados em aberto**: tarefas com review `⛔ Bloqueado` sem round subsequente → **risco: trabalho parado sem ação**
 - **Findings Bloqueantes em tarefas marcadas como Done**: tarefa fechada mas review aponta bloqueio não resolvido → **inconsistência grave entre estado declarado e estado real**
+
+Quando existe SPEC-UI, verificar também:
+
+- **CAs de interface sem tela**: cenário com ator em tela que nenhuma `UI-XX` cobre → **risco: cenário sem onde acontecer**
+- **Telas sem tarefa**: `UI-XX` na SPEC-UI que nenhuma tarefa do plano implementa → **risco: tela órfã**
+- **Estados sem implementação**: estado especificado (`UI-02.esgotado`) que nenhuma tarefa declara em `Telas:` → **risco: caminho de erro sem tratamento**
+- **Telas sem respaldo no PRD**: `UI-XX` que não mapeia para nenhum `RN-XX` nem `CA-XX` → **risco: escopo extra ou lacuna do PRD**
+- **Lacunas da SPEC-UI ainda abertas**: itens da seção 8 do documento sem decisão registrada
 
 ### Passo 5 — Salvar (opcional)
 

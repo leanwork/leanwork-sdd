@@ -5,12 +5,13 @@ argument-hint: [descrição curta da demanda, opcional]
 
 # Iniciar pipeline SDD Leanwork
 
-Você acaba de invocar o pipeline Spec-Driven Development da Leanwork. O pipeline tem 4 fases:
+Você acaba de invocar o pipeline Spec-Driven Development da Leanwork. O pipeline tem 5 fases, sendo a de protótipo opcional:
 
 1. **Architect** — proposta arquitetural (skill `architect-leanwork`)
 2. **PRD** — levantamento de requisitos (skill `prd-leanwork`)
-3. **Planner** — quebra em tarefas executáveis (skill `planner-leanwork`)
-4. **Review** — validação da implementação contra plano + PRD + arquitetura (skill `reviewer-leanwork`, invocada via `/leanwork-review` após cada tarefa entregue)
+3. **Protótipo** *(opcional — só para PRDs com interface)* — especificação de telas e estados (skill `prototype-leanwork`, via `/leanwork-prototype`)
+4. **Planner** — quebra em tarefas executáveis (skill `planner-leanwork`)
+5. **Review** — validação da implementação contra plano + PRD + arquitetura (skill `reviewer-leanwork`, invocada via `/leanwork-review` após cada tarefa entregue)
 
 A demanda atual: $ARGUMENTS
 
@@ -43,6 +44,8 @@ docs/
 ├── prds/
 │   ├── PRD-001-flash-sales.md       # outputs do prd-leanwork
 │   └── PRD-002-checkout-pix.md
+├── prototype/
+│   └── SPEC-UI-001-flash-sales.md    # output do prototype-leanwork (só PRDs com UI)
 ├── plans/
 │   ├── PLAN-001-flash-sales.md       # outputs do planner-leanwork
 │   └── PLAN-002-checkout-pix.md

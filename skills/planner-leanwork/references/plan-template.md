@@ -61,7 +61,7 @@ Agrupar tarefas em fases lógicas. Uma fase é um conjunto de tarefas que entreg
 - **Fase 1 — Fundação:** migrations, entidades, contratos
 - **Fase 2 — Lógica de negócio:** handlers, validators, regras
 - **Fase 3 — Exposição:** controllers, endpoints, autenticação
-- **Fase 4 — Interface:** UI, integrações com frontend
+- **Fase 4 — Interface:** UI, integrações com frontend. Quando existir SPEC-UI, cada tarefa desta fase declara `Telas:` com os `UI-XX` e estados que implementa. Componentes marcados como reutilizáveis na SPEC-UI viram tarefa própria, consumida pelas tarefas de composição — não replicar a implementação em cada tela
 - **Fase 5 — Qualidade e observabilidade:** testes de integração, logging, métricas, feature flag
 
 Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; feature grande pode ter 6.
@@ -82,6 +82,7 @@ Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; fea
 - **Implementa:** [RN-XX, RN-YY] *(regras de negócio do PRD que esta tarefa concretiza — vazio se for tarefa puramente estrutural)*
 - **Valida:** [CA-XX, CA-YY] *(cenários Gherkin do PRD que ficarão verdes ao concluir — vazio se for tarefa preparatória)*
 - **Decisões base:** [ADR-XX] *(decisões arquiteturais que esta tarefa materializa — opcional)*
+- **Telas:** [UI-XX (estados)] *(telas e estados da SPEC-UI que esta tarefa implementa — apenas em tarefas de interface; omitir quando o projeto não tem SPEC-UI)*
 - **Camadas/arquivos afetados:**
   - `src/Projeto.Domain/Entidades/Foo.cs` *(novo)*
   - `src/Projeto.Application/Features/Foo/Commands/CriarFoo/CriarFooHandler.cs` *(novo)*

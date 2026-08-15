@@ -15,6 +15,9 @@ projeto-x/
 │   ├── prds/
 │   │   ├── PRD-001-flash-sales.md
 │   │   └── PRD-002-checkout-pix.md
+│   ├── prototype/
+│   │   ├── SPEC-UI-001-flash-sales.md
+│   │   └── assets/                       # protótipo HTML, imagens, exports
 │   ├── plans/
 │   │   ├── PLAN-001-flash-sales.md
 │   │   └── PLAN-002-checkout-pix.md
@@ -48,6 +51,13 @@ projeto-x/
 
 - **Um plano por PRD**, na proporção 1:1. Nome: `PLAN-XXX-tema-em-kebab-case.md` — usar o **mesmo número** do PRD correspondente. Facilita encontrar o par.
 - Planos não são reescritos; são atualizados durante a execução (campo `Status` de cada tarefa, tabela de Histórico de execução).
+
+### SPEC-UI (especificação de interface)
+
+- **Um documento por PRD que tenha interface.** Nome: `SPEC-UI-XXX-tema-em-kebab-case.md`, usando **o mesmo número do PRD** correspondente.
+- **Opcional por natureza.** PRD de integração, job ou API pura não tem SPEC-UI — e a ausência não é lacuna.
+- **Artefatos visuais** (HTML do protótipo, imagens exportadas, código do Lovable/v0) ficam em `docs/prototype/assets/` ou são referenciados por URL quando externos (Figma).
+- Diferente do PRD, a SPEC-UI **é regenerável**: quando o protótipo muda, o documento é refeito sem tocar no PRD aprovado.
 
 ### Matrizes de rastreabilidade
 

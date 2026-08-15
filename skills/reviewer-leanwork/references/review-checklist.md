@@ -169,6 +169,42 @@ Lidos do `CLAUDE.md` do projeto. Exemplos do que pode estar declarado e virar cr
 
 ---
 
+## Eixo 6 — Conformidade de interface *(apenas quando existe SPEC-UI)*
+
+Aplicável somente a tarefas com o campo `Telas:` preenchido. Se o projeto não tem SPEC-UI ou a tarefa não é de interface, pular o eixo inteiro — não inventar findings de UI onde não há especificação.
+
+### Perguntas-guia
+
+| Pergunta | Default se "não" |
+|----------|------------------|
+| Todos os estados listados em `Telas:` foram implementados? | Bloqueante (estado ausente vira bug em produção) |
+| Os campos e controles batem com o especificado na SPEC-UI? | Importante |
+| Componentes marcados como reutilizáveis foram consumidos em vez de reimplementados? | Importante |
+| Estado de erro de formulário preserva os dados digitados, quando especificado? | Bloqueante |
+| Estado vazio distingue "vazio inicial" de "vazio por filtro", quando a SPEC-UI especifica? | Importante |
+| Restrições de interface (acessibilidade, tema escuro, i18n) foram respeitadas? | Importante a Bloqueante |
+| A tela implementa comportamento não especificado na SPEC-UI? | Importante (pedir justificativa — pode ser lacuna da spec) |
+
+### Limite deste eixo
+
+O review avalia **estrutura, estados e comportamento**. Não avalia estética.
+
+**Não levantar como finding:**
+- Escolha de cor, espaçamento, tamanho de fonte, composição visual
+- Preferência de layout que a SPEC-UI não especifica
+- "Ficaria melhor se..." sobre aparência
+
+Divergência visual sem impacto funcional é assunto de design review, não de code review. Se o desvio for grande a ponto de sugerir que a implementação ignorou o protótipo, levantar como um único finding `Importante` apontando o padrão, não um finding por detalhe.
+
+### Sinais de problema
+
+- **Só o caminho feliz implementado**: `Telas: UI-02 (default, limite, esgotado)` mas o código só trata `default`. Bloqueante.
+- **Estado implementado mas inalcançável**: existe o componente de erro, mas nenhuma condição o renderiza. Importante.
+- **Componente duplicado**: `CardOferta` reimplementado na tela de admin em vez de importado. Importante.
+- **Estado derivado tratado como validado**: a SPEC-UI marca um estado como "Derivado do PRD" (não validado por design) e a implementação seguiu literalmente. Não é finding — mas vale nota ao processo sugerindo validação.
+
+---
+
 ## Eixos transversais (registrar como nota se aplicar)
 
 Não são parte dos 5 eixos mas vale registrar quando aparece:
@@ -177,6 +213,7 @@ Não são parte dos 5 eixos mas vale registrar quando aparece:
 - **PRD ambíguo**: a redação de RN-XX ou CA-XX permitiu interpretação dupla, e a divergência só apareceu agora
 - **ADR ausente**: implementação tomou decisão arquitetural que merecia ser ADR e não foi documentada
 - **Padrão emergente**: o time está estabelecendo um padrão que ainda não está no `CLAUDE.md`. Sugerir documentar.
+- **SPEC-UI incompleta**: a implementação precisou de um estado que a especificação não previu. Sugerir atualizar a SPEC-UI — é sinal de que a fase de protótipo deixou lacuna.
 
 Esses pontos vão na seção "Notas ao processo" do relatório, não viram R-XX.
 
@@ -206,3 +243,8 @@ Esses pontos vão na seção "Notas ao processo" do relatório, não viram R-XX.
 | Documentação inline ausente em lógica complexa | | | ✓ |
 | Falta referência a T-XX no commit | | | ✓ |
 | Nome de teste não segue convenção CA_XX | | ✓ | |
+| Estado de tela especificado não implementado | ✓ | | |
+| Erro de formulário perde dados digitados | ✓ | | |
+| Componente reutilizável reimplementado | | ✓ | |
+| Campo divergente da SPEC-UI | | ✓ | |
+| Detalhe visual (cor, espaçamento) | | | — não é finding |

@@ -1,6 +1,6 @@
 ---
 name: reviewer-leanwork
-description: Code review estruturado de implementação contra plano + PRD + arquitetura, no padrão Leanwork. Stack-agnóstico — descobre a stack do projeto via proposta arquitetural, CLAUDE.md ou inspeção do repositório, e aplica padrões específicos do projeto. Use sempre que o usuário pedir "revisar PR", "code review", "validar implementação", "review da tarefa T-XX", "verificar se o código atende a tarefa", "fechar T-XX" ou variações. Também use quando o usuário trouxer um diff/PR e indicar qual tarefa do plano ele entrega, ou quando pedir auditoria pós-execução de uma feature. A skill avalia em 5 eixos (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código calibrada pela stack), produz documento com itens R-XX categorizados em Bloqueante/Importante/Sugestão, e fecha o último elo da matriz de rastreabilidade SDD (ADR → RN → CA → T → R). NÃO faz code review de estilo (formatação automática), NÃO faz threat modeling completo (só segurança básica), NÃO inventa críticas quando faltar contexto — sinaliza lacuna.
+description: Code review estruturado de implementação contra plano + PRD + arquitetura, no padrão Leanwork. Stack-agnóstico — descobre a stack do projeto via proposta arquitetural, CLAUDE.md ou inspeção do repositório, e aplica padrões específicos do projeto. Use sempre que o usuário pedir "revisar PR", "code review", "validar implementação", "review da tarefa T-XX", "verificar se o código atende a tarefa", "fechar T-XX" ou variações. Também use quando o usuário trouxer um diff/PR e indicar qual tarefa do plano ele entrega, ou quando pedir auditoria pós-execução de uma feature. A skill avalia em 5 eixos (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código calibrada pela stack), mais um sexto eixo de conformidade de interface quando o projeto tem SPEC-UI, produz documento com itens R-XX categorizados em Bloqueante/Importante/Sugestão, e fecha o último elo da matriz de rastreabilidade SDD (ADR → RN → CA → T → R). NÃO faz code review de estilo (formatação automática), NÃO faz threat modeling completo (só segurança básica), NÃO inventa críticas quando faltar contexto — sinaliza lacuna.
 ---
 
 # Reviewer Leanwork — Code Review Estruturado contra o Pipeline SDD
@@ -22,7 +22,7 @@ Esta skill realiza review de implementação cruzando o código entregue com os 
 2. **Localizar artefatos** do pipeline no projeto (plano, PRD, arquitetura, CLAUDE.md)
 3. **Descobrir a stack** do projeto em cascata
 4. **Carregar o diff ou os arquivos modificados**
-5. **Avaliar nos 5 eixos**
+5. **Avaliar nos eixos aplicáveis** (5 sempre; o 6º apenas quando existe SPEC-UI)
 6. **Gerar o relatório** seguindo o template
 
 ## Fase 1 — Identificar a tarefa e os artefatos
@@ -46,12 +46,14 @@ Buscar nas convenções padrão de pasta (ver `${CLAUDE_PLUGIN_ROOT}/templates/f
 - **PRD** — referenciado no cabeçalho do plano (campo `**PRD de referência:**`). Se ausente, procurar `docs/prds/PRD-*.md` com o mesmo número do plano.
 - **Proposta arquitetural** — `docs/architecture/proposta-arquitetural.md` ou variações.
 - **CLAUDE.md do projeto** — raiz do repositório.
+- **SPEC-UI** — `docs/prototype/SPEC-UI-XXX-*.md`, com o mesmo número do PRD. Só existe em projetos com interface; ausência não é problema.
 
 Extrair da tarefa T-XX no plano:
 
 - `Implementa: RN-XX, RN-YY` — lista de regras que devem estar concretizadas
 - `Valida: CA-XX, CA-YY` — lista de cenários Gherkin que devem ter teste passando
 - `Decisões base: ADR-XX` — decisões arquiteturais que precisam ser respeitadas
+- `Telas: UI-XX (estados)` — telas e estados da SPEC-UI que a tarefa implementa (quando houver)
 - `Camadas/arquivos afetados:` — escopo declarado
 - `Critério de aceite (testável):` — checklist específico da tarefa
 - `Testes a escrever:` — testes que deveriam existir
@@ -84,9 +86,9 @@ Em ordem de preferência:
 3. Usuário pediu review da última implementação local — rodar `git diff` em ambiente local, se disponível
 4. Nada disso → perguntar: "Como prefere que eu acesse o código? (paste do diff aqui, path local, branch para comparar, ou abrir os arquivos um a um)"
 
-## Fase 4 — Avaliação nos 5 eixos
+## Fase 4 — Avaliação nos eixos
 
-Aplicar **todos os eixos** no review. Cada finding vira um item `R-XX` no relatório, com severidade.
+Aplicar os eixos 1 a 5 sempre; o eixo 6 apenas quando o projeto tem SPEC-UI e a tarefa é de interface. Cada finding vira um item `R-XX` no relatório, com severidade.
 
 Detalhes de critérios e perguntas-guia por eixo em `references/review-checklist.md`. Resumo:
 
@@ -143,6 +145,18 @@ Aqui entra o conhecimento da stack descoberta na Fase 2 e dos padrões lidos do 
 **Critérios específicos da stack:** lidos do `CLAUDE.md` do projeto. Se o projeto não tem `CLAUDE.md` com padrões definidos, aplicar apenas os universais e registrar no relatório que padrões específicos da stack não foram avaliados por falta de declaração.
 
 Nesse caso, **sugerir ao usuário** (fora do relatório, na conversa) rodar a skill `context-leanwork` via `/leanwork-context raiz` para que os próximos reviews sejam completos. É sugestão, não exigência — não bloquear o review por isso, nem gerar o arquivo por conta própria.
+
+### Eixo 6 — Conformidade de interface *(apenas quando existe SPEC-UI)*
+
+Aplicável somente a tarefas com o campo `Telas:` preenchido. Pular inteiramente quando o projeto não tem SPEC-UI ou a tarefa não é de interface.
+
+- Todos os estados listados em `Telas:` foram implementados? (`UI-02 (default, limite, esgotado)` → os três existem no código?)
+- Os campos e controles da tela batem com o especificado na SPEC-UI?
+- Componentes marcados como reutilizáveis foram consumidos, ou houve reimplementação duplicada?
+- Estados de erro preservam os dados do formulário, quando a SPEC-UI especifica isso?
+- Restrições de interface declaradas (acessibilidade, tema escuro, i18n) foram respeitadas?
+
+**Limite deste eixo:** o review avalia **estrutura, estados e comportamento** — não estética. Não comentar escolha de cor, espaçamento ou composição visual: isso é território de design, não de code review. Estado ausente é `Bloqueante`; divergência estrutural é `Importante`; detalhe visual não vira finding.
 
 **Não fazer:**
 - Code review de formatação (linter/formatter cobre)

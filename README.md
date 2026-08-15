@@ -14,7 +14,8 @@ leanwork-sdd/
 │   ├── leanwork-next.md            # /leanwork-next
 │   ├── leanwork-trace.md           # /leanwork-trace
 │   ├── leanwork-review.md          # /leanwork-review
-│   └── leanwork-context.md         # /leanwork-context
+│   ├── leanwork-context.md         # /leanwork-context
+│   └── leanwork-prototype.md       # /leanwork-prototype
 ├── skills/
 │   ├── architect-leanwork/
 │   │   ├── SKILL.md
@@ -29,6 +30,13 @@ leanwork-sdd/
 │   │   └── references/
 │   │       ├── prd-template.md
 │   │       └── gherkin-examples.md
+│   ├── prototype-leanwork/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── spec-ui-template.md
+│   │       ├── ingestion-guide.md
+│   │       ├── generation-guide.md
+│   │       └── screen-states.md
 │   ├── planner-leanwork/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -45,7 +53,8 @@ leanwork-sdd/
 │       └── references/
 │           ├── claude-md-root-template.md
 │           ├── claude-md-module-template.md
-│           └── command-detection.md
+│           ├── command-detection.md
+│           └── permission-catalog.md
 └── templates/                       # convenções compartilhadas
     ├── id-conventions.md
     ├── folder-conventions.md
@@ -70,7 +79,7 @@ Padrão **progressive disclosure** do Claude Code: a SKILL.md fica curta (instru
 | `architect-leanwork` | 1 — Arquitetura | Briefing de negócio | Proposta arquitetural + ADRs + C4 | `ADR-XX` |
 | `prd-leanwork` | 2 — Requisitos | Demanda (com ou sem arquitetura) | PRD com regras + Gherkin | `RN-XX`, `CA-XX` |
 | `planner-leanwork` | 3 — Plano | PRD aprovado | Plano com tarefas executáveis | `T-XX` |
-| `reviewer-leanwork` | 4 — Review | Diff/PR + plano + PRD + arquitetura | Relatório de review por tarefa | `R-XX` |
+| `reviewer-leanwork` | 5 — Review | Diff/PR + plano + PRD + arquitetura | Relatório de review por tarefa | `R-XX` |
 | `context-leanwork` | Transversal | Artefatos do pipeline + repositório | `CLAUDE.md` raiz e módulos | — |
 
 Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural e do `CLAUDE.md` do projeto, nunca da skill.
@@ -107,10 +116,17 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 - `review-checklist.md` — perguntas-guia detalhadas por eixo + tabela de severidade
 - `stack-detection.md` — cascata de descoberta da stack do projeto
 
+**prototype-leanwork/references/**
+- `spec-ui-template.md` — template do documento SPEC-UI
+- `ingestion-guide.md` — extração por formato (HTML, imagens, Figma via MCP, Lovable/v0)
+- `generation-guide.md` — arquétipos de interface, entrevista e delegação do craft visual
+- `screen-states.md` — catálogo de estados de tela e quais são obrigatórios por tipo
+
 **context-leanwork/references/**
 - `claude-md-root-template.md` — template do `CLAUDE.md` da raiz
 - `claude-md-module-template.md` — template do `CLAUDE.md` de módulo
 - `command-detection.md` — como detectar comandos reais de build/test por ecossistema
+- `permission-catalog.md` — receitas de `allow`/`ask`/`deny` por ecossistema
 
 ### Convenções compartilhadas (raiz `templates/`)
 
@@ -166,6 +182,33 @@ O `/leanwork-trace` percorre todos esses elos e monta a matriz completa, incluin
 - Threat modeling completo (segurança básica apenas)
 - Otimização de performance se não foi atributo prioritário
 - Imposição de preferências pessoais não declaradas no projeto
+
+## A skill `prototype-leanwork` — interface como especificação
+
+Protótipo tem dois papéis: **descoberta** (desenhar para entender o problema, descartável) e **especificação** (as telas são o contrato que o dev implementa). Esta skill trata do segundo — e por isso o protótipo vira artefato do pipeline, com ID e rastreabilidade, não insumo externo solto.
+
+### Ingestão primeiro, geração como fallback
+
+Se você já prototipa, a skill **não substitui** seu processo. Ela indexa o que existe:
+
+| Formato | Qualidade da extração |
+|---|---|
+| HTML/React no repositório | Alta — rotas, componentes, campos, estados no código |
+| Imagens (PNG/screenshots) | Média — layout, campos, cores aproximadas |
+| Figma via MCP | Alta — frames, variantes, tokens exatos |
+| Lovable/v0 exportado para GitHub | Alta — idêntico ao caso HTML/React |
+
+O modo geração existe para quando não há protótipo: deriva telas e estados do PRD, herda tokens já presentes no repositório e **delega o craft visual** para skills de frontend do ambiente. O plugin fica design-agnóstico do mesmo jeito que é stack-agnóstico.
+
+### O valor está nos estados
+
+Protótipo cobre o caminho feliz. A maioria dos bugs de interface nasce nos estados que ninguém desenhou — vazio por filtro, erro de envio que perde os dados digitados, conflito de edição concorrente, sessão expirada no meio do fluxo.
+
+A skill percorre os cenários Gherkin do PRD: todo `CA-XX` cujo `Então` descreve rejeição ou mensagem de erro corresponde a um estado de tela. Cada estado ganha ID (`UI-02.esgotado`), o plano declara quais implementa, e o review verifica um a um.
+
+### Opcional de verdade
+
+Projeto sem interface — API, worker, CLI, biblioteca — pula a fase inteira, e o `/leanwork-trace` não reclama de ausência. A SPEC-UI é **por PRD**, não por projeto: `PRD-001` (checkout) pode ter especificação de telas enquanto `PRD-002` (job de sincronização) não tem nenhuma.
 
 ## A skill `context-leanwork` — contexto para o agente
 

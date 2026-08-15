@@ -2,13 +2,14 @@
 
 Este documento é a referência única para os IDs usados pelo pipeline. Todas as três skills (`architect-leanwork`, `prd-leanwork`, `planner-leanwork`) e o comando `/leanwork-trace` dependem deste padrão.
 
-## Os cinco tipos de ID
+## Os seis tipos de ID
 
 | ID | Significado | Onde nasce | Onde é referenciado |
 |----|-------------|------------|---------------------|
 | `ADR-XX` | Architecture Decision Record | Proposta arquitetural (seção 5) | PRD (regras, citações inline), Plano (campo `Decisões base`), Review (verificação de conformidade) |
 | `RN-XX` | Regra de Negócio | PRD (seção 8) | PRD (passos Gherkin entre parênteses), Plano (campo `Implementa`), Review (cobertura por RN) |
 | `CA-XX` | Critério de Aceite (cenário Gherkin) | PRD (seção 9, no nome do cenário) | Plano (campo `Valida`), código de teste (nome do teste), Review (cobertura por CA) |
+| `UI-XX` | Tela de interface | SPEC-UI (seção 3) | Plano (campo `Telas`), Review (cobertura por UI). Estados usam sufixo: `UI-02.erro` |
 | `T-XX` | Tarefa de execução | Plano (cada tarefa numerada) | Outras tarefas (campo `Depende de`), histórico de execução, Review (cada relatório referencia 1 tarefa) |
 | `R-XX` | Finding de review (Review-XX) | Relatório de review | Round subsequente de review (referência a findings anteriores), histórico de qualidade |
 
@@ -30,6 +31,8 @@ Este documento é a referência única para os IDs usados pelo pipeline. Todas a
 **CA-XX**: aparece dentro do bloco Gherkin como `Cenário [CA-01]: nome do cenário`. Os colchetes são parte da sintaxe — não omitir. Numeração é global ao PRD, não por funcionalidade.
 
 **T-XX**: granularidade calibrada (1 commit a meio dia de trabalho). Tarefa que precisa de mais de 3 critérios de aceite provavelmente é grande demais.
+
+**UI-XX**: numeração sequencial global ao documento SPEC-UI. **Estados usam sufixo com ponto** (`UI-02.erro`, `UI-02.vazio`, `UI-02.carregando`), permitindo que o plano declare `Telas: UI-02 (default, erro)` e que o review verifique estado a estado. Tela removida mantém o ID marcado como removido — não reciclar.
 
 **R-XX**: numeração sequencial por relatório (cada `REVIEW-T-XX-*.md` começa do R-01). **Não** numeração global ao projeto. Round subsequente de review da mesma tarefa começa novo relatório com nova numeração; comparar com round anterior pela referência cruzada explícita na seção "Round anterior" do relatório, não pelos IDs.
 
@@ -53,10 +56,12 @@ Sempre que um documento citar um ID de outro documento, use **parênteses inline
 
 - No PRD: `RN-05: estoque decrementado atomicamente (ADR-002)` — indica que a regra existe por causa da decisão arquitetural ADR-002
 - No Gherkin: `Dado que existe oferta ativa (RN-03)` — indica que o passo valida a regra RN-03
+- Na SPEC-UI: `UI-02.limiteExcedido` — estado derivado de `CA-05`, que valida `RN-03`
 - No plano (tarefa T-07):
   - `Implementa: RN-03, RN-05` — esta tarefa concretiza essas regras
   - `Valida: CA-01, CA-03` — após essa tarefa, esses cenários ficam verdes
   - `Decisões base: ADR-002` — esta tarefa materializa essa decisão arquitetural
+  - `Telas: UI-02 (default, limiteExcedido)` — telas e estados que a tarefa implementa
 
 ### Direção das setas
 
@@ -68,6 +73,8 @@ ADR-XX (decisão arquitetural)
 RN-XX (regra de negócio)
    ↓ é provada por
 CA-XX (cenário Gherkin)
+   ↓ se manifesta em (quando há interface)
+UI-XX (tela e estados)
    ↓ é implementada por
 T-XX (tarefa de código)
    ↓ é validada por

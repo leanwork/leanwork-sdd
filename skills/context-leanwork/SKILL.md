@@ -1,6 +1,6 @@
 ---
 name: context-leanwork
-description: Geração e atualização de arquivos CLAUDE.md (raiz e por módulo) que dão contexto de projeto a agentes de IA, no padrão Leanwork. Use quando o usuário pedir explicitamente para "gerar CLAUDE.md", "criar contexto do projeto", "atualizar CLAUDE.md", "documentar convenções do projeto para o agente", "criar CLAUDE.md do módulo X" ou variações diretas. Também use quando o usuário aceitar uma sugestão de rodar a skill vinda de outra skill do pipeline SDD. A skill detecta stack e comandos reais inspecionando o repositório, lê os artefatos do pipeline (proposta arquitetural, ADRs, PRDs, planos) para extrair convenções e restrições, e produz CLAUDE.md com seções Resumo, Stack, Comandos, Convenções, Restrições e índice de documentação. NUNCA sobrescreve conteúdo escrito por humanos — faz merge conservador em blocos delimitados e mostra diff antes de gravar. CLAUDE.md de módulo é opt-in, nunca gerado em massa sem escolha do usuário. NÃO gera CLAUDE.md automaticamente durante outras tarefas — precisa ser invocada explicitamente.
+description: Geração e atualização do contexto de projeto para agentes de IA, no padrão Leanwork — arquivos CLAUDE.md (raiz e por módulo) e permissões em .claude/settings.json. Use quando o usuário pedir explicitamente para "gerar CLAUDE.md", "criar contexto do projeto", "atualizar CLAUDE.md", "configurar permissões do Claude Code", "gerar settings.json", "documentar convenções do projeto para o agente", "criar CLAUDE.md do módulo X" ou variações diretas. Também use quando o usuário aceitar uma sugestão de rodar a skill vinda de outra skill do pipeline SDD. A skill detecta stack e comandos reais inspecionando o repositório, lê os artefatos do pipeline (proposta arquitetural, ADRs, PRDs, planos) para extrair convenções e restrições, e produz CLAUDE.md com seções Resumo, Stack, Comandos, Convenções, Restrições e índice de documentação, além de permissões allow/ask/deny calibradas pela stack detectada. NUNCA sobrescreve conteúdo escrito por humanos — faz merge conservador em blocos delimitados e mostra diff antes de gravar. CLAUDE.md de módulo é opt-in, nunca gerado em massa sem escolha do usuário. NÃO gera CLAUDE.md automaticamente durante outras tarefas — precisa ser invocada explicitamente.
 ---
 
 # Context Leanwork — Geração de CLAUDE.md para Agentes de IA
@@ -32,10 +32,15 @@ Perguntar ao usuário **uma vez**, com opções claras, a menos que ele já tenh
 >
 > **A.** `CLAUDE.md` da raiz do projeto
 > **B.** `CLAUDE.md` de um ou mais módulos específicos
-> **C.** Raiz + escolher módulos depois
-> **D.** Auditar o que existe hoje e me dizer o que está desatualizado (sem gravar nada)
+> **C.** Permissões — `.claude/settings.json` com allow/ask/deny pela stack
+> **D.** Raiz + permissões (o pacote completo de contexto do projeto)
+> **E.** Auditar o que existe hoje e apontar o que está desatualizado (sem gravar nada)
 
-A opção **D** é modo somente-leitura: útil quando o usuário quer saber se vale a pena rodar antes de mexer em arquivo.
+A opção **E** é modo somente-leitura: útil quando o usuário quer saber se vale a pena rodar antes de mexer em arquivo.
+
+**Por que permissões vivem aqui:** a detecção de stack e de comandos reais de build/teste é exatamente a mesma que alimenta a seção Comandos do `CLAUDE.md`. Os comandos detectados ali são os que entram no `allow`. Separar em outro comando faria o mesmo trabalho duas vezes.
+
+**Momento certo:** permissões só ficam boas **depois que existe código** — em repositório vazio não há stack para detectar. Se o usuário pedir permissões num repo sem código, gerar apenas o deny universal e as regras de git, e avisar que vale rodar de novo após o scaffolding.
 
 **Nunca gerar `CLAUDE.md` para todos os módulos sem escolha explícita.** Projeto LMA com 8 módulos rende 8 arquivos, e vários deles (módulos triviais de CRUD) só viram ruído. Detecte os módulos, liste, e deixe o usuário escolher.
 
@@ -75,6 +80,42 @@ Quando uma seção não tiver fonte:
 - Formato do placeholder: `<!-- TODO: [o que falta] — sem fonte no repositório ou nos artefatos do pipeline -->`
 - Se a lacuna for crítica (ex.: nenhum comando de teste detectado), perguntar ao usuário diretamente antes de gravar
 
+## Fase 2.5 — Permissões (quando o escopo incluir)
+
+Ler `references/permission-catalog.md` e compor o `.claude/settings.json`:
+
+1. **Deny universal** — sempre, sem exceção. `.env`, chaves, certificados, credenciais de cloud, `terraform.tfstate`, tokens de registry, comandos destrutivos.
+2. **Receita da stack detectada** na Fase 2 — allow, ask e deny específicos. Os comandos de build e teste já extraídos do repositório entram no `allow`.
+3. **Regras de git** — transversais.
+4. **Docker e infraestrutura** — apenas se detectados.
+
+Duas decisões dividem opinião entre times e valem perguntar:
+
+> **1.** `git commit` — em `allow` (o agente commita direto, é local e reversível) ou em `ask`?
+> **2.** Migrations — em `ask` (você confirma cada uma) ou `deny` (só na mão)?
+
+Não perguntar mais do que isso. O resto do catálogo é calibragem defensável por padrão.
+
+### Onde gravar
+
+**Sempre em `.claude/settings.json`** — política do time, versionada, viaja com o repositório. Nunca em `.claude/settings.local.json`, que é território pessoal de cada dev.
+
+### Merge com arquivo existente
+
+Mesma regra do `CLAUDE.md`: nunca destrutivo.
+
+- Manter todas as regras existentes
+- Adicionar apenas as que faltam
+- **Nunca remover** regra que o usuário colocou
+- Se uma regra existente está em balde diferente do sugerido (ex.: `git push` em `allow` quando o catálogo sugere `ask`), **não mexer** — apontar a divergência no relatório e deixar a decisão com ele
+- Mostrar o diff antes de gravar
+
+Como `settings.json` é JSON e não aceita comentário delimitador, o merge é por comparação de listas, não por marcador. Regra que já existe não é duplicada.
+
+### Verificar o `.gitignore`
+
+Confirmar que `.claude/settings.local.json` está ignorado. Se não estiver, mostrar a linha para o usuário adicionar — sem editar o `.gitignore` por conta própria.
+
 ## Fase 3 — Detectar drift
 
 Quando já existe um `CLAUDE.md`, comparar o conteúdo dele com a realidade coletada na Fase 2 e reportar divergências antes de propor mudança:
@@ -87,6 +128,9 @@ Quando já existe um `CLAUDE.md`, comparar o conteúdo dele com a realidade cole
 | Link morto | Índice aponta para `docs/prds/PRD-003.md` que não existe | Média |
 | Padrão emergente não documentado | Reviews citam 3× um padrão que não está no CLAUDE.md | Média |
 | Módulo novo sem CLAUDE.md | Pasta de módulo criada após a última execução | Baixa |
+| Permissão para comando inexistente | `allow` tem `Bash(npm run test:*)` mas o script foi removido | Baixa |
+| Stack nova sem permissões | Projeto ganhou frontend, `settings.json` só cobre backend | Média |
+| Segredo sem deny | Apareceu `terraform.tfstate` ou `.npmrc` no repo, sem regra de bloqueio | **Alta** |
 
 Apresentar o drift ao usuário **antes** de propor a escrita. Em modo auditoria (opção D da Fase 1), o relatório de drift é o output final — não grava nada.
 
@@ -129,7 +173,7 @@ Manter a ordem canônica (Resumo, Stack, Comandos, Convenções, Restrições, D
 
 Ao final, mostrar ao usuário:
 
-- Arquivos criados / atualizados / inalterados
+- Arquivos criados / atualizados / inalterados (`CLAUDE.md` e/ou `settings.json`)
 - Drift detectado e resolvido
 - Lacunas que ficaram como TODO e por quê
 - Módulos detectados que **não** receberam CLAUDE.md (com o motivo: usuário não selecionou)
@@ -156,6 +200,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 - **Conteúdo copiado dos artefatos do pipeline.** Referencie o caminho; não duplique regras de negócio, ADRs completos ou critérios de aceite.
 - **Histórico ou changelog.** Isso é papel do git e do `PROGRESS`/histórico de execução do plano.
 - **Instruções genéricas de boa prática** ("escreva código limpo", "use nomes descritivos"). O agente já sabe; só ocupa contexto.
+- **Permissões afrouxadas a pedido.** Se o usuário pedir para remover um item do deny universal, explicar o risco específico antes. `terraform.tfstate` e `.npmrc` guardam segredo em texto puro e são os mais esquecidos.
 - **Credenciais, connection strings, tokens.** Nunca, em nenhuma circunstância. Se encontrar algum no arquivo existente, **alertar o usuário** em vez de propagar.
 - **Detalhes que mudam toda semana.** Se a informação tem meia-vida curta, ela pertence a um doc referenciado, não ao CLAUDE.md.
 
@@ -170,6 +215,8 @@ Esta skill nunca se auto-invoca, mas as outras skills e comandos do pipeline dev
 | Review rodou em modo degradado por falta de CLAUDE.md | `reviewer-leanwork` |
 | Projeto tem artefatos do pipeline mas nenhum CLAUDE.md | `/leanwork-next` |
 | Módulo novo apareceu no repositório | `/leanwork-next` |
+| Projeto tem código mas nenhum `.claude/settings.json` | `/leanwork-next` |
+| Primeiro scaffolding concluído (comandos de build passam a existir) | `/leanwork-next` |
 
 A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário ignorar, o pipeline segue normalmente.
 
@@ -178,3 +225,4 @@ A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário
 - `references/claude-md-root-template.md` — template do CLAUDE.md da raiz
 - `references/claude-md-module-template.md` — template do CLAUDE.md de módulo
 - `references/command-detection.md` — como detectar comandos reais por ecossistema
+- `references/permission-catalog.md` — receitas de `allow`/`ask`/`deny` por ecossistema, com deny universal de segredos

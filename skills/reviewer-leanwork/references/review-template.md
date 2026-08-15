@@ -38,6 +38,7 @@ Template completo a ser preenchido pelo `reviewer-leanwork`. Manter ordem das se
 | Cenários validados (CA) | CA-XX, CA-YY, CA-ZZ | CA-XX, CA-YY | ⚠️ CA-ZZ sem teste |
 | Decisões base (ADR) | ADR-XX | ADR-XX respeitada | ✅ |
 | Critérios de aceite da tarefa | 3 | 2 atendidos, 1 parcial | ⚠️ |
+| Telas e estados (UI) | UI-02 (default, limite, esgotado) | default, limite | ⚠️ falta `.esgotado` |
 | Testes prometidos | 4 | 3 | ⚠️ falta CA_ZZ_* |
 
 ---
@@ -79,8 +80,8 @@ Precisam ser resolvidos antes do merge.
 
 #### R-01 — [Título curto descrevendo o problema]
 
-- **Eixo:** [1. Aderência ao plano / 2. Rastreabilidade / 3. Aderência ao spec / 4. Cobertura de teste / 5. Qualidade do código]
-- **Referência cruzada:** [RN-XX, CA-XX, ADR-XX se aplicável]
+- **Eixo:** [1. Aderência ao plano / 2. Rastreabilidade / 3. Aderência ao spec / 4. Cobertura de teste / 5. Qualidade do código / 6. Conformidade de interface]
+- **Referência cruzada:** [RN-XX, CA-XX, ADR-XX, UI-XX se aplicável]
 - **Evidência:** `src/Projeto/Foo/FooHandler.cs:45-52`
 - **Descrição:** [O que está errado, com fragmento de código se ajudar]
 
@@ -144,6 +145,22 @@ Verificação dos cenários Gherkin que a tarefa prometeu validar.
 
 - **Teste correspondente:** Não encontrado
 - **Status:** ❌ Ver R-02
+
+---
+
+## Cobertura por UI (Telas) *(omitir quando o projeto não tem SPEC-UI)*
+
+Verificação dos estados de tela que a tarefa prometeu implementar.
+
+### UI-02 — [Nome da tela, copiado da SPEC-UI]
+
+| Estado | Especificado | Implementado | Evidência |
+|---|---|---|---|
+| `.default` | Sim | ✅ | `src/Web/Checkout.tsx:20-60` |
+| `.limiteExcedido` | Sim | ✅ | `src/Web/Checkout.tsx:62-78` |
+| `.esgotado` | Sim | ❌ | Ver R-02 |
+
+*Repetir para cada tela listada em `Telas:` da tarefa.*
 
 ---
 
