@@ -35,7 +35,10 @@ Para o plano correspondente:
 
 - **Tarefas**: `T-01`, `T-02`, ...
 - **Campos de rastreabilidade**: `**Implementa:** RN-XX`, `**Valida:** CA-XX`, `**Decisões base:** ADR-XX`
-- **Status de cada tarefa** (Pendente / Em andamento / Concluído / Bloqueado)
+- **Status de cada tarefa**: campo `**Status:**` de dentro do bloco `#### T-XX`, com um de quatro valores literais — `Pendente` / `Em andamento` / `Concluído` / `Bloqueado` (ver `templates/id-conventions.md`). Três cuidados de leitura:
+  - O `**Status:**` do **cabeçalho do plano** é status de documento (`Rascunho` / `Em execução` / `Concluído`), não de tarefa. Ignorar — só contam as ocorrências dentro de um bloco de tarefa
+  - O bloco da tarefa é a fonte de verdade; a tabela de Histórico da seção 11 é o registro. Se divergirem, reportar como inconsistência em vez de escolher uma
+  - Valor fora do vocabulário é gap de estado, não estado desconhecido — reportar a grafia encontrada em vez de interpretá-la
 
 Para a arquitetura:
 
@@ -79,12 +82,14 @@ Apresente em três tabelas + um diagrama Mermaid:
 
 #### Tabela 3: Estado de execução por tarefa
 
+A coluna **Status no plano** reproduz literalmente o valor do campo `**Status:**` da tarefa, sem traduzir nem decorar com emoji.
+
 | Tarefa | Status no plano | Review existe? | Severidade máxima | Findings abertos |
 |--------|-----------------|----------------|-------------------|------------------|
-| T-01 | ✅ Done | Sim | — | 0 |
-| T-04 | ✅ Done | Sim | Sugestão | R-04 |
-| T-05 | ⛔ Blocked | Sim | Bloqueante | R-01, R-03 |
-| T-07 | 🔄 Doing | Não | — | — |
+| T-01 | Concluído | Sim | — | 0 |
+| T-04 | Concluído | Sim | Sugestão | R-04 |
+| T-05 | Bloqueado | Sim | Bloqueante | R-01, R-03 |
+| T-07 | Em andamento | Não | — | — |
 
 #### Diagrama de rastreabilidade (Mermaid)
 
@@ -110,9 +115,11 @@ Listar explicitamente:
 - **Ts sem rastro**: tarefas que não preencheram `Implementa:` nem `Valida:` → **risco: tarefa sem propósito claro** (pode ser legítimo se for estrutural — investigar)
 - **ADRs citados mas inexistentes**: PRD ou plano cita ADR-X que não está na proposta arquitetural → **risco: referência quebrada**
 - **ADRs nunca referenciados**: decisão arquitetural que nenhuma regra ou tarefa invoca → **risco: decisão sem impacto rastreável** (pode indicar over-engineering)
-- **Tarefas Done sem review**: tarefas com `Status: Done` no plano mas sem arquivo `REVIEW-T-XX-*.md` correspondente → **risco: entrega não validada**
-- **Reviews bloqueados em aberto**: tarefas com review `⛔ Bloqueado` sem round subsequente → **risco: trabalho parado sem ação**
-- **Findings Bloqueantes em tarefas marcadas como Done**: tarefa fechada mas review aponta bloqueio não resolvido → **inconsistência grave entre estado declarado e estado real**
+- **Tarefas concluídas sem review**: tarefas com `Status: Concluído` no plano mas sem arquivo `REVIEW-T-XX-*.md` correspondente → **risco: entrega não validada**
+- **Reviews bloqueados em aberto**: tarefas com review de recomendação final `Bloqueado` sem round subsequente → **risco: trabalho parado sem ação**
+- **Findings Bloqueantes em tarefas com `Status: Concluído`**: tarefa fechada mas review aponta bloqueio não resolvido → **inconsistência grave entre estado declarado e estado real**
+- **Status fora do vocabulário**: campo `**Status:**` com grafia diferente de `Pendente` / `Em andamento` / `Concluído` / `Bloqueado` → **risco: tarefa invisível para os comandos de estado**; reportar a tarefa e a grafia encontrada
+- **Status divergente do Histórico**: campo `**Status:**` da tarefa em desacordo com a coluna Status da seção 11 do plano → **risco: registro de execução não confiável**
 
 Quando existe SPEC-UI, verificar também:
 
@@ -128,4 +135,4 @@ Pergunte ao usuário se quer salvar a matriz como `docs/traceability/MATRIX-{nom
 
 ## Regra de ouro
 
-Esta é uma análise estática dos artefatos — não invente links que não estão escritos. Se o plano não preencheu `Implementa:` em uma tarefa, marque como gap, não adivinhe a regra. Se uma tarefa Done não tem review, marque como gap — não assuma que está OK.
+Esta é uma análise estática dos artefatos — não invente links que não estão escritos. Se o plano não preencheu `Implementa:` em uma tarefa, marque como gap, não adivinhe a regra. Se uma tarefa `Concluído` não tem review, marque como gap — não assuma que está OK.

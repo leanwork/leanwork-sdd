@@ -98,7 +98,7 @@ A implementação faz **exatamente o que T-XX prometeu**, nada mais, nada menos?
 
 - Arquivos modificados batem com `Camadas/arquivos afetados`? (extra = escopo expandido sem justificativa; falta = tarefa incompleta)
 - Os `Critério de aceite (testável)` da tarefa estão atendidos?
-- Tarefa marcada como Done sem cobrir todos os critérios → Bloqueante
+- Tarefa com `Status: Concluído` sem cobrir todos os critérios → Bloqueante
 
 ### Eixo 2 — Rastreabilidade
 

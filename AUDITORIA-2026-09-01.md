@@ -11,13 +11,30 @@
 
 ---
 
+## Estado das correções — 2026-09-01, v1.6.0
+
+**Os 4 Bloqueantes estão resolvidos.** Os 10 Importantes e as 3 Sugestões permanecem em aberto.
+
+| Finding | Estado | Divergência em relação ao proposto |
+|---|---|---|
+| B1 — `marketplace.json` ausente | Resolvido | Arquivo criado apesar do uso ser interno. `--plugin-dir` é apenas de sessão; o marketplace local é o único caminho de instalação permanente. |
+| B2 — vocabulário de status | Resolvido | Vocabulário todo em PT-BR, não o misto `Pendente`/`Doing`/`Done`/`Blocked` proposto. A auditoria contou 3 vocabulários; havia 4. |
+| B3 — `adr-leanwork` fantasma | Resolvido | Roteado para `architect-leanwork`; o planner não gera ADR avulso (contradiria "O plano consome decisões; não cria" na mesma linha). |
+| B4 — `[execução]` sem dono | Resolvido | `/leanwork-execute` criado. O item (b) da correção proposta partia de premissa factualmente errada — ver a nota na seção. |
+| **B0 — frontmatter YAML quebrado** | Resolvido | **Não detectado por esta auditoria.** `prototype-leanwork/SKILL.md:3` continha `: ` em escalar YAML; a skill carregava sem `name` nem `description` desde a v1.4. Encontrado por `claude plugin validate`. |
+
+> **Nota de método.** A auditoria foi feita por leitura, sem executar `claude plugin validate`. Isso explica o B0: nenhuma leitura humana ou por LLM do arquivo pega um `: ` dentro de escalar YAML, mas o validador pega em um segundo. Para auditorias futuras deste repositório, rodar o validador antes de ler.
+
+---
+
 ## Índice
 
-- [Bloqueantes](#bloqueantes)
-  - [B1 — Não existe `marketplace.json`](#bloqueante-não-existe-marketplacejson--o-readme-documenta-uma-instalação-que-não-funciona)
-  - [B2 — Vocabulário de status divergente](#bloqueante-vocabulário-de-status-divergente-entre-o-template-do-plano-e-os-comandos-que-o-leem)
-  - [B3 — `adr-leanwork` é skill fantasma](#bloqueante-adr-leanwork--skill-fantasma-referenciada-duas-vezes)
-  - [B4 — `[execução]` sem dono](#bloqueante-o-passo-execução-não-tem-dono--o-plugin-abandona-o-usuário-na-fase-mais-longa)
+- [Estado das correções](#estado-das-correções--2026-09-01-v160)
+- [Bloqueantes](#bloqueantes) — **todos resolvidos na v1.6.0**
+  - [B1 — Não existe `marketplace.json`](#bloqueante-não-existe-marketplacejson--resolvido-na-v160)
+  - [B2 — Vocabulário de status divergente](#bloqueante-vocabulário-de-status-divergente--resolvido-na-v160)
+  - [B3 — `adr-leanwork` é skill fantasma](#bloqueante-adr-leanwork--skill-fantasma--resolvido-na-v160)
+  - [B4 — `[execução]` sem dono](#bloqueante-o-passo-execução-não-tem-dono--resolvido-na-v160)
 - [Importantes](#importantes)
   - [I1 — `deny` de `--force` bloqueia `--force-with-lease`](#importante-o-deny-de-git-push---force-também-bloqueia---force-with-lease-e-o-catálogo-recomenda-exatamente-o-que-não-funciona)
   - [I2 — `npx tsc` no allow é código morto](#importante-bashnpx-tsc-no-allow-é-código-morto-sob-bashnpx-no-ask)
@@ -38,7 +55,11 @@
 
 # Bloqueantes
 
-## [Bloqueante] Não existe `marketplace.json` — o README documenta uma instalação que não funciona
+## [Bloqueante] ~~Não existe `marketplace.json`~~ — RESOLVIDO na v1.6.0
+
+> **Resolvido.** `.claude-plugin/marketplace.json` criado (marketplace `leanwork`, auto-referente com `"source": "./"`) e o bloco de instalação do README reescrito.
+>
+> **Divergência:** a pergunta 2 ao autor sugeria que uso interno rebaixaria este finding a Sugestão. A premissa não se sustenta — `--plugin-dir` vale só pela sessão corrente, então mesmo o uso interno precisa do marketplace para instalação permanente. O finding continua Bloqueante independentemente da resposta. O README agora documenta `--plugin-dir` apenas como modo de desenvolvimento, com a ressalva de sessão explícita.
 
 **Onde:** `README.md:327-334`; ausência de `.claude-plugin/marketplace.json` (o diretório contém apenas `plugin.json`).
 
@@ -89,7 +110,11 @@ claude plugin install leanwork-sdd@leanwork
 
 ---
 
-## [Bloqueante] Vocabulário de status divergente entre o template do plano e os comandos que o leem
+## [Bloqueante] ~~Vocabulário de status divergente~~ — RESOLVIDO na v1.6.0
+
+> **Resolvido.** Vocabulário único declarado em `templates/id-conventions.md` e propagado por template, comandos e exemplos.
+>
+> **Divergências:** (1) os quatro valores são `Pendente` | `Em andamento` | `Concluído` | `Bloqueado` — tudo em PT-BR, não o misto PT/EN proposto, que apenas deslocaria a inconsistência. (2) A auditoria contou 3 vocabulários; havia **4**. O quarto, em `planner-leanwork/SKILL.md:71`, estava dentro do próprio gerador do plano — a contradição nascia no produtor, não só nos consumidores. (3) O checkbox `- [ ]` foi removido do campo `Status:` no template, porque duas representações de estado no mesmo campo reintroduzem a ambiguidade por outra via.
 
 **Onde:** `skills/planner-leanwork/references/plan-template.md:79` e `:167-171`; `commands/leanwork-next.md:43,46,72`; `commands/leanwork-trace.md:84-87,113,115`.
 
@@ -137,7 +162,11 @@ Depois trocar em `leanwork-next.md:43,46,72` as ocorrências de `⛔ Blocked` / 
 
 ---
 
-## [Bloqueante] `adr-leanwork` — skill fantasma referenciada duas vezes
+## [Bloqueante] ~~`adr-leanwork` — skill fantasma~~ — RESOLVIDO na v1.6.0
+
+> **Resolvido.** As duas ocorrências foram roteadas para `architect-leanwork`.
+>
+> **Divergência:** a correção proposta mandava o planner gerar um ADR avulso, o que contradiz *"O plano consome decisões; não cria"* — frase que a própria correção mantinha na mesma linha. Em vez disso, o planner registra a decisão pendente em "Questões em aberto" com `bloqueia: T-XX` e devolve ao arquiteto. A tarefa fica visivelmente travada em vez de avançar sobre decisão inexistente.
 
 **Onde:** `skills/planner-leanwork/SKILL.md:48` e `:87`.
 
@@ -161,7 +190,11 @@ Depois trocar em `leanwork-next.md:43,46,72` as ocorrências de `⛔ Blocked` / 
 
 ---
 
-## [Bloqueante] O passo `[execução]` não tem dono — o plugin abandona o usuário na fase mais longa
+## [Bloqueante] ~~O passo `[execução]` não tem dono~~ — RESOLVIDO na v1.6.0
+
+> **Resolvido.** A pergunta 1 ao autor foi respondida: **é lacuna, não decisão de escopo.** `commands/leanwork-execute.md` criado, e a execução virou fase numerada do pipeline no README, não intervalo entre fases.
+>
+> **Divergências:** (1) o item (b) da correção proposta afirma que `leanwork-review.md` "não procura relatório anterior da mesma T-XX" — **factualmente errado**, as linhas 69-71 já procuravam. Os defeitos reais eram outros: a lógica vivia em "Casos especiais" em vez do fluxo principal, e o sufixo `-round2` era literal, sem caminho para um terceiro round. Generalizado para round N+1. (2) O comando marca `Status: Em andamento` ao iniciar, além do que a correção pedia — sem isso o valor introduzido no B2 seria vocabulário morto, e uma sessão interrompida deixaria a tarefa parecendo `Pendente` com código pela metade no repositório. (3) O comando **não faz commit**, por decisão explícita: commitar antes do review inverteria a ordem do pipeline.
 
 **Onde:** transversal. Origem em `README.md:6`.
 
@@ -622,6 +655,8 @@ Thumbs.db
 
 # Top 5 ações por retorno sobre esforço
 
+> **Estado:** 1, 2, 3 e 5 feitos na v1.6.0. Resta o item 4 (`permission-catalog.md`), que é o único aberto com efeito fora do markdown.
+
 1. **Unificar o vocabulário de status do plano** (`plan-template.md`, `leanwork-next.md`, `leanwork-trace.md`). ~15 linhas em 3 arquivos; desbloqueia dois dos seis comandos, que hoje falham deterministicamente. Maior retorno por linha editada do repositório inteiro.
 
 2. **Remover `adr-leanwork`** (`planner-leanwork/SKILL.md:48,87`). Duas linhas; elimina o único ponto onde o plugin oferece ao usuário um comando inexistente, e no pior momento possível.
@@ -656,7 +691,11 @@ Cinco pontos onde não foi possível distinguir omissão de escolha, e a respost
 
 **1. A execução está fora do escopo por decisão?** Se sim, os colchetes em `README:6` deveriam virar declaração explícita — *"A execução é do seu agente e do seu processo; o pipeline entrega o plano e recebe o código de volta no review"* — e o Bloqueante sobre `[execução]` vira Sugestão. Se não é decisão, é a maior lacuna do plugin. Hoje o README não permite ao leitor saber qual dos dois é.
 
+> **Respondido (2026-09-01):** é lacuna. O comando `/leanwork-execute` existe para deixar explícito como o modelo deve executar o plano. Bloqueante confirmado e resolvido na v1.6.0.
+
 **2. O plugin é para distribuição pública ou uso interno da Leanwork via `--plugin-dir`?** Se for interno, o `marketplace.json` desce de Bloqueante para Sugestão e a correção vira remover o segundo bloco do README. Se for público, é pré-requisito de lançamento.
+
+> **Respondido (2026-09-01):** uso interno. Mas a consequência prevista não se aplica — `--plugin-dir` vale apenas pela sessão corrente, então o `marketplace.json` é necessário mesmo internamente. O finding permanece Bloqueante; a resposta mudou o *conteúdo* da correção (marketplace local auto-referente em vez de público), não a severidade.
 
 **3. `templates/` é para o humano ou para o agente?** `pipeline-example.md:3` diz *"exemplo de calibração para as skills"*, o que sugere agente — e aí o drift é funcional, não cosmético. Mas nenhuma `SKILL.md` instrui a ler `pipeline-example.md`. Se ninguém o lê, ele é documentação de apresentação e a prioridade cai; se as skills deveriam lê-lo, falta a instrução que aponta para ele.
 

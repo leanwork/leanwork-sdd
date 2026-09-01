@@ -87,15 +87,19 @@ Estrutura mínima do arquivo (a skill produz uma versão mais completa, com Resu
 Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
 
 1. Verifique se existe um plano em `docs/plans/PLAN-XXX-*.md`
-2. Identifique a próxima tarefa pendente sem bloqueio (campo `Status: Pendente` e `Depende de` satisfeito)
+2. Identifique a próxima tarefa pendente sem bloqueio: campo `Status: Pendente` e todas as tarefas de `Depende de:` com `Status: Concluído`
 3. Leia a tarefa inteira: campos `Implementa:`, `Valida:`, `Decisões base:`
 4. Abra os artefatos referenciados:
    - Para entender as regras: `docs/prds/PRD-XXX.md` (procure os `RN-XX` listados em `Implementa:`)
    - Para entender o critério de aceite: o mesmo PRD (procure `Cenário [CA-XX]:` listados em `Valida:`)
    - Para entender a decisão arquitetural base: `docs/architecture/proposta-arquitetural.md` (procure `ADR-XX`)
 5. Implemente respeitando os pontos de validação humana marcados no plano
+6. Atualize o campo `Status:` da tarefa e a tabela de Histórico de execução ao concluir
+7. Uma tarefa por ciclo, com review antes da próxima
 
 Padrão de nomeação de testes: `CA_XX_descricao_do_cenario` (ver `templates/id-conventions.md` do plugin).
+
+Com o plugin instalado, `/leanwork-execute` executa esses passos e `/leanwork-review T-XX` revisa.
 ```
 
 ## Múltiplos sistemas / mono-repo

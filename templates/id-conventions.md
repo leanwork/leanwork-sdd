@@ -36,6 +36,35 @@ Este documento é a referência única para os IDs usados pelo pipeline. Todas a
 
 **R-XX**: numeração sequencial por relatório (cada `REVIEW-T-XX-*.md` começa do R-01). **Não** numeração global ao projeto. Round subsequente de review da mesma tarefa começa novo relatório com nova numeração; comparar com round anterior pela referência cruzada explícita na seção "Round anterior" do relatório, não pelos IDs.
 
+## Vocabulário de status da tarefa
+
+O campo `**Status:**` de cada `T-XX` no plano aceita **exatamente quatro valores**, escritos por extenso e sem emoji:
+
+| Valor | Significado |
+|-------|-------------|
+| `Pendente` | Ainda não iniciada. Estado inicial de toda tarefa recém-planejada. |
+| `Em andamento` | Iniciada e não concluída. |
+| `Concluído` | Critérios de aceite atendidos e testes passando. |
+| `Bloqueado` | Impedida por dependência, decisão em aberto ou finding Bloqueante de review. |
+
+Transições válidas: `Pendente → Em andamento → Concluído`. De qualquer estado é possível ir para `Bloqueado`, e de `Bloqueado` se volta ao estado anterior quando o impedimento cai.
+
+**Este vocabulário é contrato, não estilo.** `/leanwork-next` e `/leanwork-trace` leem o campo literalmente para descobrir o estado de execução — escrever `Done`, `✅`, `Feito` ou `OK` torna a tarefa invisível para os dois comandos. O plano é a fonte de verdade do estado; um estado que o plano não declara não existe para o pipeline.
+
+### Três eixos de status — não confundir
+
+A palavra "Status" aparece em três lugares do pipeline, com vocabulários próprios. Quem lê os artefatos por busca textual precisa distinguir os três, porque `Concluído` e `Bloqueado` se repetem entre eles:
+
+| Eixo | Onde fica | Valores |
+|------|-----------|---------|
+| **Documento** | Cabeçalho do plano, do PRD, da SPEC-UI | Plano: `Rascunho` / `Em execução` / `Concluído`. PRD e SPEC-UI: `Rascunho` / `Em revisão` / `Aprovado` |
+| **Tarefa** | Campo `**Status:**` dentro do bloco `#### T-XX` | `Pendente` / `Em andamento` / `Concluído` / `Bloqueado` |
+| **Review** | Recomendação final do relatório | `Aprovado` / `Aprovado com ressalvas` / `Bloqueado` |
+
+O status de tarefa só é válido **dentro do bloco de uma `T-XX`**. Uma ocorrência de `Status:` antes da primeira tarefa é status de documento e não deve ser lida como estado de execução.
+
+Os emojis (✅ ⚠️ ⛔) permanecem legítimos como decoração de leitura em tabelas de cobertura e na recomendação final do review. No campo `**Status:**` da tarefa, não. Ao citar em prosa, qualificar de qual eixo se fala: `Status: Bloqueado` para a tarefa, `Recomendação: Bloqueado` para o review.
+
 ## Marcação de itens revogados
 
 Quando uma decisão ou regra precisa ser revogada (não excluída), use a marcação:

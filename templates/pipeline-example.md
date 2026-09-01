@@ -100,7 +100,7 @@ Funcionalidade: Compra em Oferta Relâmpago
 
 #### T-04 — Implementar comando de compra com lock pessimista de estoque
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Alta
 - **Depende de:** T-02 (entity FlashSale), T-03 (migration)
 - **Implementa:** RN-05, RN-03
@@ -138,7 +138,7 @@ violações de regra, deixando exceções técnicas subirem.
 
 #### T-05 — Implementar validador de limite por cliente
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Baixa
 - **Depende de:** T-04
 - **Implementa:** RN-03

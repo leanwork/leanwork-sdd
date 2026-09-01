@@ -45,7 +45,7 @@ Perguntar em blocos lógicos, somente o que estiver faltando:
 ### Bloco 4 — Riscos e bloqueios conhecidos
 
 - Há partes do código existente que são frágeis e podem quebrar com essa mudança? (legado sem teste, integração crítica, etc.)
-- Existe alguma decisão arquitetural ainda em aberto que pode mudar a quebra? (se sim, sugerir resolver antes via skill `architect-leanwork` ou `adr-leanwork`)
+- Existe alguma decisão arquitetural ainda em aberto que pode mudar a quebra? (se sim, sugerir resolver antes via skill `architect-leanwork` — que cobre tanto a proposta completa quanto o ADR avulso em `docs/architecture/adrs/`)
 - A feature toca dados em produção que precisam de migração/backfill?
 
 ### Quando parar de perguntar
@@ -68,7 +68,8 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 
 - **Idioma:** todo o plano em português (Brasil). Termos técnicos consagrados (handler, migration, endpoint, command, query) podem ficar em inglês.
 - **Numeração de tarefas:** `T-01`, `T-02`, ..., `T-NN`. Sequencial e global ao plano inteiro — não reinicia por fase. Facilita referência cruzada.
-- **Checkbox markdown:** todo item rastreável usa `- [ ]` / `- [x]`. Status detalhado (`Pendente / Em andamento / Concluído / Bloqueado`) fica no campo `**Status:**` da tarefa para casos onde "blocked" é relevante.
+- **Status da tarefa:** o campo `**Status:**` de cada `T-XX` é a fonte de verdade do estado e aceita exatamente quatro valores, por extenso e sem emoji: `Pendente` | `Em andamento` | `Concluído` | `Bloqueado`. Toda tarefa nasce `Pendente`. `/leanwork-next` e `/leanwork-trace` leem esse campo literalmente — outra grafia torna a tarefa invisível para eles. Ver `templates/id-conventions.md`.
+- **Checkbox markdown:** usar `- [ ]` / `- [x]` nos itens de *critério de aceite*, testes transversais, checklist de prontidão e questões em aberto. **Não** usar checkbox no campo `**Status:**` — o estado da tarefa tem uma representação só, e duas se contradizem na primeira vez que alguém atualizar apenas uma delas.
 - **Granularidade mista:** a skill decide caso a caso. Heurísticas:
   - Tarefa pequena (1 commit, ~30min-2h): quando a mudança é isolada e tem teste óbvio. Ex.: "Criar entity Foo com propriedades X, Y, Z".
   - Tarefa média (1 PR, meio dia): quando há acoplamento natural que separar atrapalha. Ex.: "Implementar handler + validator + testes unitários do CriarFoo".
@@ -84,7 +85,7 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 - **Alocação de pessoas.** "T-03: João" não vai no plano. Quem pega a tarefa é decisão de planning/daily.
 - **Estimativa em horas.** Complexidade qualitativa é suficiente — horas mentem.
 - **Código pronto.** O plano direciona, não implementa. Nomes de classes/arquivos sugeridos sim, código não.
-- **Decisões arquiteturais novas.** Se durante o planejamento aparecer necessidade de decidir algo arquitetural relevante, pausar e sugerir uso da skill `architect-leanwork` ou criação de ADR via `adr-leanwork`. O plano consome decisões; não cria.
+- **Decisões arquiteturais novas.** Se durante o planejamento aparecer necessidade de decidir algo arquitetural relevante, pausar e sugerir a skill `architect-leanwork` — ela cobre os dois casos: revisitar a proposta inteira, ou registrar um ADR avulso em `docs/architecture/adrs/` quando a decisão for isolada. O plano consome decisões; não cria. Registrar a pendência na seção "Questões em aberto" do plano, com o `bloqueia: T-XX` correspondente, em vez de escolher por conta própria e seguir.
 - **Redundância com o PRD.** Não repetir regras de negócio detalhadas — referenciar por código (RN-XX).
 
 ## Padrões de comportamento

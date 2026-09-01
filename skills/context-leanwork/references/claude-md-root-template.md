@@ -81,7 +81,7 @@ Origem entre parênteses quando vier de ADR.]
 Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
 
 1. Verifique se existe um plano em `docs/plans/PLAN-XXX-*.md`
-2. Identifique a próxima tarefa pendente sem bloqueio (`Status: Pendente` e `Depende de` satisfeito)
+2. Identifique a próxima tarefa pendente sem bloqueio: `Status: Pendente` e todas as tarefas de `Depende de:` com `Status: Concluído`
 3. Leia a tarefa inteira, incluindo os campos `Implementa:`, `Valida:` e `Decisões base:`
 4. Abra os artefatos referenciados:
    - Regras de negócio (`RN-XX`) → o PRD indicado no cabeçalho do plano
@@ -89,6 +89,10 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
    - Decisões arquiteturais (`ADR-XX`) → `docs/architecture/`
 5. Respeite os pontos de validação humana marcados no plano
 6. Nomeie os testes conforme a convenção `CA_XX_*` para preservar rastreabilidade
+7. Atualize o estado ao terminar: campo `Status:` da tarefa (`Pendente` → `Em andamento` → `Concluído`) e uma linha na tabela de Histórico de execução. O plano é a fonte de verdade do estado — tarefa concluída que continua `Pendente` fica invisível para quem retomar o trabalho
+8. Execute **uma tarefa por vez** e peça review antes de seguir para a próxima
+
+> Com o plugin Leanwork SDD instalado, `/leanwork-execute` faz os passos 1 a 8 e `/leanwork-review T-XX` faz a revisão. Sem o plugin, seguir os passos manualmente — eles não dependem de ferramenta.
 
 <!-- leanwork-context:end -->
 

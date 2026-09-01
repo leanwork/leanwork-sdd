@@ -31,7 +31,7 @@ Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** po
 ```markdown
 #### T-01 — Criar entity FlashSale e configuration EF Core
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Baixa
 - **Depende de:** nenhuma
 - **Implementa:** —
@@ -68,7 +68,7 @@ Tarefas de lógica de negócio **sempre preenchem `Implementa:`** (regras do PRD
 ```markdown
 #### T-04 — Implementar handler de compra com lock pessimista de estoque
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Alta
 - **Depende de:** T-01, T-02 (migration), T-03 (interface IFlashSaleRepository)
 - **Implementa:** RN-03, RN-05
@@ -120,7 +120,7 @@ Tarefas de controller/endpoint **preenchem `Valida:`** porque sua conclusão é 
 ```markdown
 #### T-09 — Expor endpoint POST /api/flash-sales/{id}/comprar
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-04 (handler), T-08 (validator)
 - **Implementa:** —
@@ -164,7 +164,7 @@ Tarefas de observabilidade, métricas, logging tipicamente **não preenchem `Imp
 ```markdown
 #### T-12 — Adicionar instrumentação de métricas e logging estruturado
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-09 (endpoint pronto)
 - **Implementa:** —
@@ -204,7 +204,7 @@ Quando uma tarefa **existe especificamente para implementar uma decisão arquite
 ```markdown
 #### T-15 — Configurar feature flag para "Ofertas Relâmpago" via LaunchDarkly
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-09 (endpoint pronto)
 - **Implementa:** —

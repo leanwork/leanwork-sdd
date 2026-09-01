@@ -1,14 +1,17 @@
 # Leanwork SDD Plugin
 
-Pipeline **Spec-Driven Development** para projetos Leanwork. Empacota arquitetura, levantamento de requisitos, especificação de interface, planejamento técnico e code review em seis skills coordenadas, com templates segregados em arquivos de referência, comandos de orquestração e rastreabilidade cruzada por IDs.
+Pipeline **Spec-Driven Development** para projetos Leanwork. Empacota arquitetura, levantamento de requisitos, especificação de interface, planejamento técnico, execução guiada e code review em seis skills coordenadas, com templates segregados em arquivos de referência, comandos de orquestração e rastreabilidade cruzada por IDs.
 
 ```
-1. Architect  →  2. PRD  →  3. Protótipo*  →  4. Planner  →  [execução]  →  5. Review
-                                                    ↑
-                              context-leanwork (transversal, sempre opt-in)
+1. Architect  →  2. PRD  →  3. Protótipo*  →  4. Planner  →  5. Execução  ⇄  6. Review
+                                                             └─ uma tarefa por ciclo ─┘
+
+context-leanwork — transversal ao pipeline inteiro, sempre opt-in
 
 * opcional — só para PRDs com interface
 ```
+
+A execução é uma fase do pipeline, não um intervalo entre fases. `/leanwork-execute` pega uma tarefa por vez, carrega o contexto que o plano declarou (`RN` / `CA` / `ADR` / `UI`) e devolve o estado ao plano; `/leanwork-review` valida e, se bloquear, devolve o bloqueio ao plano também. Os dois se alternam tarefa a tarefa até o plano fechar — e o plano é o único lugar onde o estado de execução vive.
 
 ## Estrutura
 
@@ -22,6 +25,7 @@ leanwork-sdd/
 │   ├── leanwork-start.md           # /leanwork-start
 │   ├── leanwork-next.md            # /leanwork-next
 │   ├── leanwork-trace.md           # /leanwork-trace
+│   ├── leanwork-execute.md         # /leanwork-execute
 │   ├── leanwork-review.md          # /leanwork-review
 │   ├── leanwork-context.md         # /leanwork-context
 │   └── leanwork-prototype.md       # /leanwork-prototype
@@ -101,7 +105,8 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 | `/leanwork-start` | Inicia o pipeline e identifica em que fase começar |
 | `/leanwork-next` | Inspeciona artefatos existentes e sugere a próxima ação (incluindo reviews pendentes) |
 | `/leanwork-prototype` | Invoca `prototype-leanwork`: indexa protótipo existente ou gera um, e produz a SPEC-UI |
-| `/leanwork-review` | Invoca `reviewer-leanwork` sobre uma tarefa específica |
+| `/leanwork-execute` | Executa uma tarefa do plano carregando o contexto declarado (RN/CA/ADR/UI) e atualiza o `Status` ao final |
+| `/leanwork-review` | Invoca `reviewer-leanwork` sobre uma tarefa específica. Finding bloqueante volta como `Status: Bloqueado` no plano |
 | `/leanwork-trace` | Gera a matriz de rastreabilidade `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e aponta gaps |
 | `/leanwork-context` | Gera ou atualiza `CLAUDE.md` (raiz e módulos) e `.claude/settings.json`. Nunca automático, nunca destrutivo |
 
@@ -280,9 +285,14 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
   → /leanwork-prototype → UI-01..UI-06 + estados   (opcional — tem interface)
   → planner → T-01..T-12
 
-[dev/agente executa T-04]
+/leanwork-execute T-04
+  → carrega RN-03, RN-05, CA-01, CA-03, ADR-002, UI-02 (default, esgotado)
+  → implementa, escreve CA_01_* e CA_03_*, roda os testes
+  → T-04: Status Concluído + linha no Histórico
+
   → /leanwork-review T-04
-  → reviewer → REVIEW-T-04-2026-06-15.md (R-01..R-03)
+  → reviewer → REVIEW-T-04-2026-06-15.md (R-01..R-03, 1 Bloqueante)
+  → T-04 volta para Status: Bloqueado no plano
 
 [após correções]
   → /leanwork-review T-04
@@ -293,7 +303,7 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 
 ```
 /leanwork-next
-  → identifica que T-04 está Done mas sem review
+  → identifica que T-04 está Concluído mas sem review
   → sugere: "rodar /leanwork-review T-04 antes de avançar"
 ```
 
@@ -303,7 +313,7 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 /leanwork-trace docs/prds/PRD-001-flash-sales.md
   → gera matriz ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R
   → aponta:
-    - T-04 marcada como Done mas review pendente
+    - T-04 com Status: Concluído mas review pendente
     - T-05 com review Bloqueado em aberto
     - CA-09 sem tarefa que valide
     - UI-03.erroEnvio especificado mas nenhuma tarefa declara em Telas:
@@ -325,13 +335,25 @@ Sem SPEC-UI no projeto, as colunas de UI são omitidas da matriz — ausência n
 
 ## Instalação
 
-```bash
-# Local (desenvolvimento):
-claude --plugin-dir /caminho/para/leanwork-sdd
+O plugin é distribuído internamente: o próprio repositório é o marketplace, adicionado por caminho local. Não há publicação pública, e nada aqui depende de rede além do `git clone`.
 
-# Marketplace (se você publicar):
-claude plugin install leanwork-sdd
+**Uso permanente (equipe):**
+
+```bash
+git clone https://github.com/leanwork/leanwork-sdd.git
+claude plugin marketplace add ./leanwork-sdd
+claude plugin install leanwork-sdd@leanwork
 ```
+
+O `install` usa a sintaxe `plugin@marketplace`: `leanwork-sdd` é o nome do plugin e `leanwork` é o nome do marketplace. Para atualizar depois de um `git pull`, rodar `claude plugin marketplace update leanwork`.
+
+**Desenvolvimento do próprio plugin:**
+
+```bash
+claude --plugin-dir /caminho/para/leanwork-sdd
+```
+
+> A flag `--plugin-dir` carrega o plugin direto do diretório, sem instalar — conveniente para editar uma skill e testar na hora. Ela **vale apenas pela sessão atual**: ao reabrir o Claude Code é preciso repassá-la. Para a instalação que persiste, usar o caminho de marketplace acima.
 
 Depois de instalar, abrir o Claude Code e rodar `/plugin` para confirmar que as skills foram carregadas. As 6 skills aparecem com prefixo `(leanwork-sdd)` quando autoinvocadas.
 
@@ -343,6 +365,7 @@ Depois de instalar, abrir o Claude Code e rodar `/plugin` para confirmar que as 
 - `1.3.0` — geração de permissões: `.claude/settings.json` calibrado pela stack via `/leanwork-context permissoes`, com o catálogo `allow`/`ask`/`deny` por ecossistema e detecção de drift entre o `CLAUDE.md` e a realidade do repositório
 - `1.4.0` — adição da skill `prototype-leanwork` + comando `/leanwork-prototype`: protótipo vira especificação rastreável (SPEC-UI) com `UI-XX` e estados. Rastreabilidade estendida para `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R`, novo eixo 6 no reviewer, campo `Telas:` no plano. Fase opcional — projeto sem interface pula inteira e o `/leanwork-trace` não reclama
 - `1.5.0` — adição do `REFERENCES.md`: as fontes de engenharia de software por trás de cada fase, com marcação de reprodução/adaptação/autoria, divergências deliberadas com a literatura e lacunas conhecidas. README realinhado ao pipeline de seis skills
+- `1.6.0` — a execução ganha dono: novo comando `/leanwork-execute`, que carrega o contexto declarado pela tarefa e devolve o estado ao plano. Vocabulário de status unificado (`Pendente` / `Em andamento` / `Concluído` / `Bloqueado`) como contrato entre o plano e os comandos que o leem. Review passa a fechar o loop — finding Bloqueante volta como `Status: Bloqueado` na tarefa — e o re-review de round N+1 entra no fluxo principal. Instalação por marketplace local
 
 ## Crédito e inspiração
 

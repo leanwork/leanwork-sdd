@@ -16,7 +16,7 @@ A implementação faz **o que T-XX prometeu**?
 |----------|------------------|
 | Os arquivos modificados batem com `Camadas/arquivos afetados` da tarefa? | Importante (escopo expandido) ou Bloqueante (escopo trocado) |
 | Todos os itens de `Critério de aceite (testável)` da tarefa estão atendidos? | Bloqueante |
-| A tarefa foi marcada como `Status: Done` no plano? Se sim, está coerente com o estado real do código? | Importante |
+| A tarefa foi marcada como `Status: Concluído` no plano? Se sim, está coerente com o estado real do código? | Importante |
 | A descrição em "Descrição:" da tarefa está coerente com o que foi feito? | Sugestão (ou Importante se houver divergência grande) |
 
 ### Sinais de problema

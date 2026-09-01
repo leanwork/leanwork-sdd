@@ -1,6 +1,6 @@
 {
   "name": "leanwork-sdd",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Pipeline Spec-Driven Development da Leanwork: architect → PRD → protótipo → planner → reviewer, mais geração de contexto (CLAUDE.md) para agentes de IA. Skills stack-agnósticas, comandos de orquestração e rastreabilidade cruzada ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R.",
   "author": {
     "name": "Mick Banagouro / Leanwork",
