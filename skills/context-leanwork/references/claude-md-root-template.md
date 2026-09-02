@@ -4,9 +4,11 @@ Template do arquivo de contexto que fica na raiz do repositório. Alvo: **60-120
 
 Os marcadores `<!-- leanwork-context:start -->` e `<!-- leanwork-context:end -->` delimitam o que a skill pode atualizar em execuções futuras. Conteúdo fora deles é preservado integralmente.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # [Nome do Projeto]
 
 <!-- leanwork-context:start -->
@@ -97,7 +99,7 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
 <!-- leanwork-context:end -->
 
 <!-- Conteúdo abaixo desta linha é mantido manualmente e não é alterado pela skill context-leanwork. -->
-```
+````
 
 ---
 

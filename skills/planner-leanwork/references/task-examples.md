@@ -6,14 +6,16 @@ Referência para calibrar como tarefas devem ser escritas no plano de execução
 
 ## Princípio de granularidade
 
-Boa tarefa cabe em **1 commit ou 1 PR pequeno**, executável em **30 minutos a 4 horas**. Acima disso, quebrar. Abaixo disso (10 min), provavelmente é um detalhe que deveria estar embutido em outra tarefa.
+Boa tarefa cabe em **1 commit ou 1 PR pequeno**, executável em **30 minutos a 4 horas** — teto canônico declarado em `templates/id-conventions.md` (regra de `T-XX`). Acima disso, quebrar. Abaixo disso (10 min), provavelmente é um detalhe que deveria estar embutido em outra tarefa.
+
+A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tarefa. O plano registra `Complexidade` qualitativa, nunca horas.
 
 | Sinal de "está grande demais" | Resposta |
 |-------------------------------|----------|
 | Mais de 3 critérios de aceite | Quebrar em 2 tarefas |
 | `Implementa:` lista 4+ RNs | Provavelmente 2 tarefas disfarçadas |
 | Descrição precisa de "e também", "além disso" | Sintoma claro de tarefa dupla |
-| Mais de 2 horas estimadas mentalmente | Quebrar |
+| Mais de 4 horas estimadas mentalmente | Quebrar |
 | Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada |
 
 | Sinal de "está pequena demais" | Resposta |

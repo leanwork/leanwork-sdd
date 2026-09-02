@@ -8,7 +8,27 @@ Receitas de `allow` / `ask` / `deny` por ecossistema, usadas pela skill `context
 - **Precedência:** `deny` → `ask` → `allow`. A primeira regra que casar decide, independente de quão específica ela seja.
 - **Escopos se somam:** as listas de `.claude/settings.json` (projeto), `.claude/settings.local.json` (pessoal) e `~/.claude/settings.json` (usuário) são combinadas. Um `deny` em qualquer escopo não pode ser afrouxado por um `allow` em outro.
 - **`deny` não aceita exceção.** Não existe "negar tudo menos X" — para isso, use `allow` específico com `defaultMode` restritivo.
-- **Sintaxe por tool:** `Bash` usa wildcard com `:` para prefixo de comando; `Read` e `Edit` usam caminhos estilo gitignore; `WebFetch` usa `domain:`.
+- **Sintaxe por tool:** `Bash` casa o texto inteiro do comando com `*` no lugar de qualquer trecho; `Read` e `Edit` usam caminhos estilo gitignore; `WebFetch` usa `domain:`.
+
+### A fronteira de espaço nas regras de `Bash`
+
+Errar isto é a fonte número um de regra que não protege o que se pensa proteger.
+
+- `:*` no fim equivale a ` *`: `Bash(ls:*)` é a mesma regra que `Bash(ls *)`.
+- **O espaço antes do `*` faz parte da regra.** `Bash(ls *)` exige espaço depois de `ls` — casa com `ls` e `ls -la`, **não** casa com `lsof`. Já `Bash(ls*)`, sem espaço, casa com `lsof` também.
+- Pela mesma regra, `Bash(git push --force:*)` **não** casa com `git push --force-with-lease`: depois de `--force` vem `-`, não espaço.
+- O `*` pode ir em qualquer posição, não só no fim: `Bash(git push * --force)` casa com `git push origin main --force`.
+- Um `*` no fim precedido de espaço também casa o comando puro — mas só quando é o único wildcard da regra. `Bash(git push --force *)` casa com `git push --force`; `Bash(* --help *)` casa com `npm --help x` e não com `npm --help`.
+
+**Consequência prática:** uma regra de `deny` escrita como prefixo só cobre a ordem de argumentos que você escreveu. Flag no fim, forma curta e alias escapam. Ao negar algo destrutivo, cobrir as variantes explicitamente — ver o bloco de Git adiante.
+
+### Sombra de prefixo entre baldes
+
+A precedência é `deny` → `ask` → `allow` e a especificidade **não** desempata. Uma regra larga no `ask` torna inalcançável qualquer regra mais estreita do `allow` — a [doc oficial](https://code.claude.com/docs/en/permissions) é literal: *"a matching ask rule prompts even when a more specific allow rule also matches the same call"*.
+
+Logo, `Bash(npx tsc:*)` no `allow` convivendo com `Bash(npx:*)` no `ask` é código morto: o comando pergunta do mesmo jeito. Quando um comando coberto por regra larga é frequente demais para tolerar a confirmação, a saída **não** é abrir exceção no `allow` — é dar a ele um nome que a regra larga não alcance: um script no `package.json` chamado por `npm run`, um alvo de Makefile, um script em `scripts/`.
+
+**Como conferir uma receita:** para cada entrada do `allow`, procurar no `ask` e no `deny` alguma regra que case com o mesmo comando. Se houver, a entrada do `allow` é inútil e deve sair, ou a regra larga precisa ser reescrita.
 
 ## Onde cada coisa mora
 
@@ -55,8 +75,16 @@ Esta lista é o núcleo de segurança e entra em **todo** projeto, independente 
 
   // Comandos destrutivos
   "Bash(rm -rf:*)",
+  "Bash(git reset --hard:*)",
+
+  // Force push — as 6 variantes cobrem forma longa, curta,
+  // e a flag depois do remote. Ver a seção de Git.
   "Bash(git push --force:*)",
-  "Bash(git reset --hard:*)"
+  "Bash(git push -f:*)",
+  "Bash(git push * --force)",
+  "Bash(git push * --force *)",
+  "Bash(git push * -f)",
+  "Bash(git push * -f *)"
 ]
 ```
 
@@ -106,8 +134,7 @@ Esta lista é o núcleo de segurança e entra em **todo** projeto, independente 
   "Bash(npm run test:*)",
   "Bash(npm run lint:*)",
   "Bash(npm run dev:*)",
-  "Bash(npm ci:*)",
-  "Bash(npx tsc:*)"
+  "Bash(npm ci:*)"
 ],
 "ask": [
   "Bash(npm install:*)",
@@ -122,7 +149,7 @@ Esta lista é o núcleo de segurança e entra em **todo** projeto, independente 
 
 **Adaptar ao gerenciador detectado pelo lockfile:** `pnpm-lock.yaml` → trocar `npm` por `pnpm`; `yarn.lock` → `yarn`; `bun.lockb` → `bun`. Usar o gerenciador errado gera regra que nunca casa.
 
-**Sobre `npx` no `ask`:** `npx` executa pacote arbitrário da internet. Deveria sempre passar por confirmação, com exceção de binários específicos já conhecidos do projeto (que podem ir no `allow` nomeados).
+**Sobre `npx` no `ask`:** `npx` executa pacote arbitrário baixado na hora — sempre passa por confirmação. Não adiantar exceções nomeadas (`npx tsc`, `npx prisma`) no `allow`: o `ask` mais largo vence pela precedência e a regra específica vira código morto. Para um `npx` frequente, declarar o comando como script no `package.json` e liberar `Bash(npm run <script>:*)`.
 
 ## Python
 
@@ -267,6 +294,11 @@ Adaptar ao gerenciador detectado: `poetry.lock` → poetry; `uv.lock` → uv; `P
 ],
 "deny": [
   "Bash(git push --force:*)",
+  "Bash(git push -f:*)",
+  "Bash(git push * --force)",
+  "Bash(git push * --force *)",
+  "Bash(git push * -f)",
+  "Bash(git push * -f *)",
   "Bash(git reset --hard:*)",
   "Bash(git clean -fdx:*)"
 ]
@@ -274,7 +306,19 @@ Adaptar ao gerenciador detectado: `poetry.lock` → poetry; `uv.lock` → uv; `P
 
 **Sobre `git commit` no `ask`:** decisão de estilo. Time que usa o agente para commits frequentes pode mover para `allow` — o commit é local e reversível. Perguntar ao usuário antes de gravar.
 
-**Sobre `git push --force` no `deny`:** proteção contra reescrita de histórico compartilhado. Se o time usa `--force-with-lease` legitimamente, adicionar `Bash(git push --force-with-lease:*)` ao `ask` em vez de afrouxar o `deny`.
+**Por que seis regras para negar force push.** Proteção contra reescrita de histórico compartilhado. Uma regra só não basta, por causa da fronteira de espaço:
+
+| Comando | Regra que pega |
+|---|---|
+| `git push --force`, `git push --force origin main` | `Bash(git push --force:*)` |
+| `git push -f origin main` | `Bash(git push -f:*)` |
+| `git push origin main --force` | `Bash(git push * --force)` |
+| `git push origin --force main` | `Bash(git push * --force *)` |
+| `git push origin main -f` | `Bash(git push * -f)` |
+
+**`--force-with-lease` continua liberado, e isso é intencional.** `Bash(git push --force:*)` exige espaço depois de `--force`, então não casa com `--force-with-lease` — o comando cai no `ask` pela regra `Bash(git push:*)`. Não é preciso adicionar nada ao `ask` para habilitá-lo. Time que queira negar também a forma com lease acrescenta `Bash(git push --force-with-lease:*)` ao `deny`.
+
+**Buraco que permanece:** `git push origin +main` faz force push via refspec e não casa com nenhuma das seis. Negar `Bash(git push * +*)` cobre o caso, ao custo de falsos positivos em refspecs legítimos com `+`. Decisão do time; o padrão da skill é não incluir.
 
 ---
 
@@ -283,21 +327,33 @@ Adaptar ao gerenciador detectado: `poetry.lock` → poetry; `uv.lock` → uv; `P
 ```jsonc
 "allow": [
   "Bash(docker compose up:*)",
-  "Bash(docker compose down:*)",
+  "Bash(docker compose stop:*)",
+  "Bash(docker compose start:*)",
   "Bash(docker compose logs:*)",
   "Bash(docker ps:*)"
 ],
 "ask": [
+  "Bash(docker compose down:*)",
   "Bash(docker build:*)",
   "Bash(docker push:*)"
 ],
 "deny": [
   "Bash(docker system prune:*)",
+  "Bash(docker volume rm:*)",
+  "Bash(docker volume prune:*)",
   "Bash(kubectl delete:*)",
   "Bash(terraform apply:*)",
   "Bash(terraform destroy:*)"
 ]
 ```
+
+**Sobre `docker compose down` no `ask`:** `down -v` remove os volumes nomeados declarados na seção `volumes` **e** os anônimos ligados aos containers — banco de desenvolvimento, seed, fixtures. Sem a flag, `down` só remove containers e redes, que o `up` recria: o risco está inteiramente no `-v`. `stop` cobre o caso cotidiano de parar o ambiente sem tocar em nada persistente, e `start` traz de volta.
+
+**Por que não negar apenas o `-v`.** Seria a regra mais precisa, e não é escrevível com segurança: o `deny` não aceita exceção, e a flag aparece em qualquer posição — `down --remove-orphans -v`, `-f compose.yml down -v`, `--volumes` por extenso. Cobrir as variantes exigiria uma dezena de regras de prefixo, e a primeira que faltasse seria a que passa. Estreitar o `allow` resolve em uma linha. Ver "Sombra de prefixo entre baldes".
+
+**Sobre `docker volume rm` e `docker volume prune` no `deny`:** rota mais curta para a mesma perda que o `down -v`. `prune` sem flag remove os volumes anônimos não usados; com `-a`, também os nomeados. `docker system prune` já cobre a forma `--volumes` pelo casamento de prefixo.
+
+**Buraco que permanece:** `docker compose up -V` (`--renew-anon-volumes`) descarta o conteúdo dos volumes anônimos ao recriar os containers. Volume nomeado não é afetado — por isso o `up` continua no `allow`. Projeto que guarde estado em volume anônimo deve mover `up` para o `ask`.
 
 **Sobre Terraform no `deny`:** `apply` mexe em infraestrutura real e custa dinheiro. Mesmo `ask` é arriscado — a confirmação vira reflexo. Time que faz IaC com agente deveria mover para `ask` conscientemente, nunca deixar em `allow`.
 

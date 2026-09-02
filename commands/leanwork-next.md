@@ -1,5 +1,6 @@
 ---
 description: Inspeciona artefatos existentes (architecture/PRD/protótipo/plan/review) e sugere a próxima fase do pipeline SDD.
+allowed-tools: Read, Glob, Grep
 ---
 
 # Próxima fase do pipeline SDD
@@ -32,14 +33,14 @@ Você está no meio de um pipeline SDD Leanwork. Sua tarefa é descobrir em que 
    | Arquitetura (ADRs 1-5)  | Completa  | — |
    | PRD-001 Flash Sales     | Aprovado  | Gerar plano |
    | PLAN-001 Flash Sales    | 5/12 ✅   | Continuar execução (T-06) |
-   | Reviews                  | 3 OK, 1 bloqueado | Resolver R-02 de T-04 |
+   | Reviews                  | 3 OK, 1 bloqueado | Resolver R-02 (REVIEW-T-04-2026-06-15) |
    | CLAUDE.md (raiz)         | Comandos com TODO | Rodar `/leanwork-context raiz` |
    ```
 
 4. **Sugira UMA próxima ação concreta**, em ordem de prioridade. Não listar opções:
 
    **Prioridade 1 — Resolver bloqueios:**
-   - Se há review com recomendação final `Bloqueado` e sem round subsequente: "Há review bloqueante em T-XX (findings R-01, R-03). Quer revisar os pontos para correção?"
+   - Se há review com recomendação final `Bloqueado` e sem round subsequente: "Há review bloqueante em T-XX — findings R-01, R-03 (REVIEW-T-04-2026-06-15). Quer revisar os pontos para correção?" Citar `R-XX` sempre com o nome do relatório: a numeração recomeça a cada arquivo, então o número sozinho não identifica o finding
    - Se há tarefa com `Status: Bloqueado` no plano: identificar a dependência e sugerir como destravar
 
    **Prioridade 2 — Validar entregas:**

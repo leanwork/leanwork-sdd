@@ -4,9 +4,11 @@ Template do arquivo de contexto que fica dentro de uma pasta de módulo. Alvo: *
 
 **Regra fundamental:** módulo **nunca** repete stack nem comandos globais. Duplicação vira divergência silenciosa em poucas semanas.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # Módulo: [Nome do módulo]
 
 <!-- leanwork-context:start -->
@@ -66,7 +68,7 @@ segue exatamente o padrão global, omitir esta seção inteira.]
 <!-- leanwork-context:end -->
 
 <!-- Conteúdo abaixo desta linha é mantido manualmente e não é alterado pela skill context-leanwork. -->
-```
+````
 
 ---
 

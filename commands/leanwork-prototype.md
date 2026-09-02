@@ -1,6 +1,7 @@
 ---
 description: Especifica a interface a partir de protótipo existente ou gera um novo. Produz SPEC-UI com telas (UI-XX) mapeadas contra o PRD.
 argument-hint: [caminho do PRD e/ou do protótipo — opcional]
+allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 ---
 
 # Especificação de Interface

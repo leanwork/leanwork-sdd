@@ -1,6 +1,7 @@
 ---
 name: reviewer-leanwork
 description: Code review estruturado de implementação contra plano + PRD + arquitetura, no padrão Leanwork. Stack-agnóstico — descobre a stack do projeto via proposta arquitetural, CLAUDE.md ou inspeção do repositório, e aplica padrões específicos do projeto. Use sempre que o usuário pedir "revisar PR", "code review", "validar implementação", "review da tarefa T-XX", "verificar se o código atende a tarefa", "fechar T-XX" ou variações. Também use quando o usuário trouxer um diff/PR e indicar qual tarefa do plano ele entrega, ou quando pedir auditoria pós-execução de uma feature. A skill avalia em 5 eixos (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código calibrada pela stack), mais um sexto eixo de conformidade de interface quando o projeto tem SPEC-UI, produz documento com itens R-XX categorizados em Bloqueante/Importante/Sugestão, e fecha o último elo da matriz de rastreabilidade SDD (ADR → RN → CA → UI → T → R). NÃO faz code review de estilo (formatação automática), NÃO faz threat modeling completo (só segurança básica), NÃO inventa críticas quando faltar contexto — sinaliza lacuna.
+allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**)
 ---
 
 # Reviewer Leanwork — Code Review Estruturado contra o Pipeline SDD
@@ -181,12 +182,12 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 
 ## Convenções de IDs
 
-`R-XX` segue as mesmas regras dos demais IDs do pipeline (ver `${CLAUDE_PLUGIN_ROOT}/templates/id-conventions.md`):
+`R-XX` é o único ID do pipeline cujo namespace é o arquivo, e não o projeto — os demais valem sob a regra de não reúso, `R-XX` é a exceção a ela (ver `${CLAUDE_PLUGIN_ROOT}/templates/id-conventions.md`):
 
-- Numeração sequencial global ao relatório (R-01, R-02, ..., R-NN)
+- Numeração sequencial dentro do relatório, **recomeçando em `R-01` a cada relatório** — inclusive nos rounds seguintes da mesma tarefa
 - Largura mínima de 2 dígitos
-- Sem reúso entre revisões (se segundo round abre R-04, o R-04 é novo, não retomada)
-- Em segundo round, criar novo relatório (`REVIEW-T-04-2026-07-02-round2.md`) — não editar o anterior
+- Em segundo round, criar novo relatório (`REVIEW-T-04-2026-07-02-round2.md`) — não editar o anterior. O `R-02` do round 2 é finding novo, sem relação com o `R-02` do round 1: a continuidade entre rounds vive na seção "Round anterior", nunca na numeração
+- Ao citar um finding fora do relatório — no plano, na matriz, na conversa —, qualificar com o arquivo: `R-01 (REVIEW-T-04-2026-06-15)`
 
 ## O que NÃO incluir
 
@@ -207,10 +208,11 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 - `references/review-template.md` — template completo do relatório de review
 - `references/review-checklist.md` — perguntas-guia detalhadas por eixo
 - `references/stack-detection.md` — cascata de descoberta da stack com exemplos
+- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `R-XX` entra na matriz de rastreabilidade e devolve a tarefa para `Bloqueado`
 
 ## Padrões de comportamento
 
 - Não trate código gerado por IA com mais leniência ou rigor que código humano. Critério é o mesmo.
 - Se identificar inconsistência entre plano e código que pode ser decisão consciente (refinamento durante implementação), levantar como `Importante` pedindo justificativa, não como `Bloqueante`.
 - Se o review revelar falha no próprio plano (ex.: T-XX especificou `Implementa: RN-05` mas o código mostra que RN-05 precisa de mais uma tarefa), apontar isso explicitamente no relatório — esse é um sinal de que o plano precisa ser atualizado.
-- Em segundo round de review, comparar com o relatório anterior e citar quais R-XX foram resolvidos, quais persistem.
+- Em segundo round de review, comparar com o relatório anterior e citar quais R-XX foram resolvidos, quais persistem. Na seção "Round anterior", nomear o relatório comparado e marcar cada item como `R-XX (round anterior)` — os números dos dois rounds se sobrepõem.

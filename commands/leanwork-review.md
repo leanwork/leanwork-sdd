@@ -1,6 +1,7 @@
 ---
 description: Revisa implementação contra plano + PRD + arquitetura. Gera relatório REVIEW-{T-XX} com findings R-XX categorizados.
 argument-hint: [T-XX e/ou path do diff/PR, opcional]
+allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**)
 ---
 
 # Review de Implementação SDD

@@ -1,6 +1,7 @@
 ---
 name: prototype-leanwork
 description: Especificação de interface a partir de protótipo — ingestão de protótipo existente (HTML exportado, imagens, Figma via MCP, Lovable/v0 exportado) ou geração de protótipo navegável quando não houver. Produz o documento SPEC-UI com inventário de telas (UI-XX), estados por tela e mapeamento cruzado com regras de negócio (RN-XX) e cenários Gherkin (CA-XX) do PRD. Use quando o usuário pedir "especificar as telas", "documentar o protótipo", "criar protótipo", "mapear telas contra o PRD", "gerar SPEC-UI", "indexar o Figma", ou quando aceitar sugestão de especificar interface antes do plano de execução. Roda entre o PRD e o plano de execução, e é opcional — projetos sem interface (API, worker, CLI, biblioteca) pulam esta fase inteiramente. NÃO faz design visual próprio — delega o craft de tipografia, paleta e composição para skills de frontend disponíveis no ambiente. NÃO inventa telas ou estados não observados no protótipo — declara a lacuna e pergunta.
+allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 ---
 
 # Prototype Leanwork — Especificação de Interface
@@ -164,7 +165,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 ## Quando sugerir esta skill
 
-Nunca se auto-invoca. As demais partes do pipeline sugerem quando:
+Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem:
 
 | Momento | Quem sugere |
 |---|---|
@@ -174,9 +175,12 @@ Nunca se auto-invoca. As demais partes do pipeline sugerem quando:
 
 A sugestão é convite. Se o usuário pular, o pipeline segue sem fase de interface e o plano simplesmente não terá campo `Telas:`.
 
+Pedido direto ("especificar as telas", "documentar o protótipo") carrega a skill normalmente, e é para isso que a `description` lista as frases-gatilho. O que a skill não faz é rodar como efeito colateral de outra tarefa.
+
 ## Recursos auxiliares
 
 - `references/spec-ui-template.md` — template do documento SPEC-UI
 - `references/ingestion-guide.md` — extração por formato (HTML, imagens, Figma MCP, Lovable/v0)
 - `references/generation-guide.md` — arquétipos de interface, condução da entrevista e delegação do craft visual
 - `references/screen-states.md` — catálogo de estados de tela e quando cada um é obrigatório
+- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `CA-XX` do PRD vira estado `UI-XX.sufixo` e como o plano e o review consomem esse estado

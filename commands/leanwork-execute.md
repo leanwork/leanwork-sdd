@@ -1,6 +1,7 @@
 ---
 description: Executa uma tarefa do plano SDD carregando o contexto declarado (RN/CA/ADR/UI), implementando só o escopo da tarefa e atualizando o Status ao final.
 argument-hint: [T-XX — opcional; se omitido, pega a próxima tarefa elegível]
+allowed-tools: Read, Glob, Grep
 ---
 
 # Executar tarefa do plano SDD

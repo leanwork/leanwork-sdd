@@ -2,9 +2,11 @@
 
 Template completo a ser preenchido. Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # Plano de Execução: [Título da feature/demanda]
 
 **PRD de referência:** [link ou caminho para o arquivo do PRD]
@@ -177,4 +179,4 @@ A coluna Status usa o mesmo vocabulário do campo `**Status:**` da tarefa e prec
 | T-01   | Concluído | 2026-05-16 | `abc1234` | — |
 | T-02   | Em andamento | —       | —      | Aguardando review |
 | T-03   | Bloqueado | —          | —      | Depende de decisão sobre RN-05 (R-02 de REVIEW-T-03-2026-05-18) |
-```
+````

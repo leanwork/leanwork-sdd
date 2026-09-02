@@ -127,7 +127,7 @@ Cada sistema tem o seu pipeline SDD independente. IDs são locais a cada sistema
 
 ## O que **não** colocar em `docs/`
 
-- Especificações de UI/UX (fluxos de design, mockups Figma) → pasta própria (`design/` ou link externo)
+- Mockups e arquivos-fonte de design (Figma, Sketch, exports de imagem) → pasta própria (`design/`) ou link externo. A **SPEC-UI é exceção**: é especificação rastreável, não artefato de design, e fica em `docs/prototype/` junto com os demais artefatos do pipeline
 - Documentação de API gerada (Swagger, etc.) → output de build, não versionar
 - Notas de reunião e brainstorm → não viram parte do pipeline; ficam em outro local (Notion, Confluence)
 - READMEs de bibliotecas internas → ficam junto do código, não em `docs/`

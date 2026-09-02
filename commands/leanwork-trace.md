@@ -1,6 +1,7 @@
 ---
 description: Gera a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R a partir dos artefatos do pipeline SDD.
 argument-hint: [arquivo do PRD, opcional — se omitido, tenta descobrir]
+allowed-tools: Read, Glob, Grep, Edit(docs/traceability/**)
 ---
 
 # Matriz de rastreabilidade SDD
@@ -56,7 +57,7 @@ Se não houver SPEC-UI, **não tratar como lacuna** — projetos sem interface l
 Para os reviews (em `docs/reviews/`):
 
 - **Relatórios existentes**: arquivos `REVIEW-T-XX-*.md`
-- **Findings**: `R-01`, `R-02`, ... com severidade (Bloqueante / Importante / Sugestão)
+- **Findings**: `R-01`, `R-02`, ... com severidade (Bloqueante / Importante / Sugestão). A numeração **recomeça a cada relatório**, inclusive entre rounds da mesma tarefa — guardar o nome do arquivo junto com o número, porque `R-01` sozinho não identifica o finding nas tabelas abaixo
 - **Recomendação final**: Aprovado / Aprovado com ressalvas / Bloqueado
 - **Tarefas associadas**: cada review carrega `T-XX` no nome
 
@@ -68,15 +69,15 @@ Apresente em três tabelas + um diagrama Mermaid:
 
 | RN | Descrição (truncada) | Validado por (CA) | Implementado em (T) | Decisão base (ADR) | Status do review |
 |----|---------------------|-------------------|---------------------|---------------------|------------------|
-| RN-01 | Estoque atômico... | CA-01, CA-03 | T-04, T-07 | ADR-002 | T-04 ✅ Aprovado, T-07 ⚠️ R-02 pendente |
-| RN-02 | Limite de compra... | CA-02 | T-05 | — | T-05 ⛔ Bloqueado (R-01) |
+| RN-01 | Estoque atômico... | CA-01, CA-03 | T-04, T-07 | ADR-002 | T-04 ✅ Aprovado, T-07 ⚠️ R-02 (REVIEW-T-07-2026-06-20) pendente |
+| RN-02 | Limite de compra... | CA-02 | T-05 | — | T-05 ⛔ Bloqueado — R-01 (REVIEW-T-05-2026-06-18) |
 
 #### Tabela 2: Cobertura reversa (do critério de aceite ao review)
 
 | CA | Cenário | Valida (RN) | Acontece em (UI) | Implementado em (T) | Tem teste? | Review |
 |----|---------|-------------|------------------|---------------------|------------|--------|
 | CA-01 | Compra com sucesso | RN-01 | UI-02.default | T-04 | sim (integration) | ✅ |
-| CA-02 | Limite excedido | RN-02 | UI-02.limite | T-05 | sim (unit) | ⛔ R-03 |
+| CA-02 | Limite excedido | RN-02 | UI-02.limiteExcedido | T-05 | sim (unit) | ⛔ R-03 (REVIEW-T-05-2026-06-18) |
 
 > A coluna **Acontece em (UI)** só aparece quando o projeto tem SPEC-UI. Omitir inteiramente caso contrário.
 
@@ -87,8 +88,8 @@ A coluna **Status no plano** reproduz literalmente o valor do campo `**Status:**
 | Tarefa | Status no plano | Review existe? | Severidade máxima | Findings abertos |
 |--------|-----------------|----------------|-------------------|------------------|
 | T-01 | Concluído | Sim | — | 0 |
-| T-04 | Concluído | Sim | Sugestão | R-04 |
-| T-05 | Bloqueado | Sim | Bloqueante | R-01, R-03 |
+| T-04 | Concluído | Sim | Sugestão | R-04 (REVIEW-T-04-2026-06-15) |
+| T-05 | Bloqueado | Sim | Bloqueante | R-01, R-03 (REVIEW-T-05-2026-06-18) |
 | T-07 | Em andamento | Não | — | — |
 
 #### Diagrama de rastreabilidade (Mermaid)

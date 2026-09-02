@@ -1,6 +1,6 @@
 # Convenções de IDs — Pipeline SDD Leanwork
 
-Este documento é a referência única para os IDs usados pelo pipeline. Todas as três skills (`architect-leanwork`, `prd-leanwork`, `planner-leanwork`) e o comando `/leanwork-trace` dependem deste padrão.
+Este documento é a referência única para os IDs usados pelo pipeline. Todas as seis skills (`architect-leanwork`, `prd-leanwork`, `prototype-leanwork`, `planner-leanwork`, `reviewer-leanwork`, `context-leanwork`) e os comandos que leem artefatos (`/leanwork-trace`, `/leanwork-next`, `/leanwork-execute`, `/leanwork-review`) dependem deste padrão.
 
 ## Os seis tipos de ID
 
@@ -15,12 +15,14 @@ Este documento é a referência única para os IDs usados pelo pipeline. Todas a
 
 ## Regras de numeração
 
-### Comuns aos quatro
+### Comuns aos seis
 
 - **Numeração sequencial global** ao documento. `T-01`, `T-02`, ..., `T-NN` — **não** reiniciar a numeração por fase ou seção.
 - **Largura mínima de 2 dígitos** com zero à esquerda (`RN-01`, `RN-02`, ..., `RN-10`, `RN-11`). Facilita ordenação alfabética e busca em editor.
-- **Sem reúso**: uma vez que um ID foi atribuído, ele nunca é reciclado, mesmo que o item original seja revogado. Use marcação de revogação (ver abaixo).
+- **Sem reúso**: uma vez que um ID foi atribuído, ele nunca é reciclado, mesmo que o item original seja revogado. Use marcação de revogação (ver abaixo). **Exceção: `R-XX`** — ver a regra específica adiante.
 - **IDs persistem entre versões do documento**. Renumeração quebra o ciclo de rastreabilidade — se você precisar reorganizar, adicione novos IDs no final em vez de renumerar os existentes.
+
+O namespace de um ID é o documento onde ele nasce. Para cinco dos seis tipos isso equivale ao projeto, porque existe um documento de cada — uma proposta arquitetural, um PRD, uma SPEC-UI, um plano. Relatórios de review são muitos: um por tarefa, mais um por round. Por isso `R-XX` é o único ID que se repete dentro do mesmo projeto e o único que precisa ser qualificado ao ser citado.
 
 ### Específicas
 
@@ -30,11 +32,15 @@ Este documento é a referência única para os IDs usados pelo pipeline. Todas a
 
 **CA-XX**: aparece dentro do bloco Gherkin como `Cenário [CA-01]: nome do cenário`. Os colchetes são parte da sintaxe — não omitir. Numeração é global ao PRD, não por funcionalidade.
 
-**T-XX**: granularidade calibrada (1 commit a meio dia de trabalho). Tarefa que precisa de mais de 3 critérios de aceite provavelmente é grande demais.
+**T-XX**: granularidade calibrada em **30 minutos a 4 horas** de execução — 1 commit ou 1 PR pequeno. Acima de 4 horas, quebrar; abaixo de ~10 minutos, embutir na tarefa vizinha. Tarefa que precisa de mais de 3 critérios de aceite provavelmente é grande demais.
+
+**Este é o teto canônico do pipeline.** `planner-leanwork/SKILL.md` e `planner-leanwork/references/task-examples.md` calibram por ele; nenhum outro número de tamanho de tarefa prevalece sobre este. A faixa é heurística mental para dimensionar a quebra — **não é estimativa e nunca vai escrita no plano**, que registra `Complexidade` qualitativa (`Baixa` / `Média` / `Alta`) e não horas.
 
 **UI-XX**: numeração sequencial global ao documento SPEC-UI. **Estados usam sufixo com ponto** (`UI-02.erro`, `UI-02.vazio`, `UI-02.carregando`), permitindo que o plano declare `Telas: UI-02 (default, erro)` e que o review verifique estado a estado. Tela removida mantém o ID marcado como removido — não reciclar.
 
 **R-XX**: numeração sequencial por relatório (cada `REVIEW-T-XX-*.md` começa do R-01). **Não** numeração global ao projeto. Round subsequente de review da mesma tarefa começa novo relatório com nova numeração; comparar com round anterior pela referência cruzada explícita na seção "Round anterior" do relatório, não pelos IDs.
+
+**Fora do relatório de origem, citar sempre qualificado**: `R-01 (REVIEW-T-04-2026-06-15)`. Vale para o plano, para a matriz de rastreabilidade e para a conversa — "resolvi o R-01" não identifica nada. Qualificar pela tarefa não basta: `R-01 de T-04` continua ambíguo assim que a T-04 tem dois rounds. Quando vários findings do mesmo relatório aparecem juntos, uma qualificação para o grupo resolve: `R-01, R-03 (REVIEW-T-04-2026-06-15)`.
 
 ## Vocabulário de status da tarefa
 

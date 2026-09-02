@@ -1,6 +1,7 @@
 ---
 name: context-leanwork
 description: Geração e atualização do contexto de projeto para agentes de IA, no padrão Leanwork — arquivos CLAUDE.md (raiz e por módulo) e permissões em .claude/settings.json. Use quando o usuário pedir explicitamente para "gerar CLAUDE.md", "criar contexto do projeto", "atualizar CLAUDE.md", "configurar permissões do Claude Code", "gerar settings.json", "documentar convenções do projeto para o agente", "criar CLAUDE.md do módulo X" ou variações diretas. Também use quando o usuário aceitar uma sugestão de rodar a skill vinda de outra skill do pipeline SDD. A skill detecta stack e comandos reais inspecionando o repositório, lê os artefatos do pipeline (proposta arquitetural, ADRs, PRDs, planos) para extrair convenções e restrições, e produz CLAUDE.md com seções Resumo, Stack, Comandos, Convenções, Restrições e índice de documentação, além de permissões allow/ask/deny calibradas pela stack detectada. NUNCA sobrescreve conteúdo escrito por humanos — faz merge conservador em blocos delimitados e mostra diff antes de gravar. CLAUDE.md de módulo é opt-in, nunca gerado em massa sem escolha do usuário. NÃO gera CLAUDE.md automaticamente durante outras tarefas — precisa ser invocada explicitamente.
+allowed-tools: Read, Glob, Grep
 ---
 
 # Context Leanwork — Geração de CLAUDE.md para Agentes de IA
@@ -9,7 +10,7 @@ Esta skill produz e mantém os arquivos `CLAUDE.md` que dão contexto de projeto
 
 ## Princípios
 
-- **Nunca automática.** Só roda quando invocada explicitamente pelo usuário ou quando ele aceita uma sugestão. Outras skills do pipeline sugerem; nenhuma gera por conta própria.
+- **Nunca automática.** Só roda por pedido direto do usuário ou quando ele aceita uma sugestão — nunca como efeito colateral de outra tarefa. Outras skills do pipeline sugerem; nenhuma gera por conta própria.
 - **Nunca destrutiva.** Conteúdo escrito por humano é preservado. Merge acontece apenas dentro de blocos delimitados como auto-gerados. Sempre mostra diff antes de gravar.
 - **Baseada em evidência do repositório.** Comandos de build/test vêm de inspeção real (`package.json`, `.csproj`, `Makefile`), não de suposição sobre a stack.
 - **Sem duplicação entre raiz e módulo.** Módulo nunca repete stack nem comandos globais. Duplicação vira divergência em poucas semanas.
@@ -206,7 +207,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 
 ## Quando sugerir que o usuário rode esta skill
 
-Esta skill nunca se auto-invoca, mas as outras skills e comandos do pipeline devem sugeri-la nestes momentos:
+Esta skill nunca roda como efeito colateral de outra tarefa — exige pedido direto ou aceite de sugestão. As outras skills e comandos do pipeline devem sugeri-la nestes momentos:
 
 | Momento | Quem sugere |
 |---------|-------------|

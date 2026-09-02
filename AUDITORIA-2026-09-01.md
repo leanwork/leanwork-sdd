@@ -13,7 +13,7 @@
 
 ## Estado das correções — 2026-09-01, v1.6.0
 
-**Os 4 Bloqueantes estão resolvidos.** Os 10 Importantes e as 3 Sugestões permanecem em aberto.
+**Os 4 Bloqueantes estão resolvidos.** Dos 10 Importantes, o I1 foi tratado na v1.6.1 — e no processo **a premissa do finding foi refutada** —, o I2 foi corrigido na v1.6.2, o I3 na v1.6.3, o I4 na v1.6.4, o I5 na v1.6.5, o I6 na v1.6.6, o I7 na v1.6.7, o I8 na v1.6.8, o I9 na v1.6.9 e o I10 na v1.6.10; **os 10 Importantes estão fechados** — 9 corrigidos e 1 refutado. Restam as 3 Sugestões. A **pergunta 3 ao autor** foi respondida no I5.
 
 | Finding | Estado | Divergência em relação ao proposto |
 |---|---|---|
@@ -23,7 +23,20 @@
 | B4 — `[execução]` sem dono | Resolvido | `/leanwork-execute` criado. O item (b) da correção proposta partia de premissa factualmente errada — ver a nota na seção. |
 | **B0 — frontmatter YAML quebrado** | Resolvido | **Não detectado por esta auditoria.** `prototype-leanwork/SKILL.md:3` continha `: ` em escalar YAML; a skill carregava sem `name` nem `description` desde a v1.4. Encontrado por `claude plugin validate`. |
 
+| **I1 — `deny` bloqueia `--force-with-lease`** | **Refutado** (v1.6.1) | **A premissa é falsa.** `:*` equivale a ` *` e o espaço faz parte da regra, então `--force` não casa com `--force-with-lease`. O defeito real era o oposto: `deny` estreito demais, sem cobrir `-f` nem flag após o remote. Ver a seção. |
+| **I2 — `npx tsc` é código morto** | Resolvido (v1.6.2) | Procede. Além de remover a regra inalcançável, a nota que já existia na receita de Node teve de ser **reescrita**: ela prescrevia o padrão que produziu o defeito. Auditadas as outras receitas pelo mesmo critério — nenhuma outra sombra de prefixo. |
+| **I3 — `docker compose down` destrói volumes** | Resolvido (v1.6.3) | Procede. Adotada a correção proposta, mais `docker volume rm` e `docker volume prune` no `deny` — rota mais curta para a mesma perda, que o finding não cobriu. Documentado por que negar só o `-v` não é escrevível, e o buraco residual do `up -V`. |
+| **I4 — nenhum `allowed-tools`** | Resolvido (v1.6.4) | Procede, mas a sintaxe proposta não funcionaria: uma regra de caminho para `Write` é aceita e **nunca consultada**. Usado `Edit(<pasta>/**)`, escopado por artefato, nos 13 arquivos — não 12. `Bash` não foi pré-autorizado. Registradas duas ressalvas que o finding não levanta. |
+| **I5 — `templates/` travado na v1.0** | Resolvido (v1.6.5) | Procede, mas o impacto (1) estava invertido: **nenhum agente lia `pipeline-example.md`** — só o README apontava para ele. Respondida a pergunta 3 (é calibração para agente): as 5 skills que produzem artefato passam a apontar para ele. Fragmentos SPEC-UI e review criados, mais `T-06` para a aresta `UI → T` existir. Cercas externas para 4 crases. Unificado `.limite` → `.limiteExcedido` em 5 pontos — drift que a auditoria não pegou. |
+| **I6 — "nunca se auto-invoca" não implementado** | Resolvido (v1.6.6) | Diagnóstico procede, **correção proposta rejeitada**. `disable-model-invocation: true` bloquearia os próprios comandos do plugin: `/leanwork-prototype` e `/leanwork-context` mandam o modelo invocar a skill, e o campo *"removes the skill from Claude's context entirely"*. Vale a segunda leitura do finding: o defeito é de redação. Corrigidas as frases nas duas skills; frontmatter intacto. A "pergunta na seção final" que o finding invoca **não existe** nas cinco Perguntas ao autor. |
+| **I7 — granularidade de tarefa contraditória** | Resolvido (v1.6.7) | Procede, e é maior: **seis redações em quatro arquivos**, não três em dois. O finding manda criar um lugar canônico em `id-conventions.md:33` sem ver que **`:33` já era uma das definições em conflito**. Teto único `30min-4h` — escolhido não por ser o mais permissivo, mas porque `REFERENCES.md` já o publica como limiar autoral do método. Resolvida de passagem a tensão com "horas mentem" (`SKILL.md:88`) e a colisão de vocabulário do PBI no template de PRD. |
+| **I8 — template pede custo e prazo** | Resolvido (v1.6.8) | Procede, mas o conflito é **interno ao template**: `:209` já mandava cronograma e estimativa para o sprint, e o finding não leu até lá — a decisão que ele apresenta como simétrica custava 5 reescritas de um lado contra 1 do outro. Redação proposta **rejeitada**: "complexidade relativa baixa/média/alta" colide com o `Complexidade` do planner, que é risco e não tamanho. Escolhida a posição de `README:332`; o sumário passa a ecoar restrição declarada em vez de gerar número, com guarda nova no checklist. |
+| **I9 — `id-conventions.md` se autocontradiz** | Resolvido (v1.6.9) | Procede, e a correção proposta foi adotada — mas metade dela **já existia** em `pipeline-example.md` e `leanwork-review.md`: faltava só no arquivo que se declara referência única. O defeito com consequência estava fora do arquivo acusado: `reviewer/SKILL.md:185` afirmava que `R-XX` *"segue as mesmas regras dos demais IDs"* e `:189` exemplificava numeração **continuando** entre rounds, contra três arquivos que mandam reiniciar. Reenquadrado: o tema não é reúso, é escopo de namespace — review é o único artefato que existe muitas vezes por projeto. Sete citações cruas de `R-XX` nos comandos passam a trazer o relatório. |
+| **I10 — fences aninhadas nos templates** | Resolvido (v1.6.10) | Procede, e é o único finding cuja mecânica proposta foi adotada intacta — premissa conferida no spec do CommonMark, não nos arquivos auditados. Duas divergências: são **oito** templates, não sete (`adr-template.md` usa o mesmo envelope e ficou de fora por não ter cerca interna *hoje* — lista pelo sintoma, não pelo padrão), e a cerca resolve **onde o modelo termina**, não que o envelope não seja copiado para o artefato: os oito ganharam uma linha declarando que as quatro crases são andaime e as três crases internas são conteúdo. Varredura das cercas do repositório inteiro: nenhum outro arquivo tem o defeito. |
+
 > **Nota de método.** A auditoria foi feita por leitura, sem executar `claude plugin validate`. Isso explica o B0: nenhuma leitura humana ou por LLM do arquivo pega um `: ` dentro de escalar YAML, mas o validador pega em um segundo. Para auditorias futuras deste repositório, rodar o validador antes de ler.
+>
+> **Nota de método 2.** O I1 expõe uma falha diferente: a auditoria citou o arquivo auditado como evidência da regra que usava para condená-lo. Quando o alvo é a própria documentação, ela não pode ser a fonte de verdade sobre o comportamento que descreve. Os findings I2 e I3 dependem da mesma mecânica de casamento e **foram reverificados contra a doc oficial: ambos procedem** — `Bash(npx:*)` casa com `npx tsc ...` (há espaço após `npx`) e `Bash(docker compose down:*)` casa com `docker compose down -v`.
 
 ---
 
@@ -35,17 +48,17 @@
   - [B2 — Vocabulário de status divergente](#bloqueante-vocabulário-de-status-divergente--resolvido-na-v160)
   - [B3 — `adr-leanwork` é skill fantasma](#bloqueante-adr-leanwork--skill-fantasma--resolvido-na-v160)
   - [B4 — `[execução]` sem dono](#bloqueante-o-passo-execução-não-tem-dono--resolvido-na-v160)
-- [Importantes](#importantes)
-  - [I1 — `deny` de `--force` bloqueia `--force-with-lease`](#importante-o-deny-de-git-push---force-também-bloqueia---force-with-lease-e-o-catálogo-recomenda-exatamente-o-que-não-funciona)
-  - [I2 — `npx tsc` no allow é código morto](#importante-bashnpx-tsc-no-allow-é-código-morto-sob-bashnpx-no-ask)
-  - [I3 — `docker compose down` destrói volumes](#importante-docker-compose-down-no-allow-autoriza-destruição-de-volumes)
-  - [I4 — Nenhum `allowed-tools`](#importante-nenhuma-skill-ou-comando-declara-allowed-tools)
-  - [I5 — `templates/` travado na v1.0](#importante-templates-está-travado-na-v10--a-documentação-mais-antiga-é-a-mais-errada)
-  - [I6 — "Nunca se auto-invoca" não é implementado](#importante-nunca-se-auto-invoca-é-declarado-no-corpo-enquanto-o-frontmatter-otimiza-a-auto-invocação--e-existe-campo-oficial-para-o-efeito-desejado)
-  - [I7 — Granularidade de tarefa com três definições](#importante-granularidade-de-tarefa-tem-três-definições-incompatíveis)
-  - [I8 — Template pede custo e prazo](#importante-o-template-de-arquitetura-pede-custo-e-prazo-que-a-skill-promete-não-entregar)
-  - [I9 — `id-conventions.md` se autocontradiz](#importante-id-conventionsmd-se-autocontradiz-sobre-reúso-de-id)
-  - [I10 — Fences aninhadas nos templates](#importante-fences-aninhadas-nos-templates--o-agente-copia-a-cerca-de-fechamento-errada)
+- [Importantes](#importantes) — **todos fechados: 9 resolvidos, 1 refutado**
+  - [I1 — `deny` de `--force` bloqueia `--force-with-lease`](#importante-o-deny-de-git-push---force-também-bloqueia---force-with-lease--refutado-na-v161) — **refutado na v1.6.1**
+  - [I2 — `npx tsc` no allow é código morto](#importante-bashnpx-tsc-no-allow-é-código-morto-sob-bashnpx-no-ask--resolvido-na-v162) — **resolvido na v1.6.2**
+  - [I3 — `docker compose down` destrói volumes](#importante-docker-compose-down-no-allow-autoriza-destruição-de-volumes--resolvido-na-v163) — **resolvido na v1.6.3**
+  - [I4 — Nenhum `allowed-tools`](#importante-nenhuma-skill-ou-comando-declara-allowed-tools--resolvido-na-v164) — **resolvido na v1.6.4**
+  - [I5 — `templates/` travado na v1.0](#importante-templates-está-travado-na-v10--a-documentação-mais-antiga-é-a-mais-errada--resolvido-na-v165) — **resolvido na v1.6.5**
+  - [I6 — "Nunca se auto-invoca" não é implementado](#importante-nunca-se-auto-invoca-é-declarado-no-corpo-enquanto-o-frontmatter-otimiza-a-auto-invocação--e-existe-campo-oficial-para-o-efeito-desejado--resolvido-na-v166) — **resolvido na v1.6.6**
+  - [I7 — Granularidade de tarefa com três definições](#importante-granularidade-de-tarefa-tem-três-definições-incompatíveis--resolvido-na-v167) — **resolvido na v1.6.7**
+  - [I8 — Template pede custo e prazo](#importante-o-template-de-arquitetura-pede-custo-e-prazo-que-a-skill-promete-não-entregar--resolvido-na-v168) — **resolvido na v1.6.8**
+  - [I9 — `id-conventions.md` se autocontradiz](#importante-id-conventionsmd-se-autocontradiz-sobre-reúso-de-id--resolvido-na-v169) — **resolvido na v1.6.9**
+  - [I10 — Fences aninhadas nos templates](#importante-fences-aninhadas-nos-templates--o-agente-copia-a-cerca-de-fechamento-errada--resolvido-na-v1610) — **resolvido na v1.6.10**
 - [Sugestões](#sugestões)
 - [Top 5 ações por retorno sobre esforço](#top-5-ações-por-retorno-sobre-esforço)
 - [O que NÃO mudar](#o-que-não-mudar)
@@ -288,7 +301,19 @@ Acrescentar ao final de `commands/leanwork-review.md`:
 
 # Importantes
 
-## [Importante] O `deny` de `git push --force` também bloqueia `--force-with-lease`, e o catálogo recomenda exatamente o que não funciona
+## [Importante] ~~O `deny` de `git push --force` também bloqueia `--force-with-lease`~~ — REFUTADO na v1.6.1
+
+> **Premissa falsa.** A afirmação central deste finding — que `Bash(git push --force:*)` casa com `git push --force-with-lease` — está errada. Verificado contra `code.claude.com/docs/en/permissions`:
+>
+> > *"The `:*` suffix is an equivalent way to write a trailing wildcard, so `Bash(ls:*)` matches the same commands as `Bash(ls *)`."*
+> >
+> > *"**The space before a trailing `*` is part of the rule.** `Bash(ls *)` requires a space after `ls`, so `lsof` doesn't match. `Bash(ls*)` has no space, so it matches `lsof` too."*
+>
+> `Bash(git push --force:*)` ≡ `Bash(git push --force *)`, que exige espaço após `--force`. Em `git push --force-with-lease` o caractere seguinte é `-`. Não casa — pela mesma mecânica que faz `lsof` escapar de `Bash(ls *)`. O `deny` nunca bloqueou `--force-with-lease`, a recomendação de `:277` sempre funcionou, e o `ask` a alcança (na prática já estava coberta por `Bash(git push:*)`, o que a tornava redundante, não inalcançável).
+>
+> **Onde a auditoria errou de método.** O finding declarou "confiança alta quanto ao casamento por prefixo" citando como evidência o próprio arquivo auditado (`:8`), não a documentação. O catálogo dizia apenas *"wildcard com `:` para prefixo de comando"* e omitia a fronteira de espaço; a auditoria herdou a omissão da fonte que estava auditando e a converteu em acusação. Confirmação circular. A lição soma-se à nota de método do B0: verificar contra a doc oficial, não contra o artefato.
+>
+> **O defeito real é o inverso — o `deny` era estreito demais.** Não cobria `git push -f origin main`, `git push origin main --force` nem `git push origin --force main`, todas formas correntes. Corrigido na v1.6.1 com seis regras cobrindo forma longa, forma curta e flag após o remote, nos dois blocos onde o `deny` de git aparece (deny universal e seção Git). A causa raiz documental — a linha 11 do catálogo — foi reescrita como seção própria sobre a fronteira de espaço, já que é ela que permite ao leitor (humano ou LLM) raciocinar corretamente sobre regras de prefixo. O buraco de refspec (`git push origin +main`) ficou declarado em vez de corrigido, por causar falso positivo em refspecs legítimos.
 
 **Onde:** `skills/context-leanwork/references/permission-catalog.md:269` e `:277`.
 
@@ -306,7 +331,7 @@ O comando `git push --force-with-lease origin main` casa com o prefixo `git push
 
 **Impacto:** o time segue a recomendação, o comando continua negado, e a conclusão natural do usuário é remover o `deny` inteiro — que é precisamente o desfecho que a recomendação queria evitar. Uma orientação de segurança que empurra o usuário a afrouxar a proteção é pior que a ausência de orientação. Agrava que `:320` afirma *"`deny` é a única camada que não pode ser afrouxada"*, o que aumenta a probabilidade de o usuário resolver o impasse editando o `deny` em vez de suspeitar da recomendação.
 
-**Correção proposta:** substituir o `deny` por uma regra que não capture o `--force-with-lease`:
+**Correção proposta:** ~~substituir o `deny` por uma regra que não capture o `--force-with-lease`~~ — **não aplicar.** Resolve um problema inexistente e o `deny` resultante seria ainda mais estreito (só pega o remote `origin`). Preservado abaixo como registro do raciocínio refutado.
 
 ```jsonc
 "deny": [
@@ -325,7 +350,22 @@ E `:277` vira:
 
 ---
 
-## [Importante] `Bash(npx tsc:*)` no allow é código morto sob `Bash(npx:*)` no ask
+## [Importante] ~~`Bash(npx tsc:*)` no allow é código morto sob `Bash(npx:*)` no ask~~ — RESOLVIDO na v1.6.2
+
+> **Premissa reverificada antes de aplicar**, contra `code.claude.com/docs/en/permissions` — não contra o arquivo auditado:
+>
+> > *"Rules are evaluated in order: deny, then ask, then allow. The first match in that order determines the outcome, and rule specificity doesn't change the order."*
+> >
+> > *"The same precedence applies between ask and allow: a matching ask rule prompts even when a more specific allow rule also matches the same call."*
+>
+> `Bash(npx:*)` ≡ `Bash(npx *)`, que casa com `npx tsc --noEmit`. O `ask` decide antes do `allow` e a especificidade não desempata. **O finding procede:** a regra era inalcançável. Removida.
+>
+> **Divergências em relação ao proposto:**
+>
+> - A nota sugerida foi escrita, mas o conserto exigiu mais do que acrescentar texto. A receita de Node **já trazia** uma nota sobre `npx` — e ela prescrevia exatamente o padrão que gerou o defeito: *"com exceção de binários específicos já conhecidos do projeto (que podem ir no `allow` nomeados)"*. Foi reescrita, não complementada. Sem isso, a receita reconstruiria a regra morta na próxima edição.
+> - A mecânica virou seção própria do catálogo — **"Sombra de prefixo entre baldes"** —, ao lado da seção de fronteira de espaço criada na v1.6.1, com um procedimento de conferência. As duas cobrem as duas metades do mesmo erro: *como* uma regra casa, e *qual* regra decide.
+>
+> **Auditoria das demais receitas, pedida no finding.** As 10 receitas (.NET, Node, Python, Go, Java/Kotlin, Rust, PHP, Ruby, Git, Docker) mais o `deny` universal foram conferidas entrada por entrada do `allow` contra o `ask` e o `deny` que a alcançam. **Nenhuma outra sombra de prefixo.** Dois casos parecem sombra e não são, justamente pela fronteira de espaço: `Bash(npm i:*)` não alcança `npm install` nem `npm ci`, e `Bash(php artisan migrate:*)` não alcança `php artisan migrate:fresh` — que tem regra própria no `deny`.
 
 **Onde:** `skills/context-leanwork/references/permission-catalog.md:110` e `:115`.
 
@@ -350,7 +390,21 @@ Essa nota tem valor além do conserto: ensina o padrão certo em vez de só corr
 
 ---
 
-## [Importante] `docker compose down` no allow autoriza destruição de volumes
+## [Importante] ~~`docker compose down` no allow autoriza destruição de volumes~~ — RESOLVIDO na v1.6.3
+
+> **Premissas reverificadas antes de aplicar**, em `docs.docker.com/reference/cli/docker/compose/down`:
+>
+> > *"`-v`, `--volumes`: Remove named volumes declared in the `volumes` section of the Compose file and anonymous volumes attached to containers."*
+>
+> E, por padrão, `down` remove *"containers for services defined in the Compose file"* e as redes — **redes externas e volumes são preservados**. O casamento por prefixo já estava estabelecido na v1.6.1. **O finding procede:** o risco está inteiramente na flag, e o `allow` a autorizava junto.
+>
+> **Correção proposta adotada como estava:** `down` para o `ask`, `stop` para o `allow`. Acrescentado também `docker compose start`, sem o qual `stop` não substitui o ciclo `down`/`up`.
+>
+> **O que o finding não cobriu — mesma perda, rota mais curta.** A receita deixava `docker volume rm` e `docker volume prune` fora das três listas: caem no modo padrão. São o caminho direto para destruir exatamente os volumes que o finding queria proteger, e mais explícito que `down -v`. Ambos foram para o `deny`. (`docker system prune` já estava lá e cobre a forma `--volumes` pelo prefixo.)
+>
+> **Por que não bastou negar o `-v`, que seria mais preciso.** Não é escrevível com segurança: `deny` não aceita exceção, e a flag aparece em qualquer posição — `down --remove-orphans -v`, `-f compose.yml down -v`, `--volumes` por extenso. Seria uma dezena de regras de prefixo, e a primeira que faltasse seria a que passa. Documentado no catálogo como o caso em que estreitar o `allow` vence escrever `deny`.
+>
+> **Buraco residual, declarado no catálogo:** `docker compose up -V` (`--renew-anon-volumes`) descarta volumes anônimos ao recriar containers. Volume nomeado não é afetado, então `up` fica no `allow`; quem guarda estado em volume anônimo move para o `ask`.
 
 **Onde:** `skills/context-leanwork/references/permission-catalog.md:286`.
 
@@ -391,7 +445,42 @@ Com a nota: *"`docker compose down` fica no `ask` porque `down -v` remove volume
 
 ---
 
-## [Importante] Nenhuma skill ou comando declara `allowed-tools`
+## [Importante] ~~Nenhuma skill ou comando declara `allowed-tools`~~ — RESOLVIDO na v1.6.4
+
+> **Premissa confirmada, e mais precisa do que o finding registrou.** A definição vigente em `code.claude.com/docs/en/skills`:
+>
+> > *"`allowed-tools` — Tools Claude can use without asking permission during the turn that invokes this skill. **The grant clears when you send your next message.** Accepts a space- or comma-separated string, or a YAML list."*
+>
+> É pré-aprovação, não restrição — a restrição é `disallowed-tools`. E `/docs/en/slash-commands` agora redireciona para a página de skills: *"Custom commands have been merged into skills"*, então `commands/*.md` e `SKILL.md` compartilham o mesmo schema. A citação do finding, tirada da doc de skills para condenar o frontmatter de um comando, **estava certa por acidente** — os schemas convergiram.
+>
+> **Divergência de sintaxe — a correção proposta não teria funcionado.** O finding manda acrescentar `Write` aos comandos que produzem artefato. Contra `/docs/en/permissions`:
+>
+> > *"Claude Code checks file permissions against `Edit(path)` and `Read(path)` rules only. If you write a path rule for `Write`, `NotebookEdit`, `Glob`, or the legacy `MultiEdit` tool instead, Claude Code accepts the rule but never consults it, and warns at startup. **Use `Edit(docs/**)` in place of `Write(docs/**)`**."*
+>
+> `Write` sem caminho até funciona, mas casa no nível da tool **em qualquer lugar** — seria autorização cega de escrita em todo o repositório. O grant foi escrito como `Edit(<pasta do artefato>/**)`, que cobre a tool `Write` (*"`Edit` rules apply to all built-in tools that edit files"*) e limita o alcance à pasta.
+>
+> **Regra adotada: cada arquivo pré-aprova a pasta do artefato que ele mesmo produz.** São 13 arquivos, não 12 — `/leanwork-execute` nasceu na v1.6.0, depois da auditoria.
+>
+> | Arquivo | `allowed-tools` | Por quê |
+> |---|---|---|
+> | `/leanwork-next` | `Read, Glob, Grep` | Só lê e sugere |
+> | `/leanwork-execute` | `Read, Glob, Grep` | **Escreve código-fonte.** Prompt é a proteção |
+> | `/leanwork-context` | `Read, Glob, Grep` | Grava `.claude/settings.json`, como o finding pediu |
+> | `context-leanwork` | `Read, Glob, Grep` | Promete não sobrescrever conteúdo humano; o prompt é o que sustenta a promessa |
+> | `/leanwork-trace` | `+ Edit(docs/traceability/**)` | O salvamento é opcional e já pergunta antes |
+> | `/leanwork-prototype`, `prototype-leanwork` | `+ Edit(docs/prototype/**)` | |
+> | `/leanwork-review`, `reviewer-leanwork` | `+ Edit(docs/reviews/**)` | **Não** inclui o plano: editar o plano por finding bloqueante exige confirmação no corpo do comando |
+> | `architect-leanwork` | `+ Edit(docs/architecture/**)` | |
+> | `prd-leanwork` | `+ Edit(docs/prds/**)` | |
+> | `planner-leanwork` | `+ Edit(docs/plans/**)` | Autor do plano — diferente de quem só muda status nele |
+> | `/leanwork-start` | `+` as quatro pastas de fase | Orquestra; o corpo manda *ler* a SKILL.md e seguir, então o grant da skill não entra em cena |
+>
+> **`Bash` não foi pré-autorizado em lugar nenhum**, como o finding recomendou. Cogitou-se liberar `git diff/log/show` para o reviewer — o próprio `permission-catalog.md` os põe no `allow`. Recusado: permissão de Bash é assunto do `settings.json` do projeto, não de um plugin que se instala no repositório dos outros.
+>
+> **Duas ressalvas que o finding não levanta, e que limitam o ganho:**
+>
+> - **O grant morre no fim do turno.** Estas skills entrevistam o usuário — são multi-turno por construção. A pré-aprovação cobre o primeiro turno; da segunda mensagem em diante o prompt volta. O atrito diminui, não desaparece.
+> - **`allowed-tools` não vence `deny` nem `ask`.** O `Read` sem caminho não fura o `Read(**/.env)` do deny universal do catálogo. Coerente, e vale dizer: a doc avisa que *"a skill can grant itself broad tool access, so review the `allowed-tools` of skills checked into a repository before you run Claude Code there"*, e que workspace trust não protege desse campo. Por isso o grant mínimo e escopado, não `Edit(docs/**)` no plugin inteiro.
 
 **Onde:** transversal — nenhum dos 12 arquivos de skill/comando tem o campo.
 
@@ -422,7 +511,21 @@ Para os comandos que produzem artefato (`leanwork-start`, `leanwork-prototype`, 
 
 ---
 
-## [Importante] `templates/` está travado na v1.0 — a documentação mais antiga é a mais errada
+## [Importante] ~~`templates/` está travado na v1.0 — a documentação mais antiga é a mais errada~~ — RESOLVIDO na v1.6.5
+
+> **Premissa confirmada por contagem direta**, não pelo arquivo auditado: `skills/` tem seis diretórios e `commands/` tem sete arquivos. As quatro evidências abaixo procedem, com um deslocamento de linha (`folder-conventions.md:126` virou `:130` desde a auditoria).
+>
+> **Divergência 1 — o item de impacto (1) estava errado ao contrário, e a correção o tornou verdadeiro.** O finding afirma que "um agente que consulta `pipeline-example.md` produz matriz sem `UI` e sem `R`". Nenhum agente o consultava: `grep` por `pipeline-example` em todo o repositório retornava apenas o `README.md`. O arquivo se declarava *"exemplo de calibração para as skills"* enquanto nenhuma `SKILL.md` apontava para ele — a mesma confirmação circular do I1, com o arquivo servindo de evidência sobre o próprio papel.
+>
+> Isso é exatamente a **pergunta 3 ao autor**, que estava em aberto. **Respondida: é calibração para agente.** As cinco skills que produzem artefato (`architect`, `prd`, `prototype`, `planner`, `reviewer`) agora apontam para `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` em "Recursos auxiliares", cada uma com o recorte que lhe interessa. A frase da linha 3 passou a ser verdade em vez de ser corrigida para baixo — e o arquivo ganhou uma linha declarando que, em caso de divergência, quem manda são os templates em `references/`, para não virar segunda fonte de verdade da estrutura.
+>
+> **Divergência 2 — os dois fragmentos novos custaram uma renumeração e uma tarefa a mais.** Adotada a estrutura proposta (Fragmento 3 = SPEC-UI, Fragmento 5 = review), o que empurrou o plano de Fragmento 3 para 4. O exemplo ganhou também uma tarefa `T-06` de interface: sem ela não havia nenhuma `T-XX` com campo `Telas:` preenchido, e a aresta `UI → T` da cadeia ficaria só na teoria. O `R-01` escolhido é de cobertura de teste — o teste que cita `CA-03` no nome mas roda em sequência —, porque é o defeito que o `/leanwork-trace` estruturalmente não pega. Isso põe no exemplo a limitação que o `REFERENCES.md` já declarava por escrito: **o trace verifica menção, não execução.**
+>
+> **Divergência 3 — cercas de quatro crases.** O arquivo tinha o defeito do I10 (cerca externa de três crases contendo cerca `gherkin` de três crases, que a fecha antes da hora) e o I10 não o lista em "Onde". Como os fragmentos novos trazem `mermaid` e mais blocos internos, e como o arquivo passou a ser lido por agente, as cercas externas foram para quatro crases. **O I10 seguiu aberto para os templates de `references/` e foi fechado na v1.6.10** — onde se descobriu que eram oito, não sete. Aqui foi consequência do I5, não antecipação do I10.
+>
+> **Divergência 4 — um drift que a auditoria não pegou.** O sufixo do estado de limite tinha duas grafias: `.limiteExcedido` em `id-conventions.md:88`, `review-template.md:160` e `screen-states.md:119,156`; `.limite` em `spec-ui-template.md` (4 ocorrências) e `leanwork-trace.md:80`. Unificado em `.limiteExcedido`, seguindo a referência canônica. Mesma classe de defeito do I5, fora da pasta auditada.
+>
+> **Adicionalmente**, a regra de manutenção pedida pelo finding ficou no `README.md`, na seção de convenções compartilhadas: toda skill ou fase nova obriga varredura dos três arquivos de `templates/` antes do release.
 
 **Onde:** `templates/id-conventions.md:3,18`; `templates/pipeline-example.md:3` e todo o corpo; `templates/folder-conventions.md:126`.
 
@@ -454,7 +557,34 @@ Para os comandos que produzem artefato (`leanwork-start`, `leanwork-prototype`, 
 
 ---
 
-## [Importante] "Nunca se auto-invoca" é declarado no corpo, enquanto o frontmatter otimiza a auto-invocação — e existe campo oficial para o efeito desejado
+## [Importante] ~~"Nunca se auto-invoca" é declarado no corpo, enquanto o frontmatter otimiza a auto-invocação — e existe campo oficial para o efeito desejado~~ — RESOLVIDO na v1.6.6
+
+> **Diagnóstico confirmado, correção proposta rejeitada.** O finding acerta a contradição entre o corpo e o frontmatter. Mas o campo que ele indica produziria um defeito maior do que o que ele descreve.
+>
+> Semântica verificada em `code.claude.com/docs/en/skills` — não no arquivo auditado:
+>
+> > *"`disable-model-invocation: true`: Only you can invoke the skill."*
+> >
+> > *"If Claude tries anyway, Claude Code blocks the call and instructs it not to reproduce the deploy steps another way, so expect Claude to suggest running `/deploy` yourself."*
+> >
+> > *"**Hide individual skills** by adding `disable-model-invocation: true` to their frontmatter. This removes the skill from Claude's context entirely."*
+>
+> **O que o finding não viu: os dois comandos do plugin delegam para as duas skills.** `commands/leanwork-prototype.md:35` — *"Passo 4 — Invocar a skill `prototype-leanwork`"*. `commands/leanwork-context.md:15` — *"Invoque a skill `context-leanwork`, que conduz o fluxo completo"*. O corpo de um comando é prompt para o modelo, então essa chamada **é** invocação pelo modelo. Com o campo ligado ela seria bloqueada, e os dois comandos virariam beco sem saída. Regra de permissão não reabre a porta: `Skill(nome)` só restringe.
+>
+> **E a intenção documentada exige a invocação pelo modelo.** `context-leanwork/SKILL.md:13` definia o fluxo desejado como *"só roda quando invocada explicitamente pelo usuário **ou quando ele aceita uma sugestão**"*. Aceitar sugestão é, mecanicamente, o modelo chamando a skill — exatamente o que o campo proíbe.
+>
+> **Resposta do autor (2026-09-02):** vale a segunda leitura que o próprio finding oferece em *"Se a intenção não for essa"*. "Auto-invocação" foi usado no repositório com sentido diferente do que o termo tem no Claude Code. A promessa do pipeline é **não rodar sem pedido ou aceite do usuário**, não uma trava de invocação. O defeito é de redação — e é nela que a correção foi feita.
+>
+> **Aplicado na v1.6.6:**
+>
+> - `prototype-leanwork/SKILL.md:168` → *"Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem"*, mais um parágrafo dizendo que pedido direto carrega a skill normalmente e que é para isso que a `description` lista as frases-gatilho.
+> - `context-leanwork/SKILL.md:210` → *"nunca roda como efeito colateral de outra tarefa — exige pedido direto ou aceite de sugestão"*, e o mesmo ajuste no princípio de `:13`.
+> - Frontmatter das duas skills: **inalterado**, deliberadamente.
+> - README ganha o parágrafo que registra a decisão, para o leitor não repetir o raciocínio do finding.
+>
+> **Divergência adicional:** o finding fecha com *"daí a pergunta na seção final"*, mas nenhuma das cinco **Perguntas ao autor** trata deste ponto — a pergunta que decidiria a severidade nunca chegou a ser escrita. Ficou respondida aqui.
+>
+> **Drift correlato, que o finding não cobre:** `README:360` afirmava que *"as 6 skills aparecem com prefixo `(leanwork-sdd)` quando autoinvocadas"*. O namespace vale sempre, e é o do comando de barra, não um rótulo de auto-invocação — *"Plugin skills use a `plugin-name:skill-name` namespace"*. Corrigido junto.
 
 **Onde:** `skills/prototype-leanwork/SKILL.md:3` vs `:167`; `skills/context-leanwork/SKILL.md:209`.
 
@@ -480,7 +610,35 @@ Feito isso, `prototype-leanwork/SKILL.md:167` pode manter a frase, porque ela pa
 
 ---
 
-## [Importante] Granularidade de tarefa tem três definições incompatíveis
+## [Importante] ~~Granularidade de tarefa tem três definições incompatíveis~~ — RESOLVIDO na v1.6.7
+
+> **Procede, e é maior do que o finding descreve: são seis redações em quatro arquivos, não três em dois.** A contagem foi refeita por varredura de todo o repositório, não pela lista do finding.
+>
+> | Onde | O que diz | Teto implícito |
+> |---|---|---|
+> | `task-examples.md:9` | "30 minutos a 4 horas" | 4h |
+> | `task-examples.md:16` | "Mais de 2 horas estimadas mentalmente → Quebrar" | 2h |
+> | `planner/SKILL.md:76` | "Tarefa pequena (1 commit, ~30min-2h)" | — |
+> | `planner/SKILL.md:77` | "Tarefa média (1 PR, meio dia)" | ~4h |
+> | `planner/SKILL.md:78` | "**Nunca** tarefa grande (>1 dia)" | 1 dia |
+> | **`id-conventions.md:33`** | **"granularidade calibrada (1 commit a meio dia de trabalho)"** | **~4h** |
+>
+> **O finding não viu a linha mais importante.** Ele fecha pedindo *"adicionar em `id-conventions.md`, junto da regra de `T-XX` (`:33`), a referência cruzada ao teto, para haver um lugar canônico"* — mas `:33` **já era** um dos lugares em conflito, com uma quarta definição própria. O arquivo que o finding trata como neutro é o que se declara *"referência única"* do pipeline (`:1`). Não faltava lugar canônico; faltava que o lugar canônico estivesse certo.
+>
+> **Duas contradições reais, não quatro.** "Meio dia" ≈ 4h em jornada de 8h, então `SKILL.md:77` e `id-conventions.md:33` já concordavam com `:9` em intenção. O que de fato divergia era `task-examples.md:16` (2h, contra `:9` no mesmo arquivo) e `SKILL.md:78`, que põe a parada dura em **1 dia** — deixando a faixa 4h–1dia num limbo de "não é grande, então passa". A redação por "meio dia" também é ambígua fora de jornada de 8h; foi substituída por horas explícitas.
+>
+> **A escolha de `30min-4h` tem argumento mais forte do que o dado pelo finding.** Ele elege 4h por ser "o mais permissivo e o único como afirmação positiva". O motivo decisivo é outro: `REFERENCES.md:334` e `:435` **publicam `30min-4h` como limiar autoral do método**, declarado ao leitor externo como opinião de praticante. Adotar 2h tornaria o `REFERENCES.md` falso em dois pontos — e o finding não olhou para lá.
+>
+> **Aplicado na v1.6.7:**
+>
+> - `id-conventions.md:33` vira o **teto canônico**: `30min-4h`, com a frase de que nenhum outro número de tamanho de tarefa prevalece sobre este. Os outros dois arquivos apontam para lá em vez de repetir a regra.
+> - `task-examples.md:16` → `| Mais de 4 horas estimadas mentalmente | Quebrar |`.
+> - `planner/SKILL.md:75-78`: tarefa média passa a `2h-4h`, o `>1 dia` sai e a parada dura vira **"acima de 4h, quebrar — sem exceção"**.
+> - `planner/SKILL.md:103`: a lista de sinais de "está grande demais" ganha o sinal de tempo, que só existia em `task-examples.md`, e passa a apontar para a lista completa.
+>
+> **Tensão que a correção obrigou a resolver, e o finding não levanta:** `planner/SKILL.md:88` proíbe *"estimativa em horas — horas mentem"*, enquanto toda a calibragem é em horas. Não é contradição, mas passava perto: a faixa é heurística mental de quem planeja, e o artefato registra só `Complexidade` qualitativa. Isso agora está escrito nos três arquivos, porque elevar o teto sem dizer isso convidaria a leitura de que o plano passou a estimar.
+>
+> **Sexta redação, fora dos arquivos do planner:** `prd-leanwork/references/prd-template.md:62` descrevia o PBI como *"task 1.1 — pequena, executável em até alguns dias"*. É outra unidade — backlog do Azure DevOps, não `T-XX` —, mas usava a mesma palavra e um terceiro horizonte de tempo. Trocado para `PBI 1.1` e acrescentada a nota de que um PBI vira várias `T-XX` na decomposição.
 
 **Onde:** `skills/planner-leanwork/references/task-examples.md:9` e `:16`; `skills/planner-leanwork/SKILL.md:73-75`.
 
@@ -507,7 +665,23 @@ Adicionar em `id-conventions.md`, junto da regra de `T-XX` (`:33`), a referênci
 
 ---
 
-## [Importante] O template de arquitetura pede custo e prazo que a skill promete não entregar
+## [Importante] ~~O template de arquitetura pede custo e prazo que a skill promete não entregar~~ — RESOLVIDO na v1.6.8
+
+> **Procede, mas o conflito não é o que o finding descreve: o template contradiz a si mesmo, no mesmo arquivo.** O finding enquadra como template × três documentos externos e não leu até o fim do arquivo que estava acusando. `proposal-template.md:209`, no Apêndice 12 ("Aspectos não cobertos"), já mandava *"Cronograma e estimativa → backlog/planejamento de sprint"*, e `:195` já dizia da seção 11 que *"não é cronograma"*. A proposta gerada pelo template afirmava, em duas seções, não conter o número que ela mesma pedia na seção 1.
+>
+> Isso muda o custo da decisão que o finding apresenta como simétrica. A posição "o campo é intencional" não custava três reescritas: custava cinco, sendo **duas dentro do próprio template**, contra uma única edição do outro lado. O empate era aparente.
+>
+> **`REFERENCES.md` não força a mão aqui — diferente do I7.** A seção *"Exclusão deliberada de estimativa"* (`:223`) e a menção a *"proibição explícita de estimativa"* (`:221`) estão sob **`prd-leanwork`**, descrevendo o documento de requisito. Nenhuma das duas se pronuncia sobre a proposta arquitetural. Verificado antes de decidir, porque no I7 foi exatamente o `REFERENCES.md` que decidiu.
+>
+> **A redação proposta pelo finding foi rejeitada.** Ele sugere *"ordem de grandeza de esforço em complexidade relativa (baixa/média/alta por componente)"*. Isso reimporta a estimativa por outro nome e colide com vocabulário já ocupado: `planner/SKILL.md:80` define `Complexidade` — `Baixa`/`Média`/`Alta` — como **risco técnico e desconhecido, "não em tamanho"**, e é explícito que *"não é estimativa de tempo"*. Adotar a frase faria as mesmas três palavras significarem esforço na arquitetura e risco no plano. É a colisão de vocabulário que o I7 já teve de resolver com o PBI.
+>
+> **A distinção que sustenta a correção: restrição é entrada, estimativa é saída.** `architect/SKILL.md:65` e `:67` perguntam budget e deadline na entrevista, e a seção 4 do template os registra como restrição. Isso é legítimo e não foi tocado — um número que o cliente trouxe não é um número que a proposta produziu.
+>
+> **Aplicado na v1.6.8** (decisão do autor: alinhar pela posição de `README.md:332`):
+>
+> - `proposal-template.md:18` vira *"Restrições de custo e prazo declaradas pelo cliente, quando houver (ver seção 4). Esta proposta não estima esforço nem cronograma — ver seção 12"*. O sumário executivo passa a **ecoar** custo e prazo em vez de **gerá-los**, e aponta para as duas seções que já diziam isso.
+> - `architect/SKILL.md`, checklist final: novo item barrando número de custo, esforço ou prazo gerado pela proposta, com a ressalva da restrição declarada. O template diz o que preencher; o checklist é o último portão antes da entrega, e sem ele a correção seria só de redação.
+> - Inalterados, por já estarem certos: `proposal-template.md:195` e `:209`, `README.md:332`, `architect/SKILL.md:3`.
 
 **Onde:** `skills/architect-leanwork/references/proposal-template.md:18` vs `skills/architect-leanwork/SKILL.md:3` e `README.md:320`.
 
@@ -533,7 +707,25 @@ Não deixar como está. É a única inconsistência do plugin com consequência 
 
 ---
 
-## [Importante] `id-conventions.md` se autocontradiz sobre reúso de ID
+## [Importante] ~~`id-conventions.md` se autocontradiz sobre reúso de ID~~ — RESOLVIDO na v1.6.9
+
+> **Procede. A contradição existe e a correção proposta foi adotada — mas o defeito não está contido em `id-conventions.md`, e a metade do arquivo que o finding manda corrigir já estava corrigida em outros dois arquivos.**
+>
+> **O que o finding não viu (1): a skill que gera o relatório propaga a contradição, e com exemplo errado.** `reviewer-leanwork/SKILL.md:185` abre a seção de convenções com *"`R-XX` segue as mesmas regras dos demais IDs do pipeline"* — a afirmação é exatamente falsa no único ponto em que `R-XX` diverge, e a linha seguinte manda ler o `id-conventions.md`, cuja regra geral proíbe o que a skill faz. Pior, `:189` dizia *"Sem reúso entre revisões (se segundo round abre R-04, o R-04 é novo, não retomada)"*: "segundo round abre R-04" descreve numeração **continuando** de onde o round 1 parou, o oposto de `cada REVIEW-T-XX-*.md começa do R-01`. Três arquivos mandam reiniciar (`id-conventions.md:39`, `leanwork-review.md:92`, `pipeline-example.md:323`) e o quarto — o único que o agente lê na hora de gerar o relatório — sugeria continuar. Este era o defeito com consequência, não a redação do `:22`.
+>
+> **O que o finding não viu (2): a citação qualificada já existia, menos no lugar canônico.** A segunda metade da correção proposta — *"acrescentar em `:37`: fora do arquivo, citar `R-01 (REVIEW-T-04-2026-06-15)`"* — já estava escrita em `pipeline-example.md:342-343` e em `leanwork-review.md:92`, ambos desde antes. O arquivo que se declara *"a referência única para os IDs"* era o único dos três que não a tinha. A hierarquia estava invertida: os derivados sabiam a regra, o canônico não.
+>
+> **Divergência de enquadramento: o problema não é "reúso", é escopo de namespace.** `R-XX` não recicla nada — cada relatório é um documento novo com numeração própria, igual a qualquer outro ID sob a regra `:20` ("global ao documento"). O que torna `R-XX` diferente é que **existe um só documento de cada tipo por projeto** — uma proposta, um PRD, uma SPEC-UI, um plano — e **muitos relatórios de review**: um por tarefa, mais um por round. Para os outros cinco IDs, "global ao documento" e "global ao projeto" coincidem por acidente da estrutura de pastas. Escrever a exceção sem esse motivo deixaria o leitor decorando um caso especial em vez de entendê-lo.
+>
+> **Corrigido de passagem o que o finding chama de "pior" e não corrige:** *"`R-01` é ambíguo em qualquer conversa fora do arquivo"*. Era verdade dentro do próprio plugin: `leanwork-next.md:36` sugeria *"Resolver R-02 de T-04"* e `:43` reportava *"(findings R-01, R-03)"*, e as três tabelas de `leanwork-trace.md` citavam `R-01`, `R-03`, `R-04` crus. Qualificar pela tarefa — a forma que o `/leanwork-next` usava — **não resolve**: `R-02 de T-04` volta a ser ambíguo assim que a T-04 tem round 2, que é precisamente o cenário que o finding levanta.
+>
+> **Aplicado na v1.6.9:**
+>
+> - `id-conventions.md:22` ganha a exceção no ponto da regra geral, mais um parágrafo com o motivo (um documento de cada tipo por projeto, muitos relatórios). A regra específica de `R-XX` ganha a citação qualificada, com a ressalva de que qualificar pela tarefa não basta e a forma econômica para grupo: `R-01, R-03 (REVIEW-T-04-2026-06-15)`.
+> - `reviewer-leanwork/SKILL.md`: a abertura falsa vira *"o único ID do pipeline cujo namespace é o arquivo"*; o bullet do `R-04` é substituído pelo enunciado explícito de reinício por relatório e pela distinção entre `R-02` do round 2 e `R-02` do round 1 — a continuidade entre rounds vive na seção "Round anterior", nunca na numeração.
+> - `review-template.md:193`: a seção "Round anterior" passa a nomear o relatório comparado e a avisar que os números das duas colunas se sobrepõem.
+> - `leanwork-next.md` e `leanwork-trace.md`: as sete citações de exemplo passam a trazer o nome do relatório, alinhando os comandos ao que `pipeline-example.md:339` já demonstrava.
+> - Inalterado: a forma `R-01 (round 1)` da tabela do template. É citação dentro do relatório que declara qual é o round anterior — a qualificação por arquivo ficou na frase que introduz a seção, não repetida linha a linha.
 
 **Onde:** `templates/id-conventions.md:22` vs `:37`.
 
@@ -559,7 +751,19 @@ E acrescentar em `:37`: *"Fora do arquivo do relatório, sempre citar `R-XX` qua
 
 ---
 
-## [Importante] Fences aninhadas nos templates — o agente copia a cerca de fechamento errada
+## [Importante] ~~Fences aninhadas nos templates — o agente copia a cerca de fechamento errada~~ — RESOLVIDO na v1.6.10
+
+> **Procede, e é o único finding cuja correção proposta foi adotada sem alteração de mecânica. A premissa foi conferida no spec do CommonMark, não nos arquivos auditados: *"The closing code fence must be at least as long as the opening fence"*, e o exemplo canônico é justamente uma cerca de quatro crases contendo três crases como conteúdo literal — https://spec.commonmark.org/0.31.2/#fenced-code-blocks.**
+>
+> **Divergência 1: são oito arquivos, não sete.** `adr-template.md:9-90` usa exatamente o mesmo envelope `markdown` dos outros e ficou fora da lista "Onde" porque hoje não tem cerca interna. Isso é listar pelo sintoma, não pelo padrão: o envelope é a convenção de todo template de `references/`, e mantê-lo em três crases só ali significa que o primeiro bloco de código acrescentado ao template de ADR reabre o defeito em silêncio. Uniformizado com os demais.
+>
+> **Divergência 2: a cerca resolve onde o modelo termina, não que o envelope não seja copiado.** Os dois problemas são distintos e o finding trata só do primeiro — a cerca de quatro crases torna o limite inequívoco, mas nada no arquivo diz que aquele delimitador é andaime. Com o envelope agora em quatro crases e o conteúdo em três, a distinção também precisa estar escrita. Cada um dos oito templates ganhou uma linha antes do separador: *"As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem."*
+>
+> **Escopo verificado, não presumido.** Varredura de todas as cercas de `skills/`, `commands/`, `templates/` e `README.md`: os demais blocos ```` ```markdown ```` do repositório — `task-examples.md` (cinco), `stack-detection.md` (dois), `screen-states.md`, `command-detection.md`, `folder-conventions.md`, `id-conventions.md` e `context-leanwork/SKILL.md:153` — são fragmentos sem aninhamento e continuam em três crases, que é o correto para eles. Nenhum outro arquivo tem o defeito, nenhuma cerca interna dos templates estava desbalanceada e nenhum template tinha cerca de quatro ou mais crases no conteúdo, o que torna a troca segura. `pipeline-example.md` já havia sido convertido no I5.
+>
+> **Ressalva sobre a evidência:** os números de linha citados já haviam derivado — no `prd-template.md` o `mermaid` está em `:75`, o `gherkin` em `:102` e o fechamento em `:191`, não em `:73`/`:100`/`:189`. O padrão descrito está correto; só as coordenadas envelheceram. E o impacto (b) segue sendo inferência sobre comportamento do modelo, como o próprio finding admite: a correção foi feita pelo defeito de renderização, que é observável, com o ganho de robustez na leitura por agente como consequência.
+>
+> **Aplicado na v1.6.10:** envelope de quatro crases na abertura e no fechamento de `plan-template.md`, `prd-template.md`, `proposal-template.md`, `adr-template.md`, `spec-ui-template.md`, `review-template.md`, `claude-md-root-template.md` e `claude-md-module-template.md`, mais a linha sobre o envelope nos oito. Nenhuma linha foi acrescentada dentro dos blocos, então as referências de linha ao conteúdo dos templates deslocam em +2.
 
 **Onde:** `skills/planner-leanwork/references/plan-template.md:7-172`; `skills/prd-leanwork/references/prd-template.md:7-189`; `skills/architect-leanwork/references/proposal-template.md`; `skills/prototype-leanwork/references/spec-ui-template.md:9-190`; `skills/reviewer-leanwork/references/review-template.md:7-212`; `skills/context-leanwork/references/claude-md-root-template.md` e `claude-md-module-template.md`.
 
@@ -699,7 +903,11 @@ Cinco pontos onde não foi possível distinguir omissão de escolha, e a respost
 
 **3. `templates/` é para o humano ou para o agente?** `pipeline-example.md:3` diz *"exemplo de calibração para as skills"*, o que sugere agente — e aí o drift é funcional, não cosmético. Mas nenhuma `SKILL.md` instrui a ler `pipeline-example.md`. Se ninguém o lê, ele é documentação de apresentação e a prioridade cai; se as skills deveriam lê-lo, falta a instrução que aponta para ele.
 
+> **Respondido na v1.6.5:** é para o agente. `id-conventions.md` e `folder-conventions.md` já eram lidos por cinco skills e três comandos; só o `pipeline-example.md` estava solto. A lacuna era a que a pergunta previu — faltava a instrução que aponta para ele, e ela foi criada nas cinco skills que produzem artefato. Com isso o drift era funcional, e o finding se mantém Importante.
+
 **4. `allowed-tools` foi omitido por política ou por desconhecimento?** Há um argumento defensável para não pré-autorizar nada num plugin que outras empresas instalam. Se foi essa a razão, ela merece uma linha no README — vira postura, não lacuna. Se foi desconhecimento, o campo resolve o atrito de `/leanwork-trace` sem custo de segurança.
+
+> **Respondido na v1.6.4.** Desconhecimento. Mas a preocupação da pergunta é legítima e virou o critério do conserto: o plugin se instala no repositório dos outros, então cada arquivo pré-aprova leitura mais a pasta do artefato que ele mesmo produz — nada mais. O *"sem custo de segurança"* da pergunta é otimista demais, e a ressalva está registrada na seção do I4.
 
 **5. Azure DevOps: integração planejada ou vocabulário emprestado?** `prd-template.md:56-67` produz a hierarquia Epic → Feature → PBI *"para o Azure DevOps"*, e `README:317` cita o ADO como parte do contexto de adaptação. Mas nada cria work item — o humano redigita. Se a integração está no roadmap, a seção 6 do PRD é a base certa e vale marcá-la como tal. Se não está, o *"para o Azure DevOps"* promete mais do que entrega e deveria virar *"para cadastro no seu board"*.
 

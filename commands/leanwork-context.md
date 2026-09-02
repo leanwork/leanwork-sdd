@@ -1,6 +1,7 @@
 ---
 description: Gera ou atualiza o contexto do projeto para agentes — CLAUDE.md (raiz e módulos) e permissões em .claude/settings.json.
 argument-hint: [raiz | modulo <nome> | permissoes | auditar — opcional]
+allowed-tools: Read, Glob, Grep
 ---
 
 # Contexto do projeto para agentes de IA
