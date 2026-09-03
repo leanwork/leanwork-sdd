@@ -2,9 +2,11 @@
 
 Template completo a ser preenchido pelo `reviewer-leanwork`. Manter ordem das seções. Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md`.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # Review: T-XX — [Título da tarefa, idêntico ao do plano]
 
 > **Plano de referência:** [path do plano, ex.: `docs/plans/PLAN-001-flash-sales.md`]
@@ -190,7 +192,7 @@ Pontos que não viraram R-XX mas merecem registro para evoluir o pipeline.
 
 ## Round anterior (se Round 2+)
 
-Comparação com o round anterior — quais itens foram resolvidos, quais persistem.
+Comparação com `[REVIEW-T-XX-AAAA-MM-DD.md]` — quais itens foram resolvidos, quais persistem. A numeração recomeçou neste relatório: os `R-XX` da coluna abaixo são do round anterior e não têm relação com os de mesmo número deste round.
 
 | Item anterior | Status | Comentário |
 |---------------|--------|------------|
@@ -209,4 +211,4 @@ Comparação com o round anterior — quais itens foram resolvidos, quais persis
 - [Item 1, ex.: "Endereçar R-01 e R-02 antes do merge"]
 - [Item 2, ex.: "Considerar R-04 e R-05 nesta tarefa ou abrir tarefa nova de melhoria"]
 - [Item 3, ex.: "Atualizar CLAUDE.md com padrão emergente identificado em Notas ao processo"]
-```
+````

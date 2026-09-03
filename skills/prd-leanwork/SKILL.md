@@ -1,6 +1,7 @@
 ---
 name: prd-leanwork
 description: Levantamento estruturado de requisitos e geração de PRDs (Product Requirement Documents) detalhados em português, no padrão Leanwork. Use sempre que o usuário pedir explicitamente para "criar PRD", "levantar requisito", "documentar demanda", "detalhar feature", "escrever especificação" ou qualquer variação dessas expressões. Também use quando o usuário descrever uma demanda nova e indicar que precisa virar documento para os devs executarem. A skill conduz uma entrevista estruturada quando o contexto está incompleto, e produz markdown com hierarquia Epic→Feature→PBI, regras de negócio numeradas (RN-XX), critérios de aceite em Gherkin (PT-BR) com IDs (CA-XX) e diagramas Mermaid. Os IDs RN/CA são o ponto de costura com o plano de execução (planner-leanwork) e a arquitetura (architect-leanwork) — formam a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T. NÃO inclui estimativa de esforço, t-shirt sizing ou complexidade — o foco é "o quê" e "por quê", não "quanto custa".
+allowed-tools: Read, Glob, Grep, Edit(docs/prds/**)
 ---
 
 # PRD Leanwork — Levantamento de Requisitos
@@ -67,6 +68,7 @@ Use o template completo em `references/prd-template.md`. Leia o arquivo antes de
 Recursos auxiliares:
 
 - `references/gherkin-examples.md` — exemplos calibrados de cenários Gherkin com IDs cruzados, cobrindo caminho feliz, validação, erro de regra, concorrência, integração externa, esquemas com tabela e cenários condicionais por permissão. Inclui anti-padrões a evitar.
+- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como as `RN-XX` e os `CA-XX` deste PRD viram estado de tela, tarefa de execução e finding de review.
 
 Manter a hierarquia de headings e a ordem das seções. Seções que não se aplicam podem ser omitidas, **menos** as marcadas como obrigatórias.
 

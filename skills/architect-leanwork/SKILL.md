@@ -1,6 +1,7 @@
 ---
 name: architect-leanwork
 description: Avaliação arquitetural e proposta de solução técnica para projetos de software, no padrão Leanwork. Use sempre que o usuário pedir para "pensar arquitetura de", "propor solução técnica", "avaliar arquitetura", "desenhar arquitetura", "definir stack", "como construir esse sistema", "qual a melhor arquitetura para", "modelar essa solução" ou variações. Também use quando o usuário descrever um projeto novo (interno ou de cliente) e pedir o desenho da solução, ou trouxer uma arquitetura existente para revisar/criticar. A skill é stack-agnóstica por padrão — só fixa tecnologia se for restrição declarada — e produz um documento markdown com objetivos de negócio, atributos de qualidade, restrições, decisões arquiteturais com justificativa (ADRs), trade-offs explícitos e diagramas C4 (Context, Container e/ou Component) em Mermaid. Inspirada no Manual do Arquiteto de Software de Elemar Júnior. NÃO entrega estimativa de esforço, cronograma ou código pronto — entrega arquitetura.
+allowed-tools: Read, Glob, Grep, Edit(docs/architecture/**)
 ---
 
 # Architect Leanwork — Proposta Arquitetural
@@ -197,6 +198,7 @@ Recursos auxiliares (carregue conforme necessidade):
 - `references/quality-attributes.md` — catálogo de atributos de qualidade (performance, escalabilidade, disponibilidade, resiliência, segurança, manutenibilidade, observabilidade) com perguntas-gatilho, sinais de prioridade, padrões que atendem, e trade-offs a explicitar
 - `references/architectural-styles.md` — catálogo de estilos arquiteturais (monolito, modular monolith, microsserviços, pipes & filters, EDA, CQRS, event sourcing, microkernel, serverless, REST+gateway) com forças, fraquezas, isomorfismo natural e quando evitar
 - `references/adr-template.md` — template standalone de ADR (quando o usuário preferir ADRs como arquivos separados em vez de inline na proposta)
+- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `ADR-XX` desta proposta é citado depois no PRD, no plano e no review
 
 ### Princípios de escrita da proposta
 
@@ -219,6 +221,7 @@ Antes de devolver a proposta para o usuário, verifique:
 - [ ] Diagramas C4 estão no nível certo para a complexidade — nem em excesso, nem faltando
 - [ ] Dívidas conscientes estão documentadas
 - [ ] Sumário executivo é legível por não-técnico
+- [ ] Nenhum número de custo, esforço ou prazo **gerado pela proposta**. Valor financeiro e data só aparecem quando são restrição declarada pelo cliente, registrados como tal na seção 4
 - [ ] Não há `[A DEFINIR]` no documento. Se há lacuna, voltou para o usuário.
 
 ---

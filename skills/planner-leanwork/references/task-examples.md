@@ -6,14 +6,16 @@ Referência para calibrar como tarefas devem ser escritas no plano de execução
 
 ## Princípio de granularidade
 
-Boa tarefa cabe em **1 commit ou 1 PR pequeno**, executável em **30 minutos a 4 horas**. Acima disso, quebrar. Abaixo disso (10 min), provavelmente é um detalhe que deveria estar embutido em outra tarefa.
+Boa tarefa cabe em **1 commit ou 1 PR pequeno**, executável em **30 minutos a 4 horas** — teto canônico declarado em `templates/id-conventions.md` (regra de `T-XX`). Acima disso, quebrar. Abaixo disso (10 min), provavelmente é um detalhe que deveria estar embutido em outra tarefa.
+
+A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tarefa. O plano registra `Complexidade` qualitativa, nunca horas.
 
 | Sinal de "está grande demais" | Resposta |
 |-------------------------------|----------|
 | Mais de 3 critérios de aceite | Quebrar em 2 tarefas |
 | `Implementa:` lista 4+ RNs | Provavelmente 2 tarefas disfarçadas |
 | Descrição precisa de "e também", "além disso" | Sintoma claro de tarefa dupla |
-| Mais de 2 horas estimadas mentalmente | Quebrar |
+| Mais de 4 horas estimadas mentalmente | Quebrar |
 | Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada |
 
 | Sinal de "está pequena demais" | Resposta |
@@ -31,7 +33,7 @@ Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** po
 ```markdown
 #### T-01 — Criar entity FlashSale e configuration EF Core
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Baixa
 - **Depende de:** nenhuma
 - **Implementa:** —
@@ -68,7 +70,7 @@ Tarefas de lógica de negócio **sempre preenchem `Implementa:`** (regras do PRD
 ```markdown
 #### T-04 — Implementar handler de compra com lock pessimista de estoque
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Alta
 - **Depende de:** T-01, T-02 (migration), T-03 (interface IFlashSaleRepository)
 - **Implementa:** RN-03, RN-05
@@ -120,7 +122,7 @@ Tarefas de controller/endpoint **preenchem `Valida:`** porque sua conclusão é 
 ```markdown
 #### T-09 — Expor endpoint POST /api/flash-sales/{id}/comprar
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-04 (handler), T-08 (validator)
 - **Implementa:** —
@@ -164,7 +166,7 @@ Tarefas de observabilidade, métricas, logging tipicamente **não preenchem `Imp
 ```markdown
 #### T-12 — Adicionar instrumentação de métricas e logging estruturado
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-09 (endpoint pronto)
 - **Implementa:** —
@@ -204,7 +206,7 @@ Quando uma tarefa **existe especificamente para implementar uma decisão arquite
 ```markdown
 #### T-15 — Configurar feature flag para "Ofertas Relâmpago" via LaunchDarkly
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** Média
 - **Depende de:** T-09 (endpoint pronto)
 - **Implementa:** —

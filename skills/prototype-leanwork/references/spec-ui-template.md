@@ -4,9 +4,11 @@ Documento produzido pela skill `prototype-leanwork`. Salvar como `docs/prototype
 
 Alvo: proporcional ao número de telas. Uma feature com 4 telas rende ~120 linhas; com 15 telas, ~400. Se passar disso, provavelmente o PRD é grande demais e deveria ter sido dividido.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # SPEC-UI-XXX: [Título da feature, idêntico ao do PRD]
 
 > **PRD de referência:** `docs/prds/PRD-XXX-nome.md`
@@ -134,7 +136,7 @@ crie tarefas duplicadas.
 flowchart LR
     UI01[UI-01<br/>Listagem] -->|seleciona oferta| UI02[UI-02<br/>Checkout]
     UI02 -->|confirma| UI03[UI-03<br/>Confirmação]
-    UI02 -->|limite excedido| UI02e[UI-02.limite]
+    UI02 -->|limite excedido| UI02e[UI-02.limiteExcedido]
     UI02 -->|esgotado| UI02x[UI-02.esgotado]
     UI02e -->|voltar| UI01
     UI02x -->|voltar| UI01
@@ -151,7 +153,7 @@ Verificação cruzada — onde cada regra e cenário do PRD acontece na interfac
 | RN | Manifesta em | Status |
 |---|---|---|
 | RN-01 | UI-01, UI-04 | ✅ Coberta |
-| RN-03 | UI-02 (`.limite`) | ✅ Coberta |
+| RN-03 | UI-02 (`.limiteExcedido`) | ✅ Coberta |
 | RN-05 | UI-02 (`.esgotado`) | ✅ Coberta |
 | RN-07 | — | ⚠️ Regra de backend (cancelamento pelo SAC) — sem interface neste PRD |
 
@@ -160,7 +162,7 @@ Verificação cruzada — onde cada regra e cenário do PRD acontece na interfac
 | CA | Acontece em | Status |
 |---|---|---|
 | CA-01 | UI-01 → UI-02 → UI-03 | ✅ Coberto |
-| CA-05 | UI-02 (`.limite`) | ✅ Coberto |
+| CA-05 | UI-02 (`.limiteExcedido`) | ✅ Coberto |
 | CA-06 | UI-02 (`.esgotado`) | ✅ Coberto |
 | CA-09 | — | ❌ **Sem tela** — cenário de relatório administrativo não previsto no protótipo |
 
@@ -187,7 +189,7 @@ de execução, ou ser explicitamente aceito como fora de escopo.
 - [ex.: Suporte a tema escuro obrigatório]
 - [ex.: Biblioteca de componentes shadcn/ui — não introduzir outra]
 - [ex.: Sem dependência de JavaScript para o fluxo de leitura (SSR obrigatório)]
-```
+````
 
 ---
 
@@ -207,7 +209,7 @@ Tokens extraídos de imagem são sempre aproximados. Marcar como tal — impleme
 
 A parte mais valiosa do documento. Ver `screen-states.md` para o catálogo e para quais estados são obrigatórios por tipo de tela.
 
-Cada estado ganha ID com sufixo (`UI-02.limite`), permitindo que a tarefa do plano diga `Telas: UI-02 (default, limite, esgotado)` e que o review verifique estado a estado.
+Cada estado ganha ID com sufixo (`UI-02.limiteExcedido`), permitindo que a tarefa do plano diga `Telas: UI-02 (default, limiteExcedido, esgotado)` e que o review verifique estado a estado.
 
 ### Seção 5 — Componentes reutilizáveis
 

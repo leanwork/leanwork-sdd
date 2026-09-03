@@ -2,9 +2,11 @@
 
 Template completo a ser preenchido. Manter hierarquia de headings e ordem das seções. Seções marcadas como obrigatórias não podem ser omitidas; opcionais podem.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # PRD: [Título da demanda]
 
 **Cliente/Produto:** [Ultrafarma / LeanOps / Projeto X / ...]
@@ -59,12 +61,14 @@ Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
 
 - **Epic:** [nome do épico — abrange a demanda inteira e tipicamente entrega valor de negócio mensurável]
   - **Feature:** [feature 1 — entregável funcional coerente]
-    - **PBI:** [task 1.1 — pequena, executável em até alguns dias]
-    - **PBI:** [task 1.2]
+    - **PBI:** [PBI 1.1 — menor entregável com valor percebido, executável em até alguns dias]
+    - **PBI:** [PBI 1.2]
   - **Feature:** [feature 2]
-    - **PBI:** [task 2.1]
+    - **PBI:** [PBI 2.1]
 
 > Esta é uma sugestão de quebra. O Product Owner pode reorganizar conforme prioridade e capacidade do time.
+>
+> **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução tem teto de 4 horas (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
 
 ## 7. Fluxos *(obrigatória se houver interação)*
 
@@ -186,4 +190,4 @@ Lista de pontos que precisam ser definidos antes ou durante a execução. Cada i
 
 - [Link para conversa, e-mail, mockup, documento relacionado]
 - [Link para proposta arquitetural, se houver: `docs/architecture/proposta-arquitetural.md`]
-```
+````

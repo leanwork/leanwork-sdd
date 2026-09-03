@@ -1,5 +1,6 @@
 ---
 description: Inspeciona artefatos existentes (architecture/PRD/protótipo/plan/review) e sugere a próxima fase do pipeline SDD.
+allowed-tools: Read, Glob, Grep
 ---
 
 # Próxima fase do pipeline SDD
@@ -20,8 +21,8 @@ Você está no meio de um pipeline SDD Leanwork. Sua tarefa é descobrir em que 
    - **Arquitetura**: tem ADRs preenchidos? Tem diagramas C4? Marcações `[A DEFINIR]` ou `⚠️ Premissa`?
    - **PRD**: tem RN-XX preenchidos? Tem cenários CA-XX em Gherkin? Status no cabeçalho (`Rascunho / Em revisão / Aprovado`)?
    - **SPEC-UI**: existe para os PRDs com interface? Telas `UI-XX` mapeadas? Lacunas da seção 8 ainda abertas? *(ausência só é problema quando o PRD tem interface)*
-   - **Plano**: quantas tarefas T-XX existem? Quantas marcadas como concluídas? Há tarefas `⛔ Blocked`?
-   - **Reviews**: quantos relatórios existem? Quantos `⛔ Bloqueado`? Tarefas Done sem review correspondente?
+   - **Plano**: quantas tarefas T-XX existem? Quantas com `Status: Concluído`? Há tarefas com `Status: Bloqueado`?
+   - **Reviews**: quantos relatórios existem? Quantos com recomendação final `Bloqueado`? Tarefas `Status: Concluído` sem review correspondente?
    - **Contexto do agente**: existe `CLAUDE.md` na raiz? Tem as seções essenciais (Stack, Comandos, Convenções)? Há `<!-- TODO -->` pendentes? Módulos sem `CLAUDE.md`?
 
 3. **Sintetize o estado** em uma tabela curta para o usuário ver:
@@ -32,21 +33,22 @@ Você está no meio de um pipeline SDD Leanwork. Sua tarefa é descobrir em que 
    | Arquitetura (ADRs 1-5)  | Completa  | — |
    | PRD-001 Flash Sales     | Aprovado  | Gerar plano |
    | PLAN-001 Flash Sales    | 5/12 ✅   | Continuar execução (T-06) |
-   | Reviews                  | 3 OK, 1 bloqueado | Resolver R-02 de T-04 |
+   | Reviews                  | 3 OK, 1 bloqueado | Resolver R-02 (REVIEW-T-04-2026-06-15) |
    | CLAUDE.md (raiz)         | Comandos com TODO | Rodar `/leanwork-context raiz` |
    ```
 
 4. **Sugira UMA próxima ação concreta**, em ordem de prioridade. Não listar opções:
 
    **Prioridade 1 — Resolver bloqueios:**
-   - Se há review com recomendação `⛔ Bloqueado` e sem round subsequente: "Há review bloqueante em T-XX (findings R-01, R-03). Quer revisar os pontos para correção?"
-   - Se há tarefa `⛔ Blocked` no plano: identificar a dependência e sugerir como destravar
+   - Se há review com recomendação final `Bloqueado` e sem round subsequente: "Há review bloqueante em T-XX — findings R-01, R-03 (REVIEW-T-04-2026-06-15). Quer revisar os pontos para correção?" Citar `R-XX` sempre com o nome do relatório: a numeração recomeça a cada arquivo, então o número sozinho não identifica o finding
+   - Se há tarefa com `Status: Bloqueado` no plano: identificar a dependência e sugerir como destravar
 
    **Prioridade 2 — Validar entregas:**
-   - Se há tarefas marcadas como `✅ Done` no plano mas sem review correspondente: "T-04 e T-05 foram marcadas como concluídas mas não têm review. Quer rodar `/leanwork-review T-04` antes de avançar?"
+   - Se há tarefas com `Status: Concluído` no plano mas sem review correspondente: "T-04 e T-05 foram marcadas como concluídas mas não têm review. Quer rodar `/leanwork-review T-04` antes de avançar?"
 
    **Prioridade 3 — Avançar execução:**
-   - Se há plano com próxima tarefa pendente sem bloqueio: "PLAN-001 tem T-06 como próxima tarefa pendente sem bloqueio. Quer que eu prepare o contexto dela para execução?"
+   - Se há tarefa com `Status: Em andamento`: é trabalho interrompido, e vem antes de começar qualquer outro. "T-06 está Em andamento desde a última sessão. Quer retomar com `/leanwork-execute T-06`?"
+   - Se há plano com próxima tarefa `Status: Pendente` cujas dependências em `Depende de:` estão todas `Concluído`: "PLAN-001 tem T-06 como próxima tarefa pendente sem bloqueio. Quer executá-la com `/leanwork-execute T-06`?"
 
    **Prioridade 4 — Avançar pipeline:**
    - Se há PRD **com interface** aprovado, sem SPEC-UI e sem plano: "PRD-001 tem interface e ainda não tem especificação de telas. Quer rodar `/leanwork-prototype` antes do plano, ou prefere ir direto para `planner-leanwork`?" — oferecer as duas rotas, nunca bloquear
@@ -69,7 +71,9 @@ Você está no meio de um pipeline SDD Leanwork. Sua tarefa é descobrir em que 
    - PRD cita ADR-007 que não existe na arquitetura
    - Plano cita CA-12 que não está no PRD
    - Tarefas marcadas como concluídas sem commit hash
-   - **Tarefa marcada como `✅ Done` mas com review `⛔ Bloqueado` em aberto** (inconsistência grave entre estado declarado e estado validado)
+   - **Tarefa com `Status: Concluído` mas com review de recomendação `Bloqueado` em aberto** (inconsistência grave entre estado declarado e estado validado)
+   - **Campo `Status:` da tarefa divergente da coluna Status da tabela de Histórico de execução** — as duas precisam concordar
+   - **Campo `Status:` com valor fora do vocabulário** (`Pendente` / `Em andamento` / `Concluído` / `Bloqueado`) — a tarefa fica invisível para este comando e para o `/leanwork-trace`; apontar a grafia encontrada
 
 ## Não fazer
 

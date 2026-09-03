@@ -2,9 +2,11 @@
 
 Template completo a ser preenchido. Manter ordem das seções e marcações de obrigatoriedade. Seções não aplicáveis podem ser omitidas, exceto as numeradas como obrigatórias na skill.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # Proposta Arquitetural — [Nome do projeto/sistema]
 
 > Cliente: [nome ou "interno Leanwork"] · Documento gerado em [data] · Versão 0.1
@@ -15,7 +17,7 @@ Template completo a ser preenchido. Manter ordem das seções e marcações de o
 - O que estamos construindo, em uma frase
 - Por que essa arquitetura (a frase-chave que justifica tudo)
 - Principais riscos e como mitigamos
-- Custo e prazo de cara (em ordem de grandeza, não detalhado)
+- Restrições de custo e prazo declaradas pelo cliente, quando houver (ver seção 4). Esta proposta não estima esforço nem cronograma — ver seção 12
 
 ---
 
@@ -208,4 +210,4 @@ sequenceDiagram
 - Detalhes de segurança aplicacional → documento separado de threat modeling
 - Cronograma e estimativa → backlog/planejamento de sprint
 - Detalhes de UI/UX → design system / Figma
-```
+````

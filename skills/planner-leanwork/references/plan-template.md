@@ -2,9 +2,11 @@
 
 Template completo a ser preenchido. Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # Plano de Execução: [Título da feature/demanda]
 
 **PRD de referência:** [link ou caminho para o arquivo do PRD]
@@ -76,7 +78,7 @@ Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; fea
 
 #### T-01 — [Título curto e imperativo da tarefa]
 
-- [ ] **Status:** Pendente
+- **Status:** Pendente
 - **Complexidade:** [Baixa / Média / Alta]
 - **Depende de:** [nenhuma | T-XX, T-YY]
 - **Implementa:** [RN-XX, RN-YY] *(regras de negócio do PRD que esta tarefa concretiza — vazio se for tarefa puramente estrutural)*
@@ -103,6 +105,12 @@ Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; fea
 **Riscos / pontos de atenção:**
 - [ex.: "Tabela existente tem 2M de registros — migration precisa ser online"]
 - [ex.: "Nome do campo conflita com palavra reservada em SQL Server — usar `[Order]` com escape"]
+
+> **Vocabulário de status (fixo — os comandos dependem dele):** `Pendente` | `Em andamento` | `Concluído` | `Bloqueado`.
+> Escrever exatamente essas palavras no campo `**Status:**` da tarefa, por extenso e sem emoji. `/leanwork-next` e
+> `/leanwork-trace` leem esse campo literalmente: qualquer outra grafia torna a tarefa invisível para eles.
+> A mesma palavra vale na coluna Status da tabela de Histórico de execução (seção 11).
+> Referência canônica: `templates/id-conventions.md`.
 
 ---
 
@@ -164,9 +172,11 @@ Pontos que apareceram durante o planejamento e precisam ser resolvidos antes ou 
 
 Tabela atualizada à medida que tarefas são concluídas. Útil para retomar trabalho em outra sessão/ferramenta.
 
+A coluna Status usa o mesmo vocabulário do campo `**Status:**` da tarefa e precisa concordar com ele — divergência entre os dois é inconsistência que o `/leanwork-trace` reporta.
+
 | Tarefa | Status | Concluída em | Commit | Observação |
 |--------|--------|--------------|--------|------------|
-| T-01   | ✅ Done | 2026-05-16   | `abc1234` | — |
-| T-02   | 🔄 Doing | —          | —      | Aguardando review |
-| T-03   | ⛔ Blocked | —        | —      | Depende de decisão sobre RN-05 |
-```
+| T-01   | Concluído | 2026-05-16 | `abc1234` | — |
+| T-02   | Em andamento | —       | —      | Aguardando review |
+| T-03   | Bloqueado | —          | —      | Depende de decisão sobre RN-05 (R-02 de REVIEW-T-03-2026-05-18) |
+````

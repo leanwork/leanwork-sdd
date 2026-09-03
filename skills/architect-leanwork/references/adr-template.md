@@ -4,9 +4,11 @@ Use este template quando o usuário pedir ADRs como arquivos separados (`docs/ar
 
 Para projetos pequenos e médios, ADRs inline (seção 5 da proposta) bastam. Para projetos com decisões evolutivas frequentes ou times grandes, arquivos separados versionam melhor.
 
+As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
+
 ---
 
-```markdown
+````markdown
 # ADR-XXX: [Título curto e descritivo, em modo imperativo]
 
 > **Status:** [Proposta | Aceita | Revogada | Substituída por ADR-YYY]
@@ -87,7 +89,7 @@ componentes afetados, ordem sugerida de migração, feature flags necessárias.]
 - [Link para discussão de design, RFC, papers, posts técnicos consultados]
 - [Link para PRDs afetados, se houver]
 - [Link para ADRs relacionados, se houver]
-```
+````
 
 ## Convenções
 

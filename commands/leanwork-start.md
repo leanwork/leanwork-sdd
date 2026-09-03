@@ -1,6 +1,7 @@
 ---
 description: Inicia o pipeline SDD da Leanwork (architect → PRD → protótipo → planner → review) para uma nova demanda.
 argument-hint: [descrição curta da demanda, opcional]
+allowed-tools: Read, Glob, Grep, Edit(docs/architecture/**), Edit(docs/prds/**), Edit(docs/prototype/**), Edit(docs/plans/**)
 ---
 
 # Iniciar pipeline SDD Leanwork
