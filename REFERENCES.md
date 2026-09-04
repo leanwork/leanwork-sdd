@@ -330,6 +330,7 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 - **Logging estruturado e correlation ID** — [Serilog](https://serilog.net) (Nicholas Blumhardt); *Correlation Identifier* em Hohpe & Woolf, *EIP*.
 - **Cardinalidade de métricas** — a advertência sobre usar `customerId` como tag reproduz fielmente a orientação do **[Prometheus](https://prometheus.io/docs/practices/naming/)** e do OpenTelemetry.
 - **Feature flags** — Pete Hodgson (2017).
+- **Parallel Change / Expand-Contract** — **[Fowler](https://martinfowler.com/bliki/ParallelChange.html)**. **Reprodução** das três fases (expandir, migrar, contrair) para sequenciar refactors de alto *blast radius* dentro do plano, mantendo CI verde tarefa a tarefa.
 
 **Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (30min-4h por tarefa, 3 critérios de aceite, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
 
