@@ -407,13 +407,19 @@ O catálogo de estilos trata a lei de Conway como orientação de desenho ("orga
 
 A leitura clássica "escolha 2 de 3" foi corrigida pelo próprio **Eric Brewer** em *[CAP Twelve Years Later](https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/)* (2012): o trade-off só vale durante partição. Fora dela, o dilema real é latência × consistência — que é o modelo **PACELC** (Daniel Abadi, 2010), ausente do repositório.
 
-### Stack-agnóstico com exemplos .NET
+### Stack-agnóstico com exemplos .NET (mitigado na v1.9.0)
 
-As skills se declaram stack-agnósticas, e a arquitetura de resolução (proposta → CLAUDE.md → inspeção → pergunta) sustenta isso. Mas os exemplos e heurísticas são fortemente .NET: MediatR, FluentValidation, EF Core, Serilog, `.Result`/`.Wait()`, xUnit. O contrato se sustenta; a calibragem do agente carrega viés.
+As skills se declaram stack-agnósticas, e a arquitetura de resolução (proposta → CLAUDE.md → inspeção → pergunta) sustenta isso. Até a v1.8.0, porém, os exemplos didáticos do núcleo eram fortemente .NET: MediatR, FluentValidation, EF Core, Serilog, xUnit apareciam direto em `templates/pipeline-example.md`, `planner-leanwork/references/task-examples.md` e nos templates de preenchimento (`plan-template.md`, `prd-template.md`, `proposal-template.md`, `claude-md-root-template.md`).
 
-### O exemplo canônico contradiz a postura declarada
+A v1.9.0 segrega esse conteúdo: o exemplo end-to-end e os exemplos de tarefa viram pseudocódigo agnóstico no núcleo, com a versão .NET completa movida para `stacks/dotnet/` e referenciada por link explícito. Os placeholders `.NET` soltos nos templates de preenchimento viram genéricos.
 
-A skill de arquitetura lista Clean Architecture entre os modismos que não se deve adotar por moda, e o catálogo de atributos afirma que DDD/Clean é overkill para CRUD simples. Mas o **único** template de diagrama de Component fornecido é uma Clean/Onion Architecture completa com MediatR. Vale ou alinhar o exemplo, ou explicitar que ele é um caso entre vários.
+**O que não foi resolvido nesta passagem:** o catálogo de detecção de stack (`reviewer-leanwork/references/stack-detection.md`) e o checklist de review (`reviewer-leanwork/references/review-checklist.md`) ainda usam .NET como exemplo ilustrativo em alguns pontos — inclusive um item específico de anti-padrão async (`.Result`/`.Wait()`) que não tem equivalente descrito para outras stacks. Ficou fora do escopo desta rodada porque `stack-detection.md` já é multi-stack por natureza (a cascata de descoberta é o mecanismo agnóstico; o exemplo é só ilustração de como ela fica preenchida) — mas o item do checklist é viés real, ainda não corrigido.
+
+### O exemplo canônico contradiz a postura declarada (mitigado na v1.9.0)
+
+A skill de arquitetura lista Clean Architecture entre os modismos que não se deve adotar por moda, e o catálogo de atributos afirma que DDD/Clean é overkill para CRUD simples. Até a v1.8.0, porém, o **único** template de diagrama de Component fornecido era uma Clean/Onion Architecture completa com MediatR — sem nenhuma ressalva.
+
+A v1.9.0 troca o diagrama de `c4-mermaid-templates.md` por uma versão com nomes de padrão genéricos (sem biblioteca), e move a versão com MediatR/FluentValidation/EF Core para `stacks/dotnet/c4-component-example.md`, com uma nota explícita de que é "um caso entre vários", não recomendação. A divergência apontada aqui está resolvida; o diagrama de exemplo já não contradiz a postura declarada da skill.
 
 ### `grep` verifica menção, não execução
 

@@ -80,8 +80,9 @@ Fora desses gatilhos, seguir o padrão horizontal: é a orientação default do 
 
 Recursos auxiliares:
 
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver de onde vêm os valores dos campos `Implementa`, `Valida`, `Decisões base` e `Telas`.
-- `references/task-examples.md` — exemplos calibrados de tarefas para diferentes contextos (estrutural, lógica de negócio, exposição, observabilidade, feature flag), mostrando como preencher os campos de rastreabilidade (`Implementa`, `Valida`, `Decisões base`) corretamente em cada caso. Inclui guia de granularidade (sinais de "grande demais" e "pequena demais") e tabela de quando cada campo fica vazio.
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver de onde vêm os valores dos campos `Implementa`, `Valida`, `Decisões base` e `Telas`.
+- `references/task-examples.md` — exemplos calibrados de tarefas para diferentes contextos (estrutural, lógica de negócio, exposição, observabilidade, feature flag), com pseudocódigo agnóstico de stack. Mostra como preencher os campos de rastreabilidade (`Implementa`, `Valida`, `Decisões base`) corretamente em cada caso. Inclui guia de granularidade (sinais de "grande demais" e "pequena demais") e tabela de quando cada campo fica vazio.
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md` — os mesmos exemplos com código real em .NET (MediatR, EF Core, xUnit), para quem quiser ver a aplicação numa stack concreta
 
 Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
 

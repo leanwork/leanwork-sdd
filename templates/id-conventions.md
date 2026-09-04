@@ -122,23 +122,15 @@ Quando o `/leanwork-trace` percorre os artefatos, ele sobe e desce essa cadeia p
 
 ## Convenções de nomenclatura de testes
 
-Para fechar o último elo da cadeia, recomenda-se que testes automatizados carreguem o ID do CA que validam no próprio nome:
+Para fechar o último elo da cadeia, recomenda-se que testes automatizados carreguem o ID do CA que validam no próprio nome. O padrão é o mesmo em qualquer stack — nome de teste no formato `CA_XX_descricao_do_cenario`, na convenção de nomenclatura de teste que o framework local usa:
 
-```csharp
-// xUnit
-[Fact]
-public void CA_01_Cliente_compra_produto_em_flash_sale_com_sucesso()
-{
+```
+// pseudocódigo — pattern válido em qualquer framework de teste
+teste "CA_01_Cliente_compra_produto_em_flash_sale_com_sucesso":
     // arrange / act / assert
-}
 
-[Theory]
-[InlineData("CA-02", 0)]
-[InlineData("CA-02", -1)]
-public void CA_02_Compra_falha_quando_estoque_insuficiente(string ca, int estoque)
-{
+teste "CA_02_Compra_falha_quando_estoque_insuficiente":
     // ...
-}
 ```
 
 ```typescript
@@ -149,5 +141,7 @@ describe('CA-01 — Cliente compra produto em flash sale com sucesso', () => {
     });
 });
 ```
+
+Para a versão com xUnit/C# real, ver `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md`, seção "Convenção de nomenclatura de testes".
 
 Isso permite ao `/leanwork-trace` rodar um grep simples (`grep -r "CA-01" tests/`) e confirmar que o cenário tem cobertura de teste real, não apenas referência teórica no plano.

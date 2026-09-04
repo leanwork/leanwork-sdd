@@ -10,8 +10,8 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 # Plano de Execução: [Título da feature/demanda]
 
 **PRD de referência:** [link ou caminho para o arquivo do PRD]
-**Cliente/Produto:** [Ultrafarma / LeanOps / Projeto X / ...]
-**Stack:** [ex.: .NET 8, EF Core 8, SQL Server, React 18]
+**Cliente/Produto:** [Contoso / LeanOps / Projeto X / ...]
+**Stack:** [linguagem, framework, banco de dados, frontend — ex.: Node.js/NestJS, PostgreSQL, React]
 **Autor:** [nome]
 **Data:** [AAAA-MM-DD]
 **Status:** [Rascunho / Em execução / Concluído]
@@ -39,7 +39,7 @@ Listar premissas que afetam o plano. Cada premissa precisa ser explícita — se
 
 Decisões técnicas relevantes já tomadas (referenciar ADR se houver):
 
-- **Decisão:** [ex.: Usaremos MediatR para os handlers] — *referência: ADR-007*
+- **Decisão:** [ex.: Usaremos um pipeline centralizado de handlers para comandos e queries] — *referência: ADR-007*
 
 ## 4. Mapa de dependências *(obrigatória se houver mais de 5 tarefas)*
 
@@ -88,9 +88,9 @@ Quando a entrevista sinalizar entrega incremental real ou risco de integração 
 - **Decisões base:** [ADR-XX] *(decisões arquiteturais que esta tarefa materializa — opcional)*
 - **Telas:** [UI-XX (estados)] *(telas e estados da SPEC-UI que esta tarefa implementa — apenas em tarefas de interface; omitir quando o projeto não tem SPEC-UI)*
 - **Camadas/arquivos afetados:**
-  - `src/Projeto.Domain/Entidades/Foo.cs` *(novo)*
-  - `src/Projeto.Application/Features/Foo/Commands/CriarFoo/CriarFooHandler.cs` *(novo)*
-  - `src/Projeto.Infrastructure/Persistence/Configurations/FooConfiguration.cs` *(novo)*
+  - `dominio/entidades/foo` *(novo)*
+  - `aplicacao/foo/comandos/criar-foo/handler` *(novo)*
+  - `infraestrutura/persistencia/mapeamento-foo` *(novo)*
 
 **Descrição:**
 [O que essa tarefa faz, em 2-4 linhas. Explicar o "como" em alto nível — não código, mas direção. As regras de negócio implementadas já estão em **Implementa:**; aqui você pode aprofundar nuances de implementação.]
