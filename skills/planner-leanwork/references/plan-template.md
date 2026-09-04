@@ -68,6 +68,8 @@ Agrupar tarefas em fases lógicas. Uma fase é um conjunto de tarefas que entreg
 
 Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; feature grande pode ter 6.
 
+Quando a entrevista sinalizar entrega incremental real ou risco de integração concreto, parte das fases pode virar fatia vertical — uma por `CA-XX`, atravessando as camadas necessárias, em vez de fatia por camada. Ver `SKILL.md`, seção "Orientação da fatia", e Exemplo 6 de `task-examples.md`. É exceção, não substituição do padrão acima.
+
 ### Fase 1 — [nome da fase]
 
 **Objetivo da fase:** [1 frase]

@@ -60,6 +60,24 @@ Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com 
 
 Use o template completo em `references/plan-template.md`. Leia o arquivo antes de gerar o plano; ele contém a estrutura exata com todas as seções obrigatórias (resumo executivo, estratégia de entrega, fases com tarefas T-XX, checklist de prontidão, pontos de validação humana) e opcionais (premissas, mapa de dependências em Mermaid, testes transversais, rollback, questões em aberto, histórico de execução).
 
+### Orientação da fatia: horizontal (padrão) ou vertical (seletiva)
+
+O padrão do pipeline é fatiar por camada técnica (Fundação → Lógica de negócio → Exposição → Interface → Qualidade). A justificativa e o trade-off assumido nessa escolha estão registrados em `REFERENCES.md`, seção "Fatiamento horizontal por camada" — vale ler antes de desviar dela.
+
+Desviar quando a entrevista já sinalizou um dos dois:
+
+- **Bloco 2** respondeu que partes da feature **precisam** ir a produção isoladamente, ou que a entrega é incremental de verdade (não "podemos, mas não vamos").
+- **Bloco 4** apontou risco de integração concreto (dependência externa instável, contrato entre times ainda não validado na prática).
+
+Quando um desses sinais aparece, fatiar **a parte afetada do plano** — não necessariamente o plano inteiro — em fatias verticais: cada `T-XX` atravessa as camadas necessárias para fechar um `CA-XX` específico ponta a ponta, começando pelo caminho feliz e deixando erro/edge case para fatias seguintes. Ver `references/task-examples.md`, Exemplo 6, para o formato.
+
+Duas ressalvas a comunicar ao usuário ao propor:
+
+1. Fatia vertical tende a gerar **mais tarefas**, não menos — o teto de 4h força cortar por comportamento (caminho feliz → erro → edge case) em vez de cortar por camada inteira de uma vez. O ganho é demonstrabilidade cedo e menos risco de integração tardia, não redução de tarefas.
+2. Na stack de referência do pipeline (Clean Architecture com projetos separados — Domain/Application/Infrastructure/Api), cada fatia vertical carrega contexto de múltiplos projetos numa única execução de `/leanwork-execute`. O sinal de "grande demais" de `task-examples.md` ("mexe em mais de 3 camadas → separar por camada") não se aplica a essas tarefas — a exceção está registrada lá, junto do exemplo.
+
+Fora desses gatilhos, seguir o padrão horizontal: é a orientação default do pipeline, não uma opção equivalente que se escolhe por preferência.
+
 Recursos auxiliares:
 
 - `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver de onde vêm os valores dos campos `Implementa`, `Valida`, `Decisões base` e `Telas`.

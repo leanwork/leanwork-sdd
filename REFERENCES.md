@@ -389,6 +389,8 @@ O `plan-template.md` organiza fases por camada técnica (domínio → persistên
 
 **Justificativa do pipeline:** com um PRD e uma arquitetura já fechados antes do plano, o risco de descoberta tardia — o principal argumento a favor do vertical slice — é menor. **Contra-argumento honesto:** o risco de integração continua real, e fatia horizontal o empurra para o fim.
 
+**Exceção seletiva (v1.8.0):** quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical volta a valer — não para o plano inteiro, só para a parte afetada. `planner-leanwork/SKILL.md`, seção "Orientação da fatia", e `task-examples.md`, Exemplo 6. O horizontal continua sendo o default; a exceção é condicionada a sinal explícito da entrevista, não a preferência.
+
 ### Numeração sequencial global de tarefas
 
 `T-01`, `T-02`... numeradas linearmente. A **WBS** do PMBOK usa codificação hierárquica (`1.2.3`), que carrega a estrutura de decomposição no próprio ID. A escolha aqui privilegia ID curto e estável para citação em commit e review.

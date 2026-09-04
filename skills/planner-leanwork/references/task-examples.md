@@ -16,7 +16,7 @@ A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tare
 | `Implementa:` lista 4+ RNs | Provavelmente 2 tarefas disfarçadas |
 | Descrição precisa de "e também", "além disso" | Sintoma claro de tarefa dupla |
 | Mais de 4 horas estimadas mentalmente | Quebrar |
-| Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada |
+| Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada — **exceto** em fatia vertical deliberada (Exemplo 6), onde atravessar camadas é o objetivo e o corte certo é por comportamento, não por camada |
 
 | Sinal de "está pequena demais" | Resposta |
 |--------------------------------|----------|
@@ -235,6 +235,52 @@ projeto como ativar/desativar.
 **Riscos / pontos de atenção:**
 - Ponto de validação humana antes de ativar em produção: confirmar que a flag
   está em OFF no environment de produção do LaunchDarkly antes do deploy
+```
+
+---
+
+## Exemplo 6 — Fatia vertical deliberada (entrega incremental ou risco de integração)
+
+Exceção ao padrão horizontal dos Exemplos 1-4. Só se aplica quando a entrevista (Bloco 2 ou Bloco 4 de `SKILL.md`) sinalizou entrega incremental real ou risco de integração concreto — ver `SKILL.md`, seção "Orientação da fatia". Fora desses gatilhos, a quebra continua por camada.
+
+A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito o bastante (só o caminho feliz de um `CA-XX`) para caber no mesmo teto de 4h que os Exemplos 1-4 — o corte estreito aqui é por cenário, não por camada.
+
+```markdown
+#### T-01 — Fatia: comprar oferta relâmpago, caminho feliz
+
+- **Status:** Pendente
+- **Complexidade:** Alta
+- **Depende de:** nenhuma
+- **Implementa:** RN-03
+- **Valida:** CA-04
+- **Decisões base:** ADR-002 *(lock pessimista — adiado para a próxima fatia)*, ADR-003 *(REST + MediatR)*
+- **Camadas/arquivos afetados:**
+  - `src/Ultrafarma.Domain/Entities/FlashSale.cs` *(novo)*
+  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
+  - `src/Ultrafarma.Infrastructure/Persistence/Configurations/FlashSaleConfiguration.cs` *(novo)*
+  - `src/Ultrafarma.Api/Controllers/FlashSalesController.cs` *(novo)*
+
+**Descrição:**
+Fatia mínima que atravessa as quatro camadas só para o caminho feliz: entity
++ configuration, handler que decrementa estoque sem lock pessimista ainda
+(lock e concorrência são CA-06, ficam para a próxima fatia), e endpoint que
+expõe o handler. Sem tratamento de erro além do óbvio (estoque zero). O
+objetivo é ter algo demonstrável e verificável ponta a ponta o quanto antes —
+não cobrir a funcionalidade inteira nesta tarefa.
+
+**Critério de aceite (testável):**
+- [ ] CA-04 verde: `POST /api/flash-sales/{id}/comprar` com estoque disponível
+      retorna 200 e decrementa estoque em 1
+
+**Testes a escrever:**
+- *Integration (com WebApplicationFactory):* `CA_04_Compra_com_sucesso_decrementa_estoque`
+
+**Riscos / pontos de atenção:**
+- Concorrência (CA-06) e limite por cliente (RN-05) ficam para a fatia
+  seguinte — não implementar lock pessimista aqui, é escopo de outra tarefa
+- Fatia estreita gera **mais tarefas no total** que a quebra horizontal
+  equivalente (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a
+  mesma feature): o ganho é demonstrabilidade cedo, não menos tarefas
 ```
 
 ---
