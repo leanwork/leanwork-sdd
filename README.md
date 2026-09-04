@@ -68,10 +68,14 @@ leanwork-sdd/
 │           ├── claude-md-module-template.md
 │           ├── command-detection.md
 │           └── permission-catalog.md
-└── templates/                       # convenções compartilhadas
-    ├── id-conventions.md
-    ├── folder-conventions.md
-    └── pipeline-example.md
+├── templates/                       # convenções compartilhadas, stack-agnósticas
+│   ├── id-conventions.md
+│   └── folder-conventions.md
+└── stacks/                          # exemplos calibrados por stack (ver stacks/README.md)
+    └── dotnet/
+        ├── pipeline-example.md
+        ├── task-examples.md
+        └── c4-component-example.md
 ```
 
 ### Por que templates em arquivos separados?
@@ -81,7 +85,8 @@ Padrão **progressive disclosure** do Claude Code: a SKILL.md fica curta (instru
 - **Menos tokens em contexto** quando a skill está só "ativa" mas ainda em fase de entrevista
 - **Templates versionáveis isoladamente** — você ajusta o `proposal-template.md` sem mexer na lógica da skill
 - **Templates reutilizáveis fora do plugin** — devs podem copiar `references/proposal-template.md` direto para um repositório e usar manualmente
-- **Convenções compartilhadas centralizadas** em `templates/` na raiz (IDs, pastas, exemplo end-to-end)
+- **Convenções compartilhadas centralizadas** em `templates/` na raiz (IDs, pastas) — sempre stack-agnósticas
+- **Exemplos calibrados por stack isolados** em `stacks/` — quem quer ver código real de uma stack específica sabe onde procurar, sem misturar com o núcleo agnóstico
 
 ## O que vem dentro
 
@@ -131,7 +136,7 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 
 **planner-leanwork/references/**
 - `plan-template.md` — template completo do plano com fases e estrutura de tarefa
-- `task-examples.md` — 5 exemplos de tarefas + guia de granularidade
+- `task-examples.md` — 6 exemplos de tarefas (pseudocódigo agnóstico) + guia de granularidade; versão com código real em .NET em `stacks/dotnet/task-examples.md`
 
 **reviewer-leanwork/references/**
 - `review-template.md` — template completo do relatório de review
@@ -148,9 +153,16 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 
 - `id-conventions.md` — como numerar `ADR-XX`, `RN-XX`, `CA-XX`, `UI-XX`, `T-XX`, `R-XX`, sufixo de estado (`UI-02.erro`), regras de revogação, convenção de nome de teste
 - `folder-conventions.md` — estrutura `docs/architecture/`, `docs/prds/`, `docs/prototype/`, `docs/plans/`, `docs/reviews/`, `docs/traceability/`, mais variantes para mono-repo
-- `pipeline-example.md` — exemplo end-to-end completo (Ofertas Relâmpago da Ultrafarma): a mesma demanda atravessando os cinco artefatos — proposta arquitetural, PRD, SPEC-UI, plano e relatório de review — com os IDs cruzados preenchidos. As cinco skills que produzem artefato apontam para ele em "Recursos auxiliares"
 
-> **Regra de manutenção.** `templates/` descreve o pipeline inteiro, então toda skill nova ou fase nova obriga uma varredura dos três arquivos antes do release. A contagem de skills, as colunas da matriz e o exemplo end-to-end são os pontos que envelhecem primeiro.
+> **Regra de manutenção.** `templates/` descreve o pipeline inteiro, então toda skill nova ou fase nova obriga uma varredura dos dois arquivos antes do release. A contagem de skills e as colunas da matriz são os pontos que envelhecem primeiro.
+
+### Exemplos calibrados por stack (raiz `stacks/`)
+
+`templates/` e `references/` são stack-agnósticos por convenção — pseudocódigo, nomes de padrão genéricos, placeholders entre colchetes. Quem quer ver a mesma convenção com código real de uma stack específica encontra em `stacks/<nome-da-stack>/`. Ver [`stacks/README.md`](stacks/README.md) para a convenção completa.
+
+- `stacks/dotnet/pipeline-example.md` — exemplo end-to-end completo (Ofertas Relâmpago da Contoso), calibrado em .NET: a mesma demanda atravessando os cinco artefatos — proposta arquitetural, PRD, SPEC-UI, plano e relatório de review — com os IDs cruzados preenchidos. As cinco skills que produzem artefato apontam para ele em "Recursos auxiliares"
+- `stacks/dotnet/task-examples.md` — os 6 exemplos de tarefas de `planner-leanwork/references/task-examples.md` com código real em .NET (MediatR, EF Core, xUnit, FluentValidation, LaunchDarkly, Serilog)
+- `stacks/dotnet/c4-component-example.md` — o diagrama C4 Nível 3 de `architect-leanwork/references/c4-mermaid-templates.md` com uma Clean/Onion Architecture real em .NET, marcado como um exemplo entre vários — não recomendação de estilo
 
 ### Documentação de referência
 
@@ -330,7 +342,7 @@ Sem SPEC-UI no projeto, as colunas de UI são omitidas da matriz — ausência n
 - **Português é padrão.** Todos os artefatos saem em PT-BR. Termos técnicos consagrados podem ficar em inglês.
 - **IA-friendly por design.** Cada artefato é otimizado para ser consumido por agente de IA, com IDs estáveis, pontos de validação humana explícitos e critérios de aceite testáveis.
 - **Sem cronograma, sem estimativa.** O pipeline produz "o quê", "por quê" e "em que ordem". "Quando" e "quanto" são responsabilidade do planejamento de sprint.
-- **Stack-agnóstico onde dá.** Nenhuma skill traz tecnologia pré-definida. Stack vem do projeto — e design vem das skills de frontend do ambiente.
+- **Stack-agnóstico no núcleo.** Nenhuma skill traz tecnologia pré-definida, e `templates/`/`references/` usam pseudocódigo. Stack vem do projeto — e design vem das skills de frontend do ambiente. Exemplos com código real de uma stack específica ficam isolados em `stacks/` (ver `stacks/README.md`), nunca misturados ao núcleo.
 - **Progressive disclosure.** SKILL.md curta = conversa e direção. References carregadas sob demanda = templates e catálogos.
 - **Lacuna declarada vale mais que lacuna preenchida.** Nenhuma skill inventa para fechar matriz, e toda informação gerada declara a origem. Matriz honestamente incompleta é informação; matriz fechada com suposição é armadilha.
 - **Fontes na mesa.** O [`REFERENCES.md`](REFERENCES.md) credita a literatura por trás de cada fase e registra onde o pipeline diverge dela de propósito.
@@ -380,6 +392,9 @@ Nenhuma delas usa `disable-model-invocation`: o modelo pode carregá-las quando 
 - `1.6.8` — o único ponto do pipeline que podia produzir número financeiro por acidente de template deixa de produzi-lo. O sumário executivo da proposta arquitetural pedia "custo e prazo de cara, em ordem de grandeza" enquanto o apêndice do mesmo arquivo já mandava cronograma e estimativa para o planejamento de sprint — e o campo vencia, porque é o que o agente preenche. Agora o sumário só ecoa **restrição declarada pelo cliente**, que é entrada e vive na seção 4; estimativa gerada pela proposta some, e o checklist final passa a barrá-la explicitamente
 - `1.6.9` — `R-XX` deixa de ser exceção não declarada. A regra geral de IDs proibia reúso, e a regra de `R-XX` recomeça em `R-01` a cada relatório: a exceção agora está escrita no ponto da regra geral, junto com o motivo — relatórios de review são o único artefato que existe muitas vezes no mesmo projeto. Corrigido o efeito colateral disso na skill de review, que anunciava "as mesmas regras dos demais IDs" e dava exemplo de numeração continuando entre rounds. E o número passa a vir com o arquivo: `R-01 (REVIEW-T-04-2026-06-15)` em todo lugar fora do relatório de origem — plano, matriz do `/leanwork-trace`, sugestão do `/leanwork-next` e conversa
 - `1.6.10` — os oito templates de `references/` param de se fechar sozinhos. Cada um envolve o documento-modelo numa cerca de código, e o conteúdo tem blocos `mermaid`, `gherkin`, `bash` e `csharp` na mesma largura de três crases: pelo CommonMark, o primeiro bloco interno encerra o externo. A renderização quebrava no meio do template e o agente que o lê para gerar o artefato precisava adivinhar onde o modelo termina — bem no ponto em que nascem os `CA-XX` do PRD. O envelope passa a quatro crases, e cada template agora diz por escrito que essa cerca é andaime e não entra no documento gerado
+- `1.7.0` — três práticas de engenharia entram no pipeline sem skill nova. `planner-leanwork` ganha o padrão **expandir-migrar-contrair** para refactors de alto *blast radius* (renomear coluna, retipar símbolo compartilhado) que não cabem em uma tarefa monolítica de 4h, e uma pergunta de entrevista sobre a **costura de teste** (seam) preferencial antes de quebrar em tarefas. `/leanwork-execute` passa a escrever o teste antes do código de produção na costura, quando praticável, e a rodar typecheck/build antes da suíte — typecheck quebrado bloqueia `Concluído` do mesmo jeito que teste vermelho. Fatiamento vertical por tarefa (tracer bullet) foi avaliado e **não adotado**: o `plan-template.md` fatia por camada técnica de propósito, divergência já registrada em `REFERENCES.md` com justificativa própria — trocar isso exige decisão explícita, não é ganho a implementar de passagem
+- `1.8.0` — a divergência de fatiamento horizontal registrada em `REFERENCES.md` ganha exceção seletiva: quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical passa a valer para a parte afetada do plano — não para o plano inteiro. `planner-leanwork/SKILL.md` ganha a seção "Orientação da fatia" com os dois gatilhos e duas ressalvas (fatia vertical gera mais tarefas, não menos; e carrega contexto de múltiplos projetos por execução na stack de referência em Clean Architecture). `task-examples.md` ganha o Exemplo 6 e uma exceção explícita ao sinal de "mexe em mais de 3 camadas → separar", e `plan-template.md` referencia a alternativa sem substituir o padrão. Horizontal continua default
+- `1.9.0` — os exemplos .NET saem do núcleo agnóstico e ganham endereço próprio em `stacks/dotnet/`. `templates/pipeline-example.md` (exemplo end-to-end das cinco fases) muda de lugar inteiro, e as cinco skills que produzem artefato repontam para lá. `task-examples.md` do planner e o diagrama C4 Nível 3 do architect (que usava MediatR/FluentValidation/EF Core numa Clean Architecture completa — a mesma combinação que a skill lista entre os modismos a não adotar por moda) passam a ter versão agnóstica no lugar original e versão calibrada em `stacks/dotnet/`. Placeholders `.NET` soltos em templates de preenchimento (`proposal-template.md`, `prd-template.md`, `plan-template.md`, `claude-md-root-template.md`) viram genéricos. `id-conventions.md` troca o bloco xUnit por pseudocódigo e aponta para a versão .NET. Novo `stacks/README.md` documenta a convenção para futuras stacks
 
 ## Crédito e inspiração
 

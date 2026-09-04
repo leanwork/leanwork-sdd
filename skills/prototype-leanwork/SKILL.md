@@ -183,4 +183,4 @@ Pedido direto ("especificar as telas", "documentar o protótipo") carrega a skil
 - `references/ingestion-guide.md` — extração por formato (HTML, imagens, Figma MCP, Lovable/v0)
 - `references/generation-guide.md` — arquétipos de interface, condução da entrevista e delegação do craft visual
 - `references/screen-states.md` — catálogo de estados de tela e quando cada um é obrigatório
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `CA-XX` do PRD vira estado `UI-XX.sufixo` e como o plano e o review consomem esse estado
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver como um `CA-XX` do PRD vira estado `UI-XX.sufixo` e como o plano e o review consomem esse estado

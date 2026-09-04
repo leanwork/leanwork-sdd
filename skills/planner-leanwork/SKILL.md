@@ -42,6 +42,7 @@ Perguntar em blocos lógicos, somente o que estiver faltando:
 - Há cobertura mínima exigida? Há áreas que dispensam teste (ex.: DTOs puros)?
 - Existe ambiente de homologação/staging onde a feature será validada antes de produção?
 - Quem valida o critério de aceite final? (PO, QA, cliente, próprio dev)
+- Em que costura (seam) a feature deve ser testada — comportamento externo (API, handler, use case) ou existe ponto já usado em features parecidas? Preferir a costura mais alta possível e a existente à nova; quanto menos costuras diferentes no plano, mais fácil o teste sobreviver a refactors internos.
 
 ### Bloco 4 — Riscos e bloqueios conhecidos
 
@@ -59,10 +60,29 @@ Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com 
 
 Use o template completo em `references/plan-template.md`. Leia o arquivo antes de gerar o plano; ele contém a estrutura exata com todas as seções obrigatórias (resumo executivo, estratégia de entrega, fases com tarefas T-XX, checklist de prontidão, pontos de validação humana) e opcionais (premissas, mapa de dependências em Mermaid, testes transversais, rollback, questões em aberto, histórico de execução).
 
+### Orientação da fatia: horizontal (padrão) ou vertical (seletiva)
+
+O padrão do pipeline é fatiar por camada técnica (Fundação → Lógica de negócio → Exposição → Interface → Qualidade). A justificativa e o trade-off assumido nessa escolha estão registrados em `REFERENCES.md`, seção "Fatiamento horizontal por camada" — vale ler antes de desviar dela.
+
+Desviar quando a entrevista já sinalizou um dos dois:
+
+- **Bloco 2** respondeu que partes da feature **precisam** ir a produção isoladamente, ou que a entrega é incremental de verdade (não "podemos, mas não vamos").
+- **Bloco 4** apontou risco de integração concreto (dependência externa instável, contrato entre times ainda não validado na prática).
+
+Quando um desses sinais aparece, fatiar **a parte afetada do plano** — não necessariamente o plano inteiro — em fatias verticais: cada `T-XX` atravessa as camadas necessárias para fechar um `CA-XX` específico ponta a ponta, começando pelo caminho feliz e deixando erro/edge case para fatias seguintes. Ver `references/task-examples.md`, Exemplo 6, para o formato.
+
+Duas ressalvas a comunicar ao usuário ao propor:
+
+1. Fatia vertical tende a gerar **mais tarefas**, não menos — o teto de 4h força cortar por comportamento (caminho feliz → erro → edge case) em vez de cortar por camada inteira de uma vez. O ganho é demonstrabilidade cedo e menos risco de integração tardia, não redução de tarefas.
+2. Na stack de referência do pipeline (Clean Architecture com projetos separados — Domain/Application/Infrastructure/Api), cada fatia vertical carrega contexto de múltiplos projetos numa única execução de `/leanwork-execute`. O sinal de "grande demais" de `task-examples.md` ("mexe em mais de 3 camadas → separar por camada") não se aplica a essas tarefas — a exceção está registrada lá, junto do exemplo.
+
+Fora desses gatilhos, seguir o padrão horizontal: é a orientação default do pipeline, não uma opção equivalente que se escolhe por preferência.
+
 Recursos auxiliares:
 
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver de onde vêm os valores dos campos `Implementa`, `Valida`, `Decisões base` e `Telas`.
-- `references/task-examples.md` — exemplos calibrados de tarefas para diferentes contextos (estrutural, lógica de negócio, exposição, observabilidade, feature flag), mostrando como preencher os campos de rastreabilidade (`Implementa`, `Valida`, `Decisões base`) corretamente em cada caso. Inclui guia de granularidade (sinais de "grande demais" e "pequena demais") e tabela de quando cada campo fica vazio.
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver de onde vêm os valores dos campos `Implementa`, `Valida`, `Decisões base` e `Telas`.
+- `references/task-examples.md` — exemplos calibrados de tarefas para diferentes contextos (estrutural, lógica de negócio, exposição, observabilidade, feature flag), com pseudocódigo agnóstico de stack. Mostra como preencher os campos de rastreabilidade (`Implementa`, `Valida`, `Decisões base`) corretamente em cada caso. Inclui guia de granularidade (sinais de "grande demais" e "pequena demais") e tabela de quando cada campo fica vazio.
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md` — os mesmos exemplos com código real em .NET (MediatR, EF Core, xUnit), para quem quiser ver a aplicação numa stack concreta
 
 Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
 
@@ -104,6 +124,8 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 **Quando aparece tarefa parecendo grande durante a quebra:** quebrar antes de gerar. Sinal de "está grande demais": mais de 3 critérios de aceite na mesma tarefa, ou critério de aceite que precisa de mais de 2 testes para validar, ou descrição que precisa de "e também" / "além disso" para descrever, ou mais de 4 horas estimadas mentalmente. A lista completa está em `references/task-examples.md`.
 
 **Quando a feature toca código legado sem teste:** sugerir tarefa preliminar de caracterização (escrever testes que documentam o comportamento atual) antes das tarefas de modificação. Isso previne regressões silenciosas.
+
+**Quando a quebra encontra um refactor de alto impacto** (renomear coluna usada por várias queries, retipar um símbolo compartilhado, mudar contrato consumido por múltiplos chamadores): não force uma tarefa monolítica — ela quebra tudo de uma vez e não cabe em 4h. Sequencie como **expandir → migrar → contrair**: uma tarefa expande (forma nova ao lado da antiga, nada quebra ainda), uma ou mais tarefas migram os chamadores em lotes (por módulo/pasta, cada lote sua própria tarefa com `Depende de:` a tarefa de expansão), e uma tarefa final contrai (remove a forma antiga, `Depende de:` todos os lotes de migração). Cada tarefa fica com CI verde standalone, ao custo de mais tarefas no plano do que uma mudança mecânica única exigiria.
 
 **Quando o plano será consumido por agente de IA (Claude Code, Codex, etc.):** ser ainda mais explícito nos critérios de aceite e nos pontos de validação humana. Agentes não têm o instinto de "isso parece estranho, melhor confirmar" — precisam de gates explícitos no plano.
 

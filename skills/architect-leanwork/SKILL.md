@@ -198,7 +198,7 @@ Recursos auxiliares (carregue conforme necessidade):
 - `references/quality-attributes.md` — catálogo de atributos de qualidade (performance, escalabilidade, disponibilidade, resiliência, segurança, manutenibilidade, observabilidade) com perguntas-gatilho, sinais de prioridade, padrões que atendem, e trade-offs a explicitar
 - `references/architectural-styles.md` — catálogo de estilos arquiteturais (monolito, modular monolith, microsserviços, pipes & filters, EDA, CQRS, event sourcing, microkernel, serverless, REST+gateway) com forças, fraquezas, isomorfismo natural e quando evitar
 - `references/adr-template.md` — template standalone de ADR (quando o usuário preferir ADRs como arquivos separados em vez de inline na proposta)
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `ADR-XX` desta proposta é citado depois no PRD, no plano e no review
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver como um `ADR-XX` desta proposta é citado depois no PRD, no plano e no review
 
 ### Princípios de escrita da proposta
 

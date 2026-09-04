@@ -80,16 +80,18 @@ flowchart TB
 
 Zoom dentro de um container. Use apenas quando faz diferença para a decisão arquitetural. Geralmente só vale para a API ou para o container de domínio mais complexo.
 
+Este exemplo usa nomes de padrão (não de biblioteca) — o objetivo é ilustrar agrupamento lógico, não prescrever uma arquitetura em camadas específica. Para uma versão com bibliotecas reais de uma stack .NET (MediatR, FluentValidation, EF Core), ver `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/c4-component-example.md`.
+
 ```mermaid
 flowchart TB
-    subgraph API["API REST (.NET 8)"]
-        Controllers["Controllers<br/>(HTTP entry-points)"]
-        Mediator["MediatR<br/>(orquestração de handlers)"]
+    subgraph API["API REST"]
+        Controllers["Entry-points<br/>(HTTP)"]
+        Dispatcher["Dispatcher<br/>(orquestração de handlers)"]
 
         subgraph Application["Application Layer"]
             Commands["Command Handlers<br/>(escrita)"]
             Queries["Query Handlers<br/>(leitura)"]
-            Validators["FluentValidation"]
+            Validators["Validadores"]
         end
 
         subgraph Domain["Domain Layer"]
@@ -98,19 +100,19 @@ flowchart TB
         end
 
         subgraph Infrastructure["Infrastructure"]
-            Repos["Repositories<br/>(EF Core)"]
+            Repos["Repositories<br/>(acesso a dados)"]
             ExternalAdapters["External API<br/>Adapters"]
-            EventPublisher["Event Publisher<br/>(Service Bus)"]
+            EventPublisher["Event Publisher<br/>(fila/broker)"]
         end
     end
 
-    DB[("SQL Server")]
-    Queue[("Service Bus")]
+    DB[("Banco Relacional")]
+    Queue[("Fila")]
     Legacy["ERP Legado"]
 
-    Controllers --> Mediator
-    Mediator --> Commands
-    Mediator --> Queries
+    Controllers --> Dispatcher
+    Dispatcher --> Commands
+    Dispatcher --> Queries
     Commands --> Validators
     Commands --> Aggregates
     Commands --> Repos
@@ -129,6 +131,7 @@ flowchart TB
 - Subgraphs para mostrar agrupamento lógico (camadas, módulos)
 - Cores diferentes por camada ajudam a leitura
 - Não detalhe classes individuais — é nível 3, não 4
+- Este agrupamento em camadas é um exemplo, não uma recomendação — ver catálogo de atributos da skill quanto a quando Clean/Onion Architecture compensa
 
 ## Sequence Diagram para fluxos críticos
 

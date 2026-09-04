@@ -2,6 +2,8 @@
 
 Referência para calibrar como tarefas devem ser escritas no plano de execução. Mostra a faixa correta de granularidade (nem grande demais, nem fragmentada demais), o uso correto dos campos de rastreabilidade (`Implementa`, `Valida`, `Decisões base`) e padrões para diferentes tipos de tarefa.
 
+Os exemplos abaixo usam pseudocódigo e nomes de camada genéricos — nenhum framework ou biblioteca específica. Para ver os mesmos seis exemplos com código real (.NET, EF Core, MediatR, xUnit, Serilog, LaunchDarkly), ver `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md`.
+
 ---
 
 ## Princípio de granularidade
@@ -16,7 +18,7 @@ A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tare
 | `Implementa:` lista 4+ RNs | Provavelmente 2 tarefas disfarçadas |
 | Descrição precisa de "e também", "além disso" | Sintoma claro de tarefa dupla |
 | Mais de 4 horas estimadas mentalmente | Quebrar |
-| Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada |
+| Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada — **exceto** em fatia vertical deliberada (Exemplo 6), onde atravessar camadas é o objetivo e o corte certo é por comportamento, não por camada |
 
 | Sinal de "está pequena demais" | Resposta |
 |--------------------------------|----------|
@@ -31,7 +33,7 @@ A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tare
 Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** porque não materializam regras de negócio diretamente — preparam terreno.
 
 ```markdown
-#### T-01 — Criar entity FlashSale e configuration EF Core
+#### T-01 — Criar entidade FlashSale e mapeamento de persistência
 
 - **Status:** Pendente
 - **Complexidade:** Baixa
@@ -40,25 +42,26 @@ Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** po
 - **Valida:** —
 - **Decisões base:** ADR-001 *(estrutura modular monolith)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Domain/Entities/FlashSale.cs` *(novo)*
-  - `src/Ultrafarma.Domain/Entities/FlashSaleItem.cs` *(novo)*
-  - `src/Ultrafarma.Infrastructure/Persistence/Configurations/FlashSaleConfiguration.cs` *(novo)*
+  - `dominio/entidades/flash-sale` *(novo)*
+  - `dominio/entidades/flash-sale-item` *(novo)*
+  - `infraestrutura/persistencia/mapeamento-flash-sale` *(novo)*
 
 **Descrição:**
-Criar a entidade `FlashSale` com propriedades: `Id`, `ProductId`, `Price`, `Stock`,
-`StartsAt`, `EndsAt`, `Status` (enum). Aggregate root com lista de `FlashSaleItem`
-(itens vendidos). Configuration EF Core com índice composto em `(ProductId, StartsAt)`
-e constraint `EndsAt > StartsAt`. Sem lógica de comportamento ainda — apenas estrutura.
+Criar a entidade `FlashSale` com propriedades: `id`, `produtoId`, `preco`, `estoque`,
+`iniciaEm`, `terminaEm`, `status` (enum). Aggregate root com lista de `FlashSaleItem`
+(itens vendidos). Mapeamento de persistência com índice composto em
+`(produtoId, iniciaEm)` e constraint `terminaEm > iniciaEm`. Sem lógica de
+comportamento ainda — apenas estrutura.
 
 **Critério de aceite (testável):**
-- [ ] Entity compila e está mapeada corretamente (verificável via `dotnet ef migrations add`)
-- [ ] Configuration aplica constraint e índice
+- [ ] Entidade compila e está mapeada corretamente (verificável via geração/dry-run de migration)
+- [ ] Mapeamento aplica constraint e índice
 
 **Testes a escrever:**
-- *Não aplicável* — tarefa estrutural. Testes virão nas tarefas T-04 (handler) e T-08 (validation).
+- *Não aplicável* — tarefa estrutural. Testes virão nas tarefas T-04 (handler) e T-08 (validação).
 
 **Riscos / pontos de atenção:**
-- Padrão de nomenclatura do projeto usa `Entity` como sufixo? Verificar antes em `CLAUDE.md`.
+- Padrão de nomenclatura do projeto usa algum sufixo específico para entidades? Verificar antes em `CLAUDE.md`.
 ```
 
 ---
@@ -72,44 +75,44 @@ Tarefas de lógica de negócio **sempre preenchem `Implementa:`** (regras do PRD
 
 - **Status:** Pendente
 - **Complexidade:** Alta
-- **Depende de:** T-01, T-02 (migration), T-03 (interface IFlashSaleRepository)
+- **Depende de:** T-01, T-02 (migration), T-03 (interface do repositório)
 - **Implementa:** RN-03, RN-05
 - **Valida:** CA-04, CA-06
 - **Decisões base:** ADR-002 *(lock pessimista para evitar overselling)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaCommand.cs` *(novo)*
-  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
-  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaResult.cs` *(novo)*
-  - `src/Ultrafarma.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs` *(editado)*
+  - `aplicacao/flash-sale/comandos/comprar-oferta/comando` *(novo)*
+  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(novo)*
+  - `aplicacao/flash-sale/comandos/comprar-oferta/resultado` *(novo)*
+  - `infraestrutura/persistencia/repositorios/flash-sale-repositorio` *(editado)*
 
 **Descrição:**
-Handler MediatR que: (1) abre transação `IsolationLevel.Serializable`,
-(2) chama `IFlashSaleRepository.GetByIdWithLockAsync` que executa
-`SELECT ... WITH (UPDLOCK, ROWLOCK)`, (3) valida `Stock > 0` e
-`!HasCustomerPurchased(customerId)`, (4) decrementa `Stock`, (5) cria
-`FlashSaleItem` registrando a compra, (6) commit. Lança `BusinessException`
+Handler que: (1) abre transação com isolamento serializável, (2) chama
+`buscarPorIdComLock`, que lê a linha da oferta com lock pessimista de escrita
+(bloqueio exclusivo até o commit), (3) valida `estoque > 0` e
+`!clienteJaComprou(clienteId)`, (4) decrementa `estoque`, (5) cria
+`FlashSaleItem` registrando a compra, (6) commit. Lança exceção de negócio
 em violação de regra (estoque esgotado, limite por cliente); deixa exceções
-técnicas subirem para middleware global.
+técnicas subirem para o tratamento de erro global.
 
 **Critério de aceite (testável):**
 - [ ] CA-04 verde: compra atômica decrementa estoque e cria registro de venda
 - [ ] CA-06 verde: 100 compras concorrentes em estoque=10 → exatamente 10 sucessos
-- [ ] Exceções técnicas (SQL timeout, etc) não são convertidas em `BusinessException`
+- [ ] Exceções técnicas (timeout de banco, etc.) não são convertidas em exceção de negócio
 
 **Testes a escrever:**
-- *Unit:* `CA_04_Compra_com_sucesso_decrementa_estoque`,
-  `Handler_lanca_BusinessException_quando_estoque_zero`,
-  `Handler_lanca_BusinessException_quando_cliente_ja_comprou`
-- *Integration:* `Compra_em_oferta_ativa_persiste_em_banco_real`
-- *Stress (xUnit + Task.WhenAll):* `CA_06_100_compras_concorrentes_respeitam_estoque_atomico`
+- *Unit:* `CA_04_compra_com_sucesso_decrementa_estoque`,
+  `handler_lanca_excecao_de_negocio_quando_estoque_zero`,
+  `handler_lanca_excecao_de_negocio_quando_cliente_ja_comprou`
+- *Integration:* `compra_em_oferta_ativa_persiste_em_banco_real`
+- *Stress (execução concorrente):* `CA_06_100_compras_concorrentes_respeitam_estoque_atomico`
 
 **Riscos / pontos de atenção:**
-- Lock pessimista em produção tem custo de bloqueio — monitorar `sys.dm_tran_locks`
+- Lock pessimista em produção tem custo de bloqueio — monitorar contenção de locks
   na primeira janela de Black Friday (entrar em T-12, observabilidade)
-- Cuidado com timeout de transação — definir explicitamente
-  `IsolationLevel.Serializable` e `CommandTimeout=10s` no DbContextOptions
+- Cuidado com timeout de transação — definir explicitamente isolamento serializável
+  e timeout de comando na configuração de acesso a dados
 - **Ponto de validação humana sugerido:** revisar implementação com tech lead
-  antes de avançar para T-05 (controller). Lock pessimista é decisão de impacto
+  antes de avançar para T-05 (endpoint). Lock pessimista é decisão de impacto
   operacional.
 ```
 
@@ -124,29 +127,29 @@ Tarefas de controller/endpoint **preenchem `Valida:`** porque sua conclusão é 
 
 - **Status:** Pendente
 - **Complexidade:** Média
-- **Depende de:** T-04 (handler), T-08 (validator)
+- **Depende de:** T-04 (handler), T-08 (validador)
 - **Implementa:** —
 - **Valida:** CA-04, CA-05, CA-06, CA-07 *(todos os cenários do funcional principal)*
-- **Decisões base:** ADR-003 *(REST + MediatR como padrão de entrada)*
+- **Decisões base:** ADR-003 *(REST + pipeline de handlers como padrão de entrada)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Api/Controllers/FlashSalesController.cs` *(editado)*
-  - `src/Ultrafarma.Api/DTOs/ComprarOfertaRequest.cs` *(novo)*
+  - `api/controllers/flash-sales-controller` *(editado)*
+  - `api/dtos/comprar-oferta-request` *(novo)*
 
 **Descrição:**
-Endpoint REST que recebe `ComprarOfertaRequest`, monta `ComprarOfertaCommand`
-com `customerId` extraído do JWT claim `sub`, despacha via MediatR e mapeia
+Endpoint REST que recebe `ComprarOfertaRequest`, monta o comando `ComprarOferta`
+com `clienteId` extraído do token de autenticação, despacha para o handler e mapeia
 resultado para HTTP: sucesso → 200 com `ComprarOfertaResponse`,
-`BusinessException` → 422 com mensagem de negócio, demais exceções → 500
-via middleware global.
+exceção de negócio → 422 com mensagem de negócio, demais exceções → 500
+via tratamento de erro global.
 
 **Critério de aceite (testável):**
 - [ ] Compra autenticada bem-sucedida retorna 200 (CA-04)
 - [ ] Compra com estoque zero retorna 422 com mensagem específica (CA-06)
 - [ ] Compra fora da janela retorna 422 com mensagem específica (CA-07)
-- [ ] Compra sem JWT retorna 401
+- [ ] Compra sem autenticação retorna 401
 
 **Testes a escrever:**
-- *Integration (com WebApplicationFactory):*
+- *Integration (com cliente HTTP de teste):*
   `POST_comprar_flash_sale_retorna_200_quando_valido`,
   `POST_comprar_flash_sale_retorna_422_quando_estoque_zero`,
   `POST_comprar_flash_sale_retorna_401_sem_autenticacao`
@@ -154,7 +157,7 @@ via middleware global.
 **Riscos / pontos de atenção:**
 - Verificar se rate limiting do endpoint precisa ser mais restrito que o padrão
   (oferta relâmpago pode atrair bots)
-- Conferir se o JWT claim `sub` é o ID do cliente ou se precisa de mapeamento
+- Conferir se o claim de identidade do token é o ID do cliente ou se precisa de mapeamento
 ```
 
 ---
@@ -171,30 +174,30 @@ Tarefas de observabilidade, métricas, logging tipicamente **não preenchem `Imp
 - **Depende de:** T-09 (endpoint pronto)
 - **Implementa:** —
 - **Valida:** —
-- **Decisões base:** ADR-008 *(observabilidade via Application Insights)*
+- **Decisões base:** ADR-008 *(observabilidade via ferramenta de APM)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(editado)*
-  - `src/Ultrafarma.Infrastructure/Telemetry/FlashSaleMetrics.cs` *(novo)*
+  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(editado)*
+  - `infraestrutura/telemetria/flash-sale-metricas` *(novo)*
 
 **Descrição:**
-Adicionar: (1) log estruturado com Serilog no handler com propriedades
-`flashSaleId`, `customerId`, `outcome` (success/sold_out/limit_exceeded);
-(2) métricas custom no Application Insights: `flash_sale_purchase_attempts`,
-`flash_sale_purchase_outcomes` com tag `outcome`; (3) custom metric de
+Adicionar: (1) log estruturado no handler com propriedades `flashSaleId`,
+`clienteId`, `outcome` (success/sold_out/limit_exceeded); (2) métricas custom
+na ferramenta de APM: `flash_sale_purchase_attempts`,
+`flash_sale_purchase_outcomes` com tag `outcome`; (3) métrica custom de
 `stock_remaining_at_purchase` para análise post-mortem.
 
 **Critério de aceite (testável):**
 - [ ] Cada tentativa de compra gera log estruturado com correlation id
-- [ ] Métricas custom aparecem no App Insights em ambiente local
+- [ ] Métricas custom aparecem na ferramenta de APM em ambiente local
 - [ ] PII (CPF, email) NÃO aparece nos logs
 
 **Testes a escrever:**
-- *Unit (com fake logger):* `Handler_emite_log_com_outcome_correto_em_sucesso`,
-  `Handler_nao_emite_PII_em_log`
+- *Unit (com logger fake):* `handler_emite_log_com_outcome_correto_em_sucesso`,
+  `handler_nao_emite_pii_em_log`
 
 **Riscos / pontos de atenção:**
-- Cuidado com cardinalidade de tags em métricas custom — `customerId` como tag
-  exploda cardinality. Manter como log property, não tag de métrica.
+- Cuidado com cardinalidade de tags em métricas custom — `clienteId` como tag
+  explode cardinalidade. Manter como propriedade de log, não tag de métrica.
 ```
 
 ---
@@ -204,7 +207,7 @@ Adicionar: (1) log estruturado com Serilog no handler com propriedades
 Quando uma tarefa **existe especificamente para implementar uma decisão arquitetural**, `Decisões base:` carrega o ADR e `Implementa:` pode ficar vazio se nenhuma regra de negócio do PRD a justifica diretamente.
 
 ```markdown
-#### T-15 — Configurar feature flag para "Ofertas Relâmpago" via LaunchDarkly
+#### T-15 — Configurar feature flag para "Ofertas Relâmpago"
 
 - **Status:** Pendente
 - **Complexidade:** Média
@@ -213,15 +216,15 @@ Quando uma tarefa **existe especificamente para implementar uma decisão arquite
 - **Valida:** —
 - **Decisões base:** ADR-006 *(roll-out controlado via feature flag)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Api/Controllers/FlashSalesController.cs` *(editado)*
-  - `src/Ultrafarma.Web/Pages/Home.razor` *(editado)*
-  - `appsettings.json` *(editado)*
+  - `api/controllers/flash-sales-controller` *(editado)*
+  - `web/paginas/home` *(editado)*
+  - `configuracao/app` *(editado)*
 
 **Descrição:**
 Adicionar gate `FeatureFlag.FlashSales` no endpoint POST e no componente de UI.
-Configurar flag no LaunchDarkly com targeting: `false` por padrão, `true` para
-clientes do canary group `flash-sales-canary`. Documentar no `CLAUDE.md` do
-projeto como ativar/desativar.
+Configurar flag no serviço de feature flag com targeting: `false` por padrão,
+`true` para clientes do canary group `flash-sales-canary`. Documentar no
+`CLAUDE.md` do projeto como ativar/desativar.
 
 **Critério de aceite (testável):**
 - [ ] Com flag OFF: endpoint retorna 404 e UI esconde seção
@@ -229,12 +232,58 @@ projeto como ativar/desativar.
 - [ ] Targeting funciona para canary group
 
 **Testes a escrever:**
-- *Integration:* `Endpoint_retorna_404_quando_feature_flag_off`,
-  `Endpoint_funciona_quando_feature_flag_on`
+- *Integration:* `endpoint_retorna_404_quando_feature_flag_off`,
+  `endpoint_funciona_quando_feature_flag_on`
 
 **Riscos / pontos de atenção:**
 - Ponto de validação humana antes de ativar em produção: confirmar que a flag
-  está em OFF no environment de produção do LaunchDarkly antes do deploy
+  está em OFF no environment de produção antes do deploy
+```
+
+---
+
+## Exemplo 6 — Fatia vertical deliberada (entrega incremental ou risco de integração)
+
+Exceção ao padrão horizontal dos Exemplos 1-4. Só se aplica quando a entrevista (Bloco 2 ou Bloco 4 de `SKILL.md`) sinalizou entrega incremental real ou risco de integração concreto — ver `SKILL.md`, seção "Orientação da fatia". Fora desses gatilhos, a quebra continua por camada.
+
+A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito o bastante (só o caminho feliz de um `CA-XX`) para caber no mesmo teto de 4h que os Exemplos 1-4 — o corte estreito aqui é por cenário, não por camada.
+
+```markdown
+#### T-01 — Fatia: comprar oferta relâmpago, caminho feliz
+
+- **Status:** Pendente
+- **Complexidade:** Alta
+- **Depende de:** nenhuma
+- **Implementa:** RN-03
+- **Valida:** CA-04
+- **Decisões base:** ADR-002 *(lock pessimista — adiado para a próxima fatia)*, ADR-003 *(REST + pipeline de handlers)*
+- **Camadas/arquivos afetados:**
+  - `dominio/entidades/flash-sale` *(novo)*
+  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(novo)*
+  - `infraestrutura/persistencia/mapeamento-flash-sale` *(novo)*
+  - `api/controllers/flash-sales-controller` *(novo)*
+
+**Descrição:**
+Fatia mínima que atravessa as quatro camadas só para o caminho feliz: entidade
++ mapeamento, handler que decrementa estoque sem lock pessimista ainda
+(lock e concorrência são CA-06, ficam para a próxima fatia), e endpoint que
+expõe o handler. Sem tratamento de erro além do óbvio (estoque zero). O
+objetivo é ter algo demonstrável e verificável ponta a ponta o quanto antes —
+não cobrir a funcionalidade inteira nesta tarefa.
+
+**Critério de aceite (testável):**
+- [ ] CA-04 verde: `POST /api/flash-sales/{id}/comprar` com estoque disponível
+      retorna 200 e decrementa estoque em 1
+
+**Testes a escrever:**
+- *Integration (com cliente HTTP de teste):* `CA_04_compra_com_sucesso_decrementa_estoque`
+
+**Riscos / pontos de atenção:**
+- Concorrência (CA-06) e limite por cliente (RN-05) ficam para a fatia
+  seguinte — não implementar lock pessimista aqui, é escopo de outra tarefa
+- Fatia estreita gera **mais tarefas no total** que a quebra horizontal
+  equivalente (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a
+  mesma feature): o ganho é demonstrabilidade cedo, não menos tarefas
 ```
 
 ---

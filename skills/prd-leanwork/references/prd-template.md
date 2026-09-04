@@ -9,7 +9,7 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 ````markdown
 # PRD: [Título da demanda]
 
-**Cliente/Produto:** [Ultrafarma / LeanOps / Projeto X / ...]
+**Cliente/Produto:** [Contoso / LeanOps / Projeto X / ...]
 **Tipo:** [Epic / Feature / PBI]
 **Autor:** [nome]
 **Data:** [AAAA-MM-DD]
@@ -162,8 +162,8 @@ Diagrama de alto nível mostrando como a feature se encaixa no sistema. Não det
 
 ```mermaid
 flowchart LR
-    UI[React UI] --> API[ASP.NET Core API]
-    API --> DB[(SQL Server)]
+    UI[Interface] --> API[API]
+    API --> DB[(Banco de dados)]
     API --> EXT[Sistema externo]
 ```
 

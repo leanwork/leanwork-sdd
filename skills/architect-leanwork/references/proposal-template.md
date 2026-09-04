@@ -116,7 +116,7 @@ flowchart TB
 flowchart TB
     User[Usuário Web]
     SPA[SPA React<br/>Frontend]
-    API[API REST<br/>.NET 8]
+    API[API REST<br/>Backend]
     DB[(PostgreSQL)]
     Queue[(Azure Service Bus)]
     Worker[Worker<br/>Processamento Assíncrono]

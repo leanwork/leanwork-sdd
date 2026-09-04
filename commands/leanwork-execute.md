@@ -49,9 +49,9 @@ Respeitar as decisões de `Decisões base:` mesmo quando houver abordagem que pa
 
 ### Passo 6 — Escrever e rodar os testes
 
-Escrever os testes de `Testes a escrever:`, nomeando cada um conforme `templates/id-conventions.md` — `CA_XX_descricao` para os que provam um cenário. É esse nome que fecha o elo `CA-XX → teste` para o `/leanwork-trace`.
+Escrever os testes de `Testes a escrever:` **antes** do código de produção da costura correspondente, quando praticável — ver o teste falhar primeiro é o que confirma que ele testa a coisa certa, não um teste que passaria mesmo vazio. Nomear cada um conforme `templates/id-conventions.md` — `CA_XX_descricao` para os que provam um cenário. É esse nome que fecha o elo `CA-XX → teste` para o `/leanwork-trace`.
 
-Rodar os testes. **Não marcar nada como concluído com teste vermelho.**
+Rodar o typecheck/build do projeto antes de rodar a suíte — erro de tipo não é falha de teste, é implementação incompleta, e roda mais rápido. Rodar os testes. **Não marcar nada como concluído com teste vermelho ou typecheck quebrado.**
 
 ### Passo 7 — Fechar o estado
 

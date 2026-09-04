@@ -10,7 +10,7 @@
       "name": "leanwork-sdd",
       "source": "./",
       "description": "Pipeline Spec-Driven Development: architect → PRD → protótipo → planner → review, com rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R.",
-      "version": "1.6.10",
+      "version": "1.9.0",
       "license": "MIT",
       "category": "workflow"
     }

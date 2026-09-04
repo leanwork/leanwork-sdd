@@ -1,12 +1,14 @@
-# Exemplo End-to-End — Pipeline SDD Leanwork
+# Exemplo End-to-End — Pipeline SDD Leanwork (calibrado em .NET)
 
 Este documento mostra os cinco artefatos do pipeline (arquitetura → PRD → SPEC-UI → plano → review) para uma demanda fictícia, com os IDs cruzados preenchidos. Serve como exemplo de calibração para as skills e como referência rápida do "como tudo se conecta".
+
+**Este exemplo é calibrado em .NET/C#** (MediatR, EF Core, xUnit) só para ter código concreto em vez de pseudocódigo — as skills continuam stack-agnósticas, e o que se calibra aqui é o **cruzamento de IDs entre fases**, não a stack. Está em `stacks/dotnet/` (e não em `templates/`) exatamente por isso: é um exemplo aplicado a uma stack, não parte do núcleo agnóstico. Outras stacks podem ganhar seu próprio `stacks/<nome>/pipeline-example.md` seguindo a mesma estrutura de fragmentos.
 
 As skills do pipeline apontam para este arquivo em "Recursos auxiliares". Quando ele diverge do que as skills produzem, é este arquivo que está errado — os templates em `references/` são a fonte de verdade da estrutura; aqui só se calibra o **cruzamento de IDs entre fases**.
 
 ## Demanda fictícia
 
-> **Cliente:** Ultrafarma
+> **Cliente:** Contoso
 > **Demanda:** Implementar venda em "Ofertas Relâmpago" — produtos com estoque limitado a preço promocional, disponíveis por janela curta de tempo (15 minutos a 2 horas). Cliente pode comprar no máximo 1 unidade do produto em oferta. Estoque precisa ser decrementado de forma atômica para evitar overselling.
 
 A demanda atravessa as cinco fases. Abaixo, fragmentos representativos de cada artefato — não são os documentos completos, e sim os trechos onde os IDs se cruzam.
@@ -184,8 +186,8 @@ rejeição, bloqueio ou mensagem de erro corresponde a um estado de tela.
 - **Decisões base:** ADR-002
 - **Telas:** — *(tarefa sem interface)*
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
-  - `src/Ultrafarma.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs` *(novo)*
+  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
+  - `src/Contoso.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs` *(novo)*
 
 **Descrição:**
 Handler MediatR que orquestra: (1) abre transação `Serializable`, (2) carrega oferta com
@@ -223,7 +225,7 @@ violações de regra, deixando exceções técnicas subirem.
 - **Decisões base:** —
 - **Telas:** —
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Application/Features/FlashSale/Validators/ComprarOfertaValidator.cs` *(novo)*
+  - `src/Contoso.Application/Features/FlashSale/Validators/ComprarOfertaValidator.cs` *(novo)*
 
 [...]
 
@@ -241,7 +243,7 @@ violações de regra, deixando exceções técnicas subirem.
 - **Decisões base:** —
 - **Telas:** UI-02 (default, limiteExcedido, esgotado, carregando)
 - **Camadas/arquivos afetados:**
-  - `src/Ultrafarma.Web/pages/ofertas/[id]/checkout.tsx` *(novo)*
+  - `src/Contoso.Web/pages/ofertas/[id]/checkout.tsx` *(novo)*
 
 **Critério de aceite (testável):**
 - [ ] Os quatro estados de `UI-02` renderizam conforme a SPEC-UI
@@ -292,7 +294,7 @@ cenário que justifica a decisão arquitetural inteira segue sem prova.
 
 - **Eixo:** 4. Cobertura de teste
 - **Referência cruzada:** CA-03, RN-05, ADR-002
-- **Evidência:** `tests/Ultrafarma.Application.Tests/FlashSale/ComprarOfertaHandlerTests.cs:88-104`
+- **Evidência:** `tests/Contoso.Application.Tests/FlashSale/ComprarOfertaHandlerTests.cs:88-104`
 - **Descrição:** `CA_03_Compra_concorrente_respeita_estoque_atomico` dispara as duas
   compras em sequência, contra repositório em memória. Não há duas transações vivas ao
   mesmo tempo, então o `UPDLOCK` nunca é disputado e o teste passaria mesmo se o lock

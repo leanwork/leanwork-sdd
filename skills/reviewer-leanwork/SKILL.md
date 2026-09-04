@@ -208,7 +208,7 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 - `references/review-template.md` — template completo do relatório de review
 - `references/review-checklist.md` — perguntas-guia detalhadas por eixo
 - `references/stack-detection.md` — cascata de descoberta da stack com exemplos
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como um `R-XX` entra na matriz de rastreabilidade e devolve a tarefa para `Bloqueado`
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver como um `R-XX` entra na matriz de rastreabilidade e devolve a tarefa para `Bloqueado`
 
 ## Padrões de comportamento
 

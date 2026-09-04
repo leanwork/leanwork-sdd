@@ -330,6 +330,7 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 - **Logging estruturado e correlation ID** — [Serilog](https://serilog.net) (Nicholas Blumhardt); *Correlation Identifier* em Hohpe & Woolf, *EIP*.
 - **Cardinalidade de métricas** — a advertência sobre usar `customerId` como tag reproduz fielmente a orientação do **[Prometheus](https://prometheus.io/docs/practices/naming/)** e do OpenTelemetry.
 - **Feature flags** — Pete Hodgson (2017).
+- **Parallel Change / Expand-Contract** — **[Fowler](https://martinfowler.com/bliki/ParallelChange.html)**. **Reprodução** das três fases (expandir, migrar, contrair) para sequenciar refactors de alto *blast radius* dentro do plano, mantendo CI verde tarefa a tarefa.
 
 **Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (30min-4h por tarefa, 3 critérios de aceite, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
 
@@ -388,6 +389,8 @@ O `plan-template.md` organiza fases por camada técnica (domínio → persistên
 
 **Justificativa do pipeline:** com um PRD e uma arquitetura já fechados antes do plano, o risco de descoberta tardia — o principal argumento a favor do vertical slice — é menor. **Contra-argumento honesto:** o risco de integração continua real, e fatia horizontal o empurra para o fim.
 
+**Exceção seletiva (v1.8.0):** quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical volta a valer — não para o plano inteiro, só para a parte afetada. `planner-leanwork/SKILL.md`, seção "Orientação da fatia", e `task-examples.md`, Exemplo 6. O horizontal continua sendo o default; a exceção é condicionada a sinal explícito da entrevista, não a preferência.
+
 ### Numeração sequencial global de tarefas
 
 `T-01`, `T-02`... numeradas linearmente. A **WBS** do PMBOK usa codificação hierárquica (`1.2.3`), que carrega a estrutura de decomposição no próprio ID. A escolha aqui privilegia ID curto e estável para citação em commit e review.
@@ -404,13 +407,19 @@ O catálogo de estilos trata a lei de Conway como orientação de desenho ("orga
 
 A leitura clássica "escolha 2 de 3" foi corrigida pelo próprio **Eric Brewer** em *[CAP Twelve Years Later](https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/)* (2012): o trade-off só vale durante partição. Fora dela, o dilema real é latência × consistência — que é o modelo **PACELC** (Daniel Abadi, 2010), ausente do repositório.
 
-### Stack-agnóstico com exemplos .NET
+### Stack-agnóstico com exemplos .NET (mitigado na v1.9.0)
 
-As skills se declaram stack-agnósticas, e a arquitetura de resolução (proposta → CLAUDE.md → inspeção → pergunta) sustenta isso. Mas os exemplos e heurísticas são fortemente .NET: MediatR, FluentValidation, EF Core, Serilog, `.Result`/`.Wait()`, xUnit. O contrato se sustenta; a calibragem do agente carrega viés.
+As skills se declaram stack-agnósticas, e a arquitetura de resolução (proposta → CLAUDE.md → inspeção → pergunta) sustenta isso. Até a v1.8.0, porém, os exemplos didáticos do núcleo eram fortemente .NET: MediatR, FluentValidation, EF Core, Serilog, xUnit apareciam direto em `templates/pipeline-example.md`, `planner-leanwork/references/task-examples.md` e nos templates de preenchimento (`plan-template.md`, `prd-template.md`, `proposal-template.md`, `claude-md-root-template.md`).
 
-### O exemplo canônico contradiz a postura declarada
+A v1.9.0 segrega esse conteúdo: o exemplo end-to-end e os exemplos de tarefa viram pseudocódigo agnóstico no núcleo, com a versão .NET completa movida para `stacks/dotnet/` e referenciada por link explícito. Os placeholders `.NET` soltos nos templates de preenchimento viram genéricos.
 
-A skill de arquitetura lista Clean Architecture entre os modismos que não se deve adotar por moda, e o catálogo de atributos afirma que DDD/Clean é overkill para CRUD simples. Mas o **único** template de diagrama de Component fornecido é uma Clean/Onion Architecture completa com MediatR. Vale ou alinhar o exemplo, ou explicitar que ele é um caso entre vários.
+**O que não foi resolvido nesta passagem:** o catálogo de detecção de stack (`reviewer-leanwork/references/stack-detection.md`) e o checklist de review (`reviewer-leanwork/references/review-checklist.md`) ainda usam .NET como exemplo ilustrativo em alguns pontos — inclusive um item específico de anti-padrão async (`.Result`/`.Wait()`) que não tem equivalente descrito para outras stacks. Ficou fora do escopo desta rodada porque `stack-detection.md` já é multi-stack por natureza (a cascata de descoberta é o mecanismo agnóstico; o exemplo é só ilustração de como ela fica preenchida) — mas o item do checklist é viés real, ainda não corrigido.
+
+### O exemplo canônico contradiz a postura declarada (mitigado na v1.9.0)
+
+A skill de arquitetura lista Clean Architecture entre os modismos que não se deve adotar por moda, e o catálogo de atributos afirma que DDD/Clean é overkill para CRUD simples. Até a v1.8.0, porém, o **único** template de diagrama de Component fornecido era uma Clean/Onion Architecture completa com MediatR — sem nenhuma ressalva.
+
+A v1.9.0 troca o diagrama de `c4-mermaid-templates.md` por uma versão com nomes de padrão genéricos (sem biblioteca), e move a versão com MediatR/FluentValidation/EF Core para `stacks/dotnet/c4-component-example.md`, com uma nota explícita de que é "um caso entre vários", não recomendação. A divergência apontada aqui está resolvida; o diagrama de exemplo já não contradiz a postura declarada da skill.
 
 ### `grep` verifica menção, não execução
 

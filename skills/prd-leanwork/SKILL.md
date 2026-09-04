@@ -24,7 +24,7 @@ Antes de escrever uma linha do PRD, garantir que as informações abaixo estão 
 ### Bloco 1 — Contexto e problema
 
 - Qual problema essa demanda resolve? Quem está sentindo essa dor hoje?
-- Qual cliente / produto / módulo é afetado? (Ultrafarma, LeanOps, Projeto X, outro?)
+- Qual cliente / produto / módulo é afetado? (Contoso, LeanOps, Projeto X, outro?)
 - Existe algum processo ou sistema atual que faz isso de outro jeito? Como funciona hoje?
 - Qual o impacto de **não** fazer essa demanda?
 
@@ -68,7 +68,7 @@ Use o template completo em `references/prd-template.md`. Leia o arquivo antes de
 Recursos auxiliares:
 
 - `references/gherkin-examples.md` — exemplos calibrados de cenários Gherkin com IDs cruzados, cobrindo caminho feliz, validação, erro de regra, concorrência, integração externa, esquemas com tabela e cenários condicionais por permissão. Inclui anti-padrões a evitar.
-- `${CLAUDE_PLUGIN_ROOT}/templates/pipeline-example.md` — exemplo end-to-end da mesma demanda nas cinco fases; consultar para ver como as `RN-XX` e os `CA-XX` deste PRD viram estado de tela, tarefa de execução e finding de review.
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver como as `RN-XX` e os `CA-XX` deste PRD viram estado de tela, tarefa de execução e finding de review.
 
 Manter a hierarquia de headings e a ordem das seções. Seções que não se aplicam podem ser omitidas, **menos** as marcadas como obrigatórias.
 

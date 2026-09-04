@@ -53,10 +53,10 @@ existe, deixar o TODO explícito em vez de inventar.]
 [Só o que é decisão do projeto e o agente não adivinharia. Cada item em uma linha.
 Origem entre parênteses quando vier de ADR.]
 
-- [ex.: Comandos e queries passam por MediatR; controllers nunca instanciam handler direto (ADR-004)]
-- [ex.: Erros de negócio via `BusinessException`, mapeada para HTTP 422; erros técnicos sobem para o middleware global]
+- [ex.: Comandos e queries passam por um pipeline centralizado de handlers; controllers nunca chamam a lógica de negócio direto (ADR-004)]
+- [ex.: Erros de negócio via exceção dedicada, mapeada para HTTP 422; erros técnicos sobem para o tratamento de erro global]
 - [ex.: Nomeação: `XxxCommand`, `XxxHandler`, `XxxValidator`, `XxxResult`]
-- [ex.: Repositórios isolam o ORM; `IQueryable` nunca cruza a fronteira da camada de aplicação (ADR-006)]
+- [ex.: Repositórios isolam o ORM; query builder do ORM nunca cruza a fronteira da camada de aplicação (ADR-006)]
 - [ex.: Testes de cenário do PRD nomeados `CA_XX_descricao_do_cenario`]
 - [ex.: Logging estruturado obrigatório em handlers; PII nunca em log]
 
@@ -125,7 +125,7 @@ Só o que existe. Se a proposta arquitetural previa Redis mas ele ainda não foi
 
 O critério para incluir: **o agente erraria se não soubesse disso?** Se a resposta é não, não inclua.
 
-Exemplos que **entram**: uso obrigatório de MediatR, padrão de tratamento de erro, convenção de nomeação de teste, boundaries entre camadas.
+Exemplos que **entram**: pipeline de handlers centralizado obrigatório, padrão de tratamento de erro, convenção de nomeação de teste, boundaries entre camadas.
 
 Exemplos que **não entram**: "escreva testes", "use nomes descritivos", "siga SOLID". Genérico demais para agregar.
 
