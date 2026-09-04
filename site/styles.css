@@ -295,6 +295,31 @@ pre,
   color: var(--cinza-50);
 }
 
+/* ---------- Vídeo ---------- */
+
+.video {
+  aspect-ratio: 16 / 9;
+  border: var(--fio);
+  background: var(--preto);
+}
+
+.video__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video__legenda {
+  margin-top: var(--s3);
+  font-size: var(--t-14);
+  color: var(--cinza-50);
+}
+
+.video__legenda a {
+  color: var(--preto);
+}
+
 /* ---------- Pipeline ---------- */
 
 .pipeline {
@@ -873,7 +898,7 @@ pre .prompt {
   .instalacao,
   .ciclo,
   .rodape__interno {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s4);
   }
 
