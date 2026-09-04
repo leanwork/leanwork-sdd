@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leanwork SDD — pipeline Spec-Driven Development</title>
+<meta name="description" content="Documentação visual do pipeline Spec-Driven Development da Leanwork: seis skills coordenadas, execução e review em loop, e rastreabilidade cruzada de ADR a review.">
+<meta property="og:title" content="Leanwork SDD — pipeline Spec-Driven Development">
+<meta property="og:description" content="Arquitetura, requisitos, interface, plano, execução e review em seis skills coordenadas, com rastreabilidade cruzada por IDs.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/leanwork-group.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap topo__interno">
+    <a class="marca" href="#topo" aria-label="Leanwork SDD">
+      <img class="marca__logo" src="assets/leanwork-group.svg" alt="Leanwork Group">
+      <span class="marca__divisor" aria-hidden="true"></span>
+      <span class="marca__produto">SDD</span>
+    </a>
+    <nav class="nav">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#loop">Execução</a>
+      <a href="#rastreabilidade">Rastreabilidade</a>
+      <a href="#comandos">Comandos</a>
+      <a href="#instalacao">Instalação</a>
+      <a class="nav__repo" href="https://github.com/leanwork/leanwork-sdd">Repositório</a>
+    </nav>
+  </div>
+</header>
+
+<main id="topo">
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="rotulo">Leanwork SDD · v1.9.0</span>
+      <h1 class="hero__titulo">Do briefing ao review, sem perder o fio.</h1>
+      <p class="hero__texto">
+        Um pipeline <strong>Spec-Driven Development</strong> em seis skills coordenadas: arquitetura,
+        requisitos, interface, plano, execução e review. Cada artefato declara seus elos por ID,
+        e o <strong>/leanwork-trace</strong> percorre a cadeia inteira apontando onde ela se rompe.
+      </p>
+      <div class="numeros">
+        <div class="numero">
+          <span class="numero__valor">6</span>
+          <span class="numero__rotulo">skills coordenadas</span>
+        </div>
+        <div class="numero">
+          <span class="numero__valor">7</span>
+          <span class="numero__rotulo">comandos de orquestração</span>
+        </div>
+        <div class="numero">
+          <span class="numero__valor">6</span>
+          <span class="numero__rotulo">níveis de ID num só grafo</span>
+        </div>
+        <div class="numero">
+          <span class="numero__valor">0</span>
+          <span class="numero__rotulo">stacks pré-definidas</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="pipeline">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">O pipeline</span>
+          <h2 class="titulo-secao">Seis fases,<br>uma cadeia só.</h2>
+        </div>
+        <p class="apoio">
+          A execução é uma <span class="destaque">fase do pipeline</span>, não um intervalo entre fases.
+          As fases 5 e 6 se alternam tarefa a tarefa até o plano fechar — e o plano é o único lugar
+          onde o estado de execução vive.
+        </p>
+      </div>
+
+      <div class="pipeline">
+        <article class="fase">
+          <span class="fase__num">01</span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 21 9-18 9 18"/><path d="M7.5 12h9"/></svg>
+          <h3 class="fase__nome">Arquitetura</h3>
+          <p class="fase__skill mono">architect-leanwork</p>
+          <p class="fase__texto">Briefing de negócio vira proposta arquitetural, decisões registradas e diagramas C4.</p>
+          <div class="fase__saida"><span class="id">ADR-XX</span></div>
+        </article>
+
+        <article class="fase">
+          <span class="fase__num">02</span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+          <h3 class="fase__nome">Requisitos</h3>
+          <p class="fase__skill mono">prd-leanwork</p>
+          <p class="fase__texto">PRD com regras de negócio numeradas e critérios de aceite em Gherkin PT-BR.</p>
+          <div class="fase__saida"><span class="id">RN-XX</span><span class="id">CA-XX</span></div>
+        </article>
+
+        <article class="fase fase--opcional">
+          <span class="fase__num">03<span class="tag-opcional">Opcional</span></span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          <h3 class="fase__nome">Interface</h3>
+          <p class="fase__skill mono">prototype-leanwork</p>
+          <p class="fase__texto">Indexa o protótipo que já existe — ou gera um — e transforma telas e estados em SPEC-UI.</p>
+          <div class="fase__saida"><span class="id">UI-XX</span><span class="id">UI-XX.estado</span></div>
+        </article>
+
+        <article class="fase">
+          <span class="fase__num">04</span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="m17 12 4 4-4 4"/></svg>
+          <h3 class="fase__nome">Plano</h3>
+          <p class="fase__skill mono">planner-leanwork</p>
+          <p class="fase__texto">Tarefas executáveis de 30 min a 4 h, cada uma declarando o contexto que implementa e valida.</p>
+          <div class="fase__saida"><span class="id">T-XX</span></div>
+        </article>
+
+        <article class="fase">
+          <span class="fase__num">05</span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+          <h3 class="fase__nome">Execução</h3>
+          <p class="fase__skill mono">/leanwork-execute</p>
+          <p class="fase__texto">Uma tarefa por ciclo: carrega o contexto declarado, escreve o teste na costura, implementa.</p>
+          <div class="fase__saida"><span class="id id--vazio">devolve estado ao plano</span></div>
+        </article>
+
+        <article class="fase">
+          <span class="fase__num">06</span>
+          <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <h3 class="fase__nome">Review</h3>
+          <p class="fase__skill mono">reviewer-leanwork</p>
+          <p class="fase__texto">Seis eixos de avaliação com evidência de arquivo e linha. Finding bloqueante volta ao plano.</p>
+          <div class="fase__saida"><span class="id">R-XX</span></div>
+        </article>
+      </div>
+
+      <div class="loop-faixa">
+        <div class="loop-faixa__vazio" aria-hidden="true"></div>
+        <div class="loop-faixa__ativo">⇄ uma tarefa por ciclo, até o plano fechar</div>
+      </div>
+
+      <div class="transversal">
+        <svg class="transversal__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+        <p class="transversal__texto">
+          <strong class="mono">context-leanwork</strong> — transversal ao pipeline inteiro, sempre opt-in.
+          Gera o <code>CLAUDE.md</code> da raiz e dos módulos, mais o <code>.claude/settings.json</code> de permissões.
+          Nunca automático, nunca destrutivo.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao secao--escura" id="loop">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">O loop de execução</span>
+          <h2 class="titulo-secao">O plano é a<br>fonte de verdade.</h2>
+        </div>
+        <p class="apoio">
+          Um estado que o plano não declara <span class="destaque">não existe para o pipeline</span>.
+          O vocabulário de status é fixo e funciona como contrato entre o plano e os comandos que o leem.
+        </p>
+      </div>
+
+      <div class="status-fluxo">
+        <div class="status">
+          <p class="status__nome">Pendente</p>
+          <p class="status__texto">Tarefa aguardando. Elegível quando todas as dependências estiverem concluídas.</p>
+        </div>
+        <div class="status">
+          <p class="status__nome">Em andamento</p>
+          <p class="status__texto">Marcado antes da primeira linha de código. É o que torna a sessão recuperável.</p>
+        </div>
+        <div class="status">
+          <p class="status__nome">Concluído</p>
+          <p class="status__texto">Critérios de aceite marcados, typecheck limpo e suíte verde. Nunca com teste vermelho.</p>
+        </div>
+        <div class="status status--bloqueado">
+          <p class="status__nome">Bloqueado</p>
+          <p class="status__texto">Motivo no histórico. É também para onde um finding bloqueante do review devolve a tarefa.</p>
+        </div>
+      </div>
+
+      <div class="ciclo">
+        <div class="ciclo__passo">
+          <p class="ciclo__cmd">/leanwork-execute T-04</p>
+          <ol class="ciclo__lista">
+            <li>Carrega o PRD, a arquitetura e a SPEC-UI nos IDs que a tarefa declara</li>
+            <li>Para e reporta se algum ID referenciado não existir</li>
+            <li>Escreve o teste na costura antes do código de produção</li>
+            <li>Roda typecheck e build antes da suíte</li>
+            <li>Fecha o estado no plano e sugere o review</li>
+          </ol>
+        </div>
+        <div class="ciclo__passo">
+          <p class="ciclo__cmd">/leanwork-review T-04</p>
+          <ol class="ciclo__lista">
+            <li>Detecta a stack do projeto por cascata, sem presumir tecnologia</li>
+            <li>Avalia os seis eixos com evidência de arquivo e linha</li>
+            <li>Emite <span class="mono">R-01..R-XX</span> por severidade</li>
+            <li>Finding bloqueante devolve a tarefa para <span class="mono">Status: Bloqueado</span></li>
+            <li>Re-review de round N+1 entra no fluxo principal</li>
+          </ol>
+        </div>
+      </div>
+
+      <p class="nota">
+        Quem implementou não decide se a implementação passou: o <span class="mono">/leanwork-execute</span>
+        sugere o review, mas nunca o roda por conta própria.
+      </p>
+    </div>
+  </section>
+
+  <section class="secao" id="rastreabilidade">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">A ideia central</span>
+          <h2 class="titulo-secao">Rastreabilidade<br>cruzada completa.</h2>
+        </div>
+        <p class="apoio">
+          Seis níveis de ID num único grafo, com o <span class="destaque">review como elo terminal</span>.
+          Abaixo, a mesma decisão arquitetural atravessando o pipeline até o teste que a prova.
+        </p>
+      </div>
+
+      <div class="cadeia">
+        <div class="elo">
+          <p class="elo__id">ADR-002</p>
+          <p class="elo__desc">Lock pessimista para controle de estoque</p>
+          <p class="elo__origem">Proposta arquitetural</p>
+          <p class="elo__verbo">↓ justifica</p>
+        </div>
+        <div class="elo">
+          <p class="elo__id">RN-05</p>
+          <p class="elo__desc">Estoque decrementado atomicamente</p>
+          <p class="elo__origem">PRD</p>
+          <p class="elo__verbo">↓ valida em</p>
+        </div>
+        <div class="elo">
+          <p class="elo__id">CA-06</p>
+          <p class="elo__desc">Cenário Gherkin de estoque esgotando durante compras concorrentes</p>
+          <p class="elo__origem">PRD</p>
+          <p class="elo__verbo">↓ acontece em</p>
+        </div>
+        <div class="elo elo--opcional">
+          <p class="elo__id">UI-02.esgotado</p>
+          <p class="elo__desc">Estado da tela de confirmação <span class="tag-opcional">Opcional</span></p>
+          <p class="elo__origem">SPEC-UI</p>
+          <p class="elo__verbo">↓ implementado em</p>
+        </div>
+        <div class="elo">
+          <p class="elo__id">T-07</p>
+          <p class="elo__desc">Handler de compra em flash sale</p>
+          <p class="elo__origem">Plano</p>
+          <p class="elo__verbo">↓ validado por</p>
+        </div>
+        <div class="elo">
+          <p class="elo__id">R-01</p>
+          <p class="elo__desc">Findings da implementação de T-07</p>
+          <p class="elo__origem">Relatório de review</p>
+          <p class="elo__verbo">↓ verificado por</p>
+        </div>
+        <div class="elo">
+          <p class="elo__id">CA_06_*</p>
+          <p class="elo__desc">Teste <span class="mono">CA_06_estoque_esgota_durante_compra</span></p>
+          <p class="elo__origem">Código</p>
+        </div>
+      </div>
+
+      <p class="nota">
+        Projeto sem interface pula a fase 3 inteira, e as colunas de UI somem da matriz — ausência não vira gap.
+        <strong>Lacuna declarada vale mais que lacuna preenchida:</strong> nenhuma skill inventa para fechar a matriz.
+      </p>
+    </div>
+  </section>
+
+  <section class="secao" id="skills">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">As skills</span>
+          <h2 class="titulo-secao">O que cada<br>fase produz.</h2>
+        </div>
+        <p class="apoio">
+          Todas <span class="destaque">stack-agnósticas</span>. A stack vem da decisão arquitetural e do
+          <code>CLAUDE.md</code> do projeto, nunca da skill.
+        </p>
+      </div>
+
+      <div class="tabela-rolagem">
+        <table>
+          <thead>
+            <tr><th>Skill</th><th>Entrada</th><th>Saída</th><th>IDs</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">architect-leanwork</td>
+              <td>Briefing de negócio</td>
+              <td>Proposta arquitetural + ADRs + C4</td>
+              <td><span class="id">ADR-XX</span></td>
+            </tr>
+            <tr>
+              <td class="mono">prd-leanwork</td>
+              <td>Demanda, com ou sem arquitetura</td>
+              <td>PRD com regras + Gherkin</td>
+              <td><span class="id">RN-XX</span> <span class="id">CA-XX</span></td>
+            </tr>
+            <tr>
+              <td class="mono">prototype-leanwork</td>
+              <td>PRD com interface + protótipo, se houver</td>
+              <td>SPEC-UI com telas e estados</td>
+              <td><span class="id">UI-XX</span></td>
+            </tr>
+            <tr>
+              <td class="mono">planner-leanwork</td>
+              <td>PRD aprovado, mais a SPEC-UI se houver</td>
+              <td>Plano com tarefas executáveis</td>
+              <td><span class="id">T-XX</span></td>
+            </tr>
+            <tr>
+              <td class="mono">reviewer-leanwork</td>
+              <td>Diff/PR + plano + PRD + arquitetura + SPEC-UI</td>
+              <td>Relatório de review por tarefa</td>
+              <td><span class="id">R-XX</span></td>
+            </tr>
+            <tr>
+              <td class="mono">context-leanwork</td>
+              <td>Artefatos do pipeline + repositório</td>
+              <td><code>CLAUDE.md</code> raiz e módulos, <code>settings.json</code></td>
+              <td><span class="id id--vazio">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="comandos">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">Os comandos</span>
+          <h2 class="titulo-secao">Sete pontos<br>de entrada.</h2>
+        </div>
+        <p class="apoio">
+          Cada comando pré-aprova leitura mais a pasta do artefato que ele mesmo produz.
+          <span class="destaque">Bash não é pré-autorizado em lugar nenhum.</span>
+        </p>
+      </div>
+
+      <div class="tabela-rolagem">
+        <table>
+          <thead>
+            <tr><th>Comando</th><th>O que faz</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">/leanwork-start</td><td>Inicia o pipeline e identifica em que fase começar</td></tr>
+            <tr><td class="mono">/leanwork-next</td><td>Inspeciona os artefatos existentes e sugere a próxima ação, incluindo reviews pendentes</td></tr>
+            <tr><td class="mono">/leanwork-prototype</td><td>Indexa um protótipo existente ou gera um, e produz a SPEC-UI</td></tr>
+            <tr><td class="mono">/leanwork-execute</td><td>Executa uma tarefa carregando o contexto declarado e atualiza o <span class="mono">Status</span> ao final</td></tr>
+            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa específica. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
+            <tr><td class="mono">/leanwork-trace</td><td>Gera a matriz <span class="mono">ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R</span> e aponta os gaps</td></tr>
+            <tr><td class="mono">/leanwork-context</td><td>Gera ou atualiza <code>CLAUDE.md</code> e <code>.claude/settings.json</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="review">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">O review</span>
+          <h2 class="titulo-secao">Seis eixos,<br>com evidência.</h2>
+        </div>
+        <p class="apoio">
+          Os eixos 1 a 5 aplicam sempre. O eixo 6 só entra quando o projeto tem SPEC-UI e a tarefa é de interface.
+          <span class="destaque">Cada finding cita arquivo e linha</span> — sem achismos.
+        </p>
+      </div>
+
+      <div class="eixos">
+        <article class="eixo">
+          <p class="eixo__num">01</p>
+          <h3 class="eixo__nome">Aderência ao plano</h3>
+          <p class="eixo__texto">A tarefa T-XX foi entregue como prometida? Escopo expandido em silêncio é finding.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">02</p>
+          <h3 class="eixo__nome">Rastreabilidade</h3>
+          <p class="eixo__texto">Commits, testes e código preservam os IDs que amarram o trabalho ao requisito?</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">03</p>
+          <h3 class="eixo__nome">Aderência ao spec</h3>
+          <p class="eixo__texto">Cada RN foi concretizada, cada CA tem teste e cada ADR foi respeitada?</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">04</p>
+          <h3 class="eixo__nome">Cobertura de teste</h3>
+          <p class="eixo__texto">Os testes prometidos existem? Os casos de borda estão cobertos?</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">05</p>
+          <h3 class="eixo__nome">Qualidade do código</h3>
+          <p class="eixo__texto">Princípios universais mais os padrões específicos lidos do <code>CLAUDE.md</code> do projeto.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">06</p>
+          <h3 class="eixo__nome">Conformidade de interface</h3>
+          <p class="eixo__texto">Estrutura, estados e comportamento — nunca estética. Estado ausente é bloqueante; detalhe visual não vira finding.</p>
+        </article>
+      </div>
+
+      <div class="severidades">
+        <div class="sev sev--bloqueante">
+          <p class="sev__nome">Bloqueante</p>
+          <p class="sev__texto">Merge negado. Devolve a tarefa para <span class="mono">Bloqueado</span> no plano.</p>
+        </div>
+        <div class="sev sev--importante">
+          <p class="sev__nome">Importante</p>
+          <p class="sev__texto">Resolver agora ou na próxima tarefa, com a decisão registrada.</p>
+        </div>
+        <div class="sev">
+          <p class="sev__nome">Sugestão</p>
+          <p class="sev__texto">Opcional. Fica na mesa sem travar a entrega.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao secao--escura" id="principios">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">Filosofia</span>
+          <h2 class="titulo-secao">O que sustenta<br>o pipeline.</h2>
+        </div>
+        <p class="apoio">
+          SDD pragmático, não ortodoxo. As divergências deliberadas com a literatura estão
+          escritas no <span class="destaque">REFERENCES.md</span> — discordar é mais fácil quando a fonte está na mesa.
+        </p>
+      </div>
+
+      <div class="principios">
+        <div class="principio">
+          <h3 class="principio__nome">Lacuna declarada vale mais que lacuna preenchida</h3>
+          <p class="principio__texto">Nenhuma skill inventa para fechar a matriz. Matriz honestamente incompleta é informação; matriz fechada com suposição é armadilha.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">Stack-agnóstico no núcleo</h3>
+          <p class="principio__texto">Nenhuma skill traz tecnologia pré-definida. Exemplos com código real ficam isolados em <code>stacks/</code>, nunca misturados ao núcleo.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">Sem cronograma, sem estimativa</h3>
+          <p class="principio__texto">O pipeline produz o quê, o porquê e em que ordem. Quando e quanto são responsabilidade do planejamento de sprint.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">Português é padrão</h3>
+          <p class="principio__texto">Todos os artefatos saem em PT-BR. Termos técnicos consagrados podem ficar em inglês.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">IA-friendly por design</h3>
+          <p class="principio__texto">IDs estáveis, pontos de validação humana explícitos e critérios de aceite testáveis — otimizado para ser consumido por agente.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">Progressive disclosure</h3>
+          <p class="principio__texto">SKILL.md curta conduz a conversa. Os templates grandes ficam em <code>references/</code>, carregados só na hora de gerar o documento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="instalacao">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">Instalação</span>
+          <h2 class="titulo-secao">Marketplace<br>local.</h2>
+        </div>
+        <p class="apoio">
+          O plugin é distribuído internamente: o próprio repositório é o marketplace, adicionado por caminho local.
+          Nada aqui depende de rede além do <code>git clone</code>.
+        </p>
+      </div>
+
+      <div class="instalacao">
+        <div>
+          <div class="instalacao__bloco">
+            <h3 class="principio__nome">Uso permanente</h3>
+            <p class="principio__texto">
+              Para atualizar depois de um <code>git pull</code>, rodar
+              <span class="mono">claude plugin marketplace update leanwork</span>.
+            </p>
+          </div>
+          <div class="instalacao__bloco">
+            <h3 class="principio__nome">Desenvolvimento do plugin</h3>
+            <p class="principio__texto">
+              A flag <span class="mono">--plugin-dir</span> carrega o plugin direto do diretório, sem instalar.
+              Vale apenas pela sessão atual.
+            </p>
+          </div>
+        </div>
+        <div>
+<pre><code><span class="comentario"># Uso permanente (equipe)</span>
+<span class="prompt">$ </span>git clone https://github.com/leanwork/leanwork-sdd.git
+<span class="prompt">$ </span>claude plugin marketplace add ./leanwork-sdd
+<span class="prompt">$ </span>claude plugin install leanwork-sdd@leanwork
+
+<span class="comentario"># Desenvolvimento do próprio plugin</span>
+<span class="prompt">$ </span>claude --plugin-dir /caminho/para/leanwork-sdd
+
+<span class="comentario"># Confirmar que as skills carregaram</span>
+<span class="prompt">&gt; </span>/plugin</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="rodape">
+  <div class="wrap rodape__interno">
+    <div>
+      <img class="rodape__logo" src="assets/leanwork-group.svg" alt="Leanwork Group">
+      <p class="rodape__slogan">live the <strong>experience</strong></p>
+      <p class="rodape__texto">
+        Pipeline desenhado por Mick Banagouro. Princípios SDD inspirados em GitHub Spec Kit e AWS Kiro.
+        Filosofia arquitetural inspirada no <em>Manual do Arquiteto de Software</em> de Elemar Júnior.
+        As fontes de cada fase estão em
+        <a href="https://github.com/leanwork/leanwork-sdd/blob/main/REFERENCES.md">REFERENCES.md</a>.
+      </p>
+    </div>
+    <nav class="rodape__links">
+      <a href="https://github.com/leanwork/leanwork-sdd">Repositório</a>
+      <a href="https://github.com/leanwork/leanwork-sdd/blob/main/README.md">README</a>
+      <a href="https://github.com/leanwork/leanwork-sdd/blob/main/REFERENCES.md">REFERENCES</a>
+      <a href="https://github.com/leanwork/leanwork-sdd/blob/main/stacks/README.md">Exemplos por stack</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
