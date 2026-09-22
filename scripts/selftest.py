@@ -255,6 +255,34 @@ def write(path, content):
     path.write_text(content, encoding="utf-8")
 
 
+def write_crlf(path, content):
+    """Grava com CRLF explicito, independente da plataforma que roda o selftest."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = content.replace("\r\n", "\n").replace("\n", "\r\n")
+    path.write_bytes(body.encode("utf-8"))
+
+
+def envelope(content, language="markdown"):
+    """Embrulha o conteudo no envelope de quatro crases dos arquivos de template.
+
+    A prosa antes do envelope e instrucao para o agente e nao faz parte do
+    documento: se `unwrap_envelope` nao a descartasse, todo template seria
+    acusado de secao obrigatoria ausente.
+    """
+    return "\n".join(
+        [
+            "# Template de fixture",
+            "",
+            "Instrução para o agente, fora do envelope — não é o documento.",
+            "",
+            "````" + language,
+            content,
+            "````",
+            "",
+        ]
+    )
+
+
 def plan_setup(content):
     def setup(workspace):
         write(workspace / "docs" / "plans" / "PLAN-001-fixture.md", content)
@@ -356,6 +384,35 @@ def build_cases():
     # -- validate_plan: caso valido ---------------------------------------
     cases.append(
         plan_case("plan_valido", "—", None, 0, "0 error(s), 0 warning(s)")
+    )
+
+    # -- validate_plan: forma de arquivo (envelope e fim de linha) --------
+    cases.append(
+        plan_case(
+            "plan_com_envelope",
+            "—",
+            None,
+            0,
+            "0 error(s), 0 warning(s)",
+            base=envelope(build_plan()),
+        )
+    )
+    # Nenhum mutante de `read_lines` morre neste caso: toda regex dos
+    # validadores termina em `\s*$`, que ja absorve o `\r`. O caso fica como
+    # guarda de regressao da propriedade que importa ao usuario Windows - um
+    # arquivo CRLF valida limpo - e nao como prova de que a normalizacao pesa.
+    cases.append(
+        {
+            "name": "plan_crlf",
+            "rule": "—",
+            "script": "validate_plan.py",
+            "setup": lambda w: write_crlf(
+                w / "docs" / "plans" / "PLAN-001-fixture.md", build_plan()
+            ),
+            "argv": PLAN_ARGV,
+            "exit": 0,
+            "expect": "0 error(s), 0 warning(s)",
+        }
     )
 
     # -- validate_plan: um caso por ERROR declarado em T-02 ---------------
@@ -727,6 +784,15 @@ def build_cases():
 
     # -- validate_review --------------------------------------------------
     cases.append(review_case("review_valido", "—", None, 0, "0 error(s), 0 warning(s)"))
+    cases.append(
+        review_case(
+            "review_com_envelope",
+            "—",
+            lambda _: envelope(REVIEW),
+            0,
+            "0 error(s), 0 warning(s)",
+        )
+    )
     cases.append(
         review_case(
             "review_recomendacao_placeholder",
