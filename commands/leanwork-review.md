@@ -1,7 +1,7 @@
 ---
 description: Revisa implementação contra plano + PRD + arquitetura. Gera relatório REVIEW-{T-XX} com findings R-XX categorizados.
 argument-hint: [T-XX e/ou path do diff/PR, opcional]
-allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**)
+allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**), Bash(python:*)
 ---
 
 # Review de Implementação SDD
@@ -55,6 +55,20 @@ A partir daqui, a skill assume. Ela vai:
 ### Passo 5 — Salvar o relatório
 
 Sugira salvar em `docs/reviews/REVIEW-{T-XX}-{data-iso}.md`. Se o projeto usa outra convenção (ex.: comentário direto no PR sem versionar), perguntar ao usuário.
+
+**Gate — validar o relatório antes de salvar.** Escrever o arquivo e, antes de apresentá-lo, rodar:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md
+```
+
+**Exit diferente de zero é PARE — relatório reprovado não é entregue.** Os `ERROR` cobram o que o review promete e é fácil de não cumprir: finding sem `arquivo:linha`, item de cobertura marcado como coberto sem citar onde, recomendação fora do vocabulário (`Aprovado` / `Aprovado com ressalvas` / `Bloqueado`), e a incoerência mais cara — `Bloqueante` no corpo com recomendação diferente de `Bloqueado`. Corrigir o relatório e rodar de novo até sair 0.
+
+Linha `WARN` não reprova: relatório sem nenhum finding e relatório de round sem a seção do round anterior são sinais para conferir, não para bloquear.
+
+**Fallback — modo degradado.** Sem ferramenta de execução de código disponível, conferir à mão as regras acima e **dizer no chat que o relatório não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
+
+Se o `Bash` pedir confirmação apesar de `Bash(python:*)` no `allowed-tools` deste comando, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade (ver `permission-catalog.md`, seção "Sombra de prefixo entre baldes"). Confirmar ou ajustar as settings; nunca pular a validação.
 
 Após gerar o relatório, mostrar ao usuário:
 

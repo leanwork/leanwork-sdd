@@ -1,7 +1,7 @@
 ---
 description: Executa uma tarefa do plano SDD carregando o contexto declarado (RN/CA/ADR/UI), implementando só o escopo da tarefa e atualizando o Status ao final.
 argument-hint: [T-XX — opcional; se omitido, pega a próxima tarefa elegível]
-allowed-tools: Read, Glob, Grep
+allowed-tools: Read, Glob, Grep, Bash(python:*)
 ---
 
 # Executar tarefa do plano SDD
@@ -29,7 +29,19 @@ Abrir e ler na íntegra o que a tarefa referencia. **Não deduzir pelo título:*
 - `Decisões base:` → a proposta arquitetural, cada `ADR-XX`
 - `Telas:` → a SPEC-UI, a tela e **cada estado** listado (campo ausente em projeto sem interface — não é lacuna)
 
-Se um ID referenciado não existir no artefato correspondente, **parar e reportar**. Isso é gap de rastreabilidade, não erro de execução: implementar assim mesmo produz código que ninguém consegue amarrar a um requisito.
+Antes de ler, rodar o gate de rastreabilidade na raiz do projeto. Ele confere de uma vez, para todas as tarefas do plano, que cada `RN-XX`, `CA-XX`, `ADR-XX` e `UI-XX` citado existe no artefato onde aquele ID nasce:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_ids.py" docs/plans/PLAN-XXX-nome.md
+```
+
+**Exit diferente de zero é PARE.** Cada `ERROR` é um gap de rastreabilidade, não erro de execução: implementar assim mesmo produz código que ninguém consegue amarrar a um requisito. Reportar o gap e aguardar — não inventar o ID que falta, não seguir "assumindo que era o RN-03".
+
+Linha `WARN` não interrompe. Duas formas aparecem: artefato de origem ausente, e aí a verificação daquela classe de ID foi **pulada**, não aprovada; e regra do PRD que nenhuma tarefa cita, que é gap de cobertura — análise de `/leanwork-trace`, não bloqueio aqui.
+
+**Fallback — modo degradado.** Sem ferramenta de execução de código disponível, conferir à mão cada ID dos campos acima contra o artefato de origem e **avisar no chat que a rastreabilidade não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
+
+Se o `Bash` pedir confirmação apesar de `Bash(python:*)` no `allowed-tools` deste comando, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade (ver `permission-catalog.md`, seção "Sombra de prefixo entre baldes"). Confirmar ou ajustar as settings; nunca pular a validação.
 
 Ler também o `CLAUDE.md` da raiz e o do módulo afetado, se existirem — é onde estão as convenções que o review vai cobrar.
 

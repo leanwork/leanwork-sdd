@@ -1,7 +1,7 @@
 ---
 name: planner-leanwork
 description: Quebra de PRD em plano de execução incremental para devs (humanos ou agentes de IA), no padrão Leanwork. Use sempre que o usuário pedir para "criar plano de execução", "quebrar PRD em tarefas", "planejar implementação", "montar plan", "decompor feature", "fazer planning técnico" ou variações. Também use quando o usuário trouxer um PRD pronto e indicar que precisa transformar em tarefas executáveis, ou quando descrever uma feature já bem definida e pedir o plano. A skill conduz entrevista estruturada se o PRD vier incompleto, e produz markdown com tarefas em checkbox, granularidade calibrada (mistura de tarefas pequenas e médias), critérios de aceite testáveis por tarefa, dependências, riscos, testes a escrever e complexidade. Cada tarefa declara explicitamente o que **implementa** (RN-XX do PRD), o que **valida** (CA-XX do Gherkin) e quais **decisões base** (ADR-XX da arquitetura) materializa — fechando a matriz de rastreabilidade SDD. O plano é o artefato que o agente de IA (Claude Code, Codex, Cursor) consome para executar tarefa a tarefa. NÃO inclui cronograma, datas, alocação de pessoas ou estimativa em horas — o foco é "o que fazer, em que ordem, validado como".
-allowed-tools: Read, Glob, Grep, Edit(docs/plans/**)
+allowed-tools: Read, Glob, Grep, Edit(docs/plans/**), Bash(python:*)
 ---
 
 # Planner Leanwork — Plano de Execução
@@ -85,6 +85,22 @@ Recursos auxiliares:
 - `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md` — os mesmos exemplos com código real em .NET (MediatR, EF Core, xUnit), para quem quiser ver a aplicação numa stack concreta
 
 Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
+
+### Gate — validar o plano antes de apresentar
+
+Depois de escrever o arquivo e **antes** de mostrar o plano ao usuário, rodar na raiz do projeto:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md
+```
+
+**Exit diferente de zero é PARE.** Cada linha `ERROR` aponta uma regra desta skill que o plano violou — campo obrigatório ausente, `Status` fora do vocabulário, buraco na sequência de `T-XX`, dependência para frente. Corrigir o plano e rodar de novo até sair 0. Não apresentar plano reprovado, nem com ressalva, nem "para o usuário decidir": o gate existe justamente porque a regra em prosa é fácil de não aplicar numa execução.
+
+Linha `WARN` **não** reprova e não obriga correção — é sinal para ler e decidir. `mais de 3 critérios de aceite` indica tarefa provavelmente grande demais; quebrar é julgamento de quem planeja.
+
+**Fallback — modo degradado.** Se não houver ferramenta de execução de código disponível, conferir o plano à mão contra as regras acima e **dizer no chat, com todas as letras, que o plano não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
+
+Se o `Bash` pedir confirmação mesmo com `Bash(python:*)` no `allowed-tools` desta skill, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade. Ver `${CLAUDE_PLUGIN_ROOT}/skills/context-leanwork/references/permission-catalog.md`, seção "Sombra de prefixo entre baldes". Não é falha do gate, e a resposta é confirmar ou ajustar as settings, nunca pular a validação.
 
 ## Convenções Leanwork
 
