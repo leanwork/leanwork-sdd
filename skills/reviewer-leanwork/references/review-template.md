@@ -154,6 +154,23 @@ Verificação dos cenários Gherkin que a tarefa prometeu validar.
 
 ---
 
+## Sensor de discriminação
+
+**Profundidade:** [padrão (1-3) | completo (risco: dinheiro / auth / integridade de dados)]
+**Isolamento:** [git worktree | cópia em diretório temporário]
+**Resultado:** [N/N mortos]
+
+| # | Arquivo:linha | Mutação aplicada | Morto? |
+|---|---|---|---|
+| 1 | `src/servico.ext:42` | Condição `x > 0` invertida para `x >= 0` | ✅ Morto |
+| 2 | `src/handler.ext:15` | Chamada obrigatória a `notificar()` removida | ❌ Sobreviveu → R-01 |
+
+*Cada sobrevivente aponta o `R-XX` que gerou — mutante sobrevivente é `Bloqueante`, e o finding acusa a asserção fraca, não a mutação.*
+
+*Quando o sensor não rodou (sem suíte executável, suíte vermelha, repositório em rebase, ambiente sem execução de código), manter a seção e escrever a razão no lugar da tabela. Ausência declarada é informação; seção omitida é silêncio que passa por aprovação.*
+
+---
+
 ## Cobertura por UI (Telas) *(omitir quando o projeto não tem SPEC-UI)*
 
 Verificação dos estados de tela que a tarefa prometeu implementar.

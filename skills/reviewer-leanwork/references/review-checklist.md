@@ -111,9 +111,21 @@ Os testes existem, cobrem o que importa, e passam?
 | A asserção sobreviveria à implementação errada mais provável? (litmus da asserção rasa) | Se sobrevive, é asserção rasa: finding + critério como **não coberto** |
 | Antes de declarar um critério **ausente**, a busca nos arquivos de teste foi feita e está mostrada no relatório? | Não afirmar ausência — buscar primeiro. Falso negativo ensina o time a desconfiar do review |
 
+**Sensor de discriminação** — as perguntas do protocolo de `discrimination-sensor.md`, que responde por execução o que o litmus responde por leitura:
+
+| Pergunta | Default se "não" |
+|----------|------------------|
+| A suíte está verde **antes** de qualquer mutação? | O sensor não roda — sobre suíte vermelha, mutante morto e suíte quebrada são indistinguíveis. Registrar no relatório que não rodou e por quê |
+| A mutação foi aplicada num scratch isolado, nunca na worktree do usuário? | PARE. Restaurar a worktree e tratar a run como inválida |
+| O `git status --porcelain` do fim é idêntico ao do começo? | Run **inválida** — não reportar o resultado, nem como mutante morto nem como sobrevivente |
+| A profundidade acompanha o risco das `RN-XX` de `Implementa:` e dos atributos de qualidade da arquitetura? | Ajustar a profundidade — 1-3 mutações no padrão, 5+ em dinheiro, autenticação/autorização ou integridade de dados |
+| Todo mutante sobreviveu ao teste que deveria matá-lo? | **Bloqueante** — o teste não discrimina aquele comportamento |
+| A execução (ou a ausência dela) está registrada na seção "Sensor de discriminação" do relatório? | Sensor invisível não é auditável — registrar |
+
 ### Sinais de problema
 
 - **Teste cobre o teste**: assertions tautológicas como `Assert.Equal(result, result)`. Bloqueante.
+- **Mutante sobrevivente**: o defeito injetado passou pela suíte. Bloqueante — e o finding aponta a asserção fraca, não a mutação.
 - **Nome do teste carrega o cenário, a asserção não**: `CA_04_Compra_decrementa_estoque` cujo corpo só verifica `status == 200`. O nome declara intenção, a asserção declara o que foi verificado — quando divergem, vale a asserção. Bloqueante para o `CA-XX` correspondente.
 - **Asserção só de chamada**: `verify(repo.save(x))` / `expect(spy).toHaveBeenCalled()` como única verificação de um CA sobre resultado. Importante.
 - **Teste comentado ou marcado com `Skip` sem justificativa**: Bloqueante. Test com skip precisa de justificativa em comentário (referência a issue, motivo).

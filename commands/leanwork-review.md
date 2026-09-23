@@ -48,7 +48,9 @@ Documente a stack descoberta e a fonte no preâmbulo do relatório.
 
 A review roda num **sub-agente fresco**, não neste contexto. A razão é direta: se `/leanwork-execute` acabou de implementar a tarefa nesta mesma conversa, quem revisa tem o raciocínio da implementação inteiro em memória e tende a confirmar a própria intenção em vez de ler o que o código faz. Autor e verificador precisam ser contextos diferentes.
 
-Despachar um sub-agente **read-only sobre a árvore**, instruído a aplicar a skill `reviewer-leanwork` e a devolver os findings — não a escrever arquivo nenhum.
+Despachar um sub-agente **read-only sobre a árvore do projeto**, instruído a aplicar a skill `reviewer-leanwork` e a devolver os findings — não a escrever arquivo nenhum.
+
+A única escrita permitida ao verificador é o **scratch isolado do sensor de discriminação** (eixo 4), fora da árvore do projeto. O protocolo de `discrimination-sensor.md` existe justamente para que a mutação nunca alcance a worktree do usuário, e o passo de verificação de isolamento é o que sustenta a garantia.
 
 **Payload do verificador.** O sub-agente não herda esta conversa, então o payload precisa ser autossuficiente: nada nele pode dizer "a tarefa que acabamos de discutir". Enumerar, item a item:
 
@@ -58,6 +60,9 @@ Despachar um sub-agente **read-only sobre a árvore**, instruído a aplicar a sk
 4. A stack detectada **e a fonte dela** (Passo 3)
 5. Os padrões lidos do `CLAUDE.md` da raiz e do módulo afetado
 6. Quando for round N+1, o relatório do round anterior
+7. A instrução de **executar o sensor de discriminação** do eixo 4, com a profundidade derivada das `RN-XX` que a tarefa declara em `Implementa:` — é o verificador quem roda o sensor, porque é ele quem tem o código sob review em contexto
+
+O sensor exige capacidade de executar comandos (git e o runner de testes da stack). Se o sub-agente não tiver essa capacidade no ambiente, ele não improvisa: devolve a seção "Sensor de discriminação" registrando que não rodou e por quê, como manda `discrimination-sensor.md`. Ausência declarada é informação; seção omitida é silêncio que passa por aprovação.
 
 **O que NÃO entra no payload, e por quê:**
 
