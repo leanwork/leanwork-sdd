@@ -92,6 +92,8 @@ HEADING = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.*?)\s*$")
 FINDING_HEADING = re.compile(r"^#{3,6}\s+\**(?P<id>R-[\w-]*)\**")
 FINDING_ID = re.compile(r"^R-\d{2,}$")
 ENTRY_HEADING = re.compile(r"^#{3,6}\s+\**(?P<id>(?:RN|CA|ADR|UI)-\d{2,})\**")
+ASSERTION_FIELD = re.compile(r"\*\*Asser[çc][ãa]o:\*\*\s*\S")
+ASSERTION_REQUIRED = ("Cobertura por RN", "Cobertura por CA")
 COVERED = ("✅",)
 NOT_COVERED = ("❌", "⚠")
 RECOMMENDATION_LINE = re.compile(r"\*\*Recomendação final:\*\*\s*(?P<value>.*?)\s*$")
@@ -304,7 +306,17 @@ def check_coherence(recommendation, findings, diagnostics):
 
 
 def check_coverage(lines, mask, diagnostics):
-    """Evidence-or-zero: entrada marcada como coberta cita arquivo:linha."""
+    """Evidence-or-zero: entrada coberta cita arquivo:linha e reproduz a assercao.
+
+    Os dois campos respondem perguntas diferentes: `arquivo:linha` diz onde
+    olhar, a assercao diz o que foi verificado. Nome de teste declara intencao e
+    diverge da assercao com frequencia - e assim que um teste que so confere
+    `status == 200` passa por cobertura de um cenario sobre estoque.
+
+    A assercao e exigida so em RN e CA. Conformidade de ADR e estrutural - a
+    evidencia e o arquivo onde a decisao esta materializada, nao uma expressao
+    de teste.
+    """
     for label, keywords in COVERAGE_SECTIONS:
         section, offset = section_of(lines, mask, keywords)
         if section is None:
@@ -335,12 +347,18 @@ def check_coverage(lines, mask, diagnostics):
                 continue
             if any(mark in body for mark in NOT_COVERED):
                 continue
-            if has_file_line(body):
+            if not has_file_line(body):
+                diagnostics.error(
+                    "{} ({}, linha {}): marcado como coberto sem citacao arquivo:linha "
+                    "- nome de teste nao e evidencia".format(entry.id, label, entry.line)
+                )
                 continue
-            diagnostics.error(
-                "{} ({}, linha {}): marcado como coberto sem citacao arquivo:linha "
-                "- nome de teste nao e evidencia".format(entry.id, label, entry.line)
-            )
+            if label in ASSERTION_REQUIRED and not ASSERTION_FIELD.search(body):
+                diagnostics.error(
+                    "{} ({}, linha {}): marcado como coberto sem campo "
+                    "'**Asserção:**' - arquivo:linha diz onde olhar, a assercao diz "
+                    "o que foi verificado".format(entry.id, label, entry.line)
+                )
 
 
 def check_sensor(lines, mask, findings, diagnostics):

@@ -102,9 +102,20 @@ Os testes existem, cobrem o que importa, e passam?
 | Há mock excessivo escondendo problema real? (ex.: mockando a coisa que deveria ser testada) | Importante |
 | Cobertura cai abaixo de threshold do projeto (se houver)? | Importante |
 
+**Evidência ou zero** — as quatro perguntas que decidem se um critério pode ser marcado como coberto:
+
+| Pergunta | Default se "não" |
+|----------|------------------|
+| Cada `CA-XX` marcado como coberto cita `arquivo:linha` **e** reproduz a expressão da asserção? | O critério conta como **não coberto** — nome de teste não é evidência |
+| A asserção verifica o **estado resultante**, e não apenas que um método foi chamado? | **Parcialmente coberto**, com a lacuna escrita no relatório — mock satisfeito prova interação, não resultado |
+| A asserção sobreviveria à implementação errada mais provável? (litmus da asserção rasa) | Se sobrevive, é asserção rasa: finding + critério como **não coberto** |
+| Antes de declarar um critério **ausente**, a busca nos arquivos de teste foi feita e está mostrada no relatório? | Não afirmar ausência — buscar primeiro. Falso negativo ensina o time a desconfiar do review |
+
 ### Sinais de problema
 
 - **Teste cobre o teste**: assertions tautológicas como `Assert.Equal(result, result)`. Bloqueante.
+- **Nome do teste carrega o cenário, a asserção não**: `CA_04_Compra_decrementa_estoque` cujo corpo só verifica `status == 200`. O nome declara intenção, a asserção declara o que foi verificado — quando divergem, vale a asserção. Bloqueante para o `CA-XX` correspondente.
+- **Asserção só de chamada**: `verify(repo.save(x))` / `expect(spy).toHaveBeenCalled()` como única verificação de um CA sobre resultado. Importante.
 - **Teste comentado ou marcado com `Skip` sem justificativa**: Bloqueante. Test com skip precisa de justificativa em comentário (referência a issue, motivo).
 - **Teste sem assertion**: arrange/act sem verificação. Bloqueante.
 - **Teste de integração que não vai ao banco/serviço real**: é teste de unit travestido. Importante.

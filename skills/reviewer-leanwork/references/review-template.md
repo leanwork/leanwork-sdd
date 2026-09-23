@@ -124,11 +124,13 @@ Verificação detalhada das regras de negócio que a tarefa prometeu concretizar
 
 - **Como foi implementada:** [Resumo objetivo de onde no código vive a regra]
 - **Evidência:** `src/Projeto/Foo/FooHandler.cs:60-75`
+- **Asserção:** `Assert.Equal(9, estoque.Quantidade)` — *(a expressão que prova a regra, reproduzida do teste)*
 - **Status:** ✅ Implementada corretamente
 
 ### RN-07 — [Texto da regra]
 
 - **Como foi implementada:** [Não foi! ou Implementação divergente]
+- **Busca realizada:** `grep -r "RN-07\|LimiteCredito" tests/` — nenhum resultado
 - **Status:** ❌ Ver R-01
 
 ---
@@ -139,13 +141,15 @@ Verificação dos cenários Gherkin que a tarefa prometeu validar.
 
 ### CA-04 — [Nome do cenário, copiado do PRD]
 
-- **Teste correspondente:** `tests/FooHandlerTests.cs::CA_04_Compra_com_sucesso_decrementa_estoque`
-- **Cobre o cenário Gherkin completo?** Sim — Dado/Quando/Então mapeados
+- **Teste:** `tests/FooHandlerTests.cs:112`
+- **Asserção:** `Assert.Equal(9, estoque.Quantidade)`
+- **Cobre o cenário Gherkin completo?** Sim — Dado (estoque=10) / Quando (compra de 1) / Então (estoque=9) mapeados
 - **Status:** ✅
 
 ### CA-06 — [Nome do cenário]
 
-- **Teste correspondente:** Não encontrado
+- **Teste:** Não encontrado
+- **Busca realizada:** `grep -ri "CA-06\|cupom.*expirado\|AplicarCupom" tests/` — nenhum resultado
 - **Status:** ❌ Ver R-02
 
 ---

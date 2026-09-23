@@ -1,7 +1,7 @@
 ---
 description: Revisa implementação contra plano + PRD + arquitetura. Gera relatório REVIEW-{T-XX} com findings R-XX categorizados.
 argument-hint: [T-XX e/ou path do diff/PR, opcional]
-allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**), Bash(python:*)
+allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**), Bash(python:*), Agent
 ---
 
 # Review de Implementação SDD
@@ -44,13 +44,34 @@ Use a cascata em `references/stack-detection.md` da skill `reviewer-leanwork`:
 
 Documente a stack descoberta e a fonte no preâmbulo do relatório.
 
-### Passo 4 — Invocar a skill `reviewer-leanwork`
+### Passo 4 — Despachar o verificador num contexto limpo
 
-A partir daqui, a skill assume. Ela vai:
+A review roda num **sub-agente fresco**, não neste contexto. A razão é direta: se `/leanwork-execute` acabou de implementar a tarefa nesta mesma conversa, quem revisa tem o raciocínio da implementação inteiro em memória e tende a confirmar a própria intenção em vez de ler o que o código faz. Autor e verificador precisam ser contextos diferentes.
 
-1. Aplicar os 5 eixos de review (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código), mais o 6º eixo de conformidade de interface quando o projeto tem SPEC-UI
-2. Gerar findings numerados `R-XX` com severidade
-3. Produzir o documento `REVIEW-T-XX-YYYY-MM-DD.md` seguindo o template
+Despachar um sub-agente **read-only sobre a árvore**, instruído a aplicar a skill `reviewer-leanwork` e a devolver os findings — não a escrever arquivo nenhum.
+
+**Payload do verificador.** O sub-agente não herda esta conversa, então o payload precisa ser autossuficiente: nada nele pode dizer "a tarefa que acabamos de discutir". Enumerar, item a item:
+
+1. A tarefa `T-XX` **copiada na íntegra** do plano — campos, critérios de aceite e testes a escrever, não o resumo dela
+2. O **texto integral** de cada `RN-XX`, `CA-XX`, `ADR-XX` e `UI-XX` que a tarefa declara, copiado do artefato de origem. Referência por código não serve: o sub-agente não tem o PRD em contexto
+3. O diff ou os arquivos sob review
+4. A stack detectada **e a fonte dela** (Passo 3)
+5. Os padrões lidos do `CLAUDE.md` da raiz e do módulo afetado
+6. Quando for round N+1, o relatório do round anterior
+
+**O que NÃO entra no payload, e por quê:**
+
+- **O raciocínio da implementação** — como a solução foi pensada, que alternativas foram descartadas
+- **As justificativas de quem executou** — "fiz assim porque o handler já fazia X"
+- **Qualquer narrativa sobre por que uma escolha foi feita**
+
+Esses três itens transformam a review em avaliação da explicação, não do código. Um verificador que recebe a justificativa julga se ela é convincente; um verificador que recebe só o spec e o código julga se o código cumpre o spec — que é a pergunta do review. Incluir o raciocínio reintroduz exatamente o viés que o sub-agente existe para eliminar, e de quebra reintroduz o vazamento de contexto: payload largo demais é o mesmo contexto com outro nome.
+
+O sub-agente devolve os findings `R-XX` com severidade. **Quem escreve o relatório, salva o arquivo e edita o plano é o orquestrador** — Passos 5 e 6 seguem aqui, não lá.
+
+**Fallback — modo degradado.** Se não houver capacidade de sub-agente disponível no ambiente, rodar a review inline **e avisar no chat que autor e verificador são o mesmo contexto nesta execução**. O aviso não é opcional: é a única coisa que impede uma review degradada de passar por verificação independente.
+
+A skill `reviewer-leanwork` continua sendo a fonte do método — os 5 eixos (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código), mais o 6º de conformidade de interface quando o projeto tem SPEC-UI — e o relatório segue o template dela.
 
 ### Passo 5 — Salvar o relatório
 
@@ -62,7 +83,7 @@ Sugira salvar em `docs/reviews/REVIEW-{T-XX}-{data-iso}.md`. Se o projeto usa ou
 python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md
 ```
 
-**Exit diferente de zero é PARE — relatório reprovado não é entregue.** Os `ERROR` cobram o que o review promete e é fácil de não cumprir: finding sem `arquivo:linha`, item de cobertura marcado como coberto sem citar onde, recomendação fora do vocabulário (`Aprovado` / `Aprovado com ressalvas` / `Bloqueado`), e a incoerência mais cara — `Bloqueante` no corpo com recomendação diferente de `Bloqueado`. Corrigir o relatório e rodar de novo até sair 0.
+**Exit diferente de zero é PARE — relatório reprovado não é entregue.** Os `ERROR` cobram o que o review promete e é fácil de não cumprir: finding sem `arquivo:linha`, item de cobertura marcado como coberto sem citar onde, `RN-XX`/`CA-XX` coberto sem a asserção reproduzida, recomendação fora do vocabulário (`Aprovado` / `Aprovado com ressalvas` / `Bloqueado`), e a incoerência mais cara — `Bloqueante` no corpo com recomendação diferente de `Bloqueado`. Corrigir o relatório e rodar de novo até sair 0.
 
 Linha `WARN` não reprova: relatório sem nenhum finding e relatório de round sem a seção do round anterior são sinais para conferir, não para bloquear.
 

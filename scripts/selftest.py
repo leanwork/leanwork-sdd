@@ -917,6 +917,27 @@ def build_cases():
     )
     cases.append(
         review_case(
+            "review_ca_sem_assercao",
+            "CA com arquivo:linha mas sem a asserção reproduzida",
+            drop("- **Asserção:** `assert resposta.status == 200`"),
+            1,
+            "CA-01 (Cobertura por CA, linha 46): marcado como coberto sem campo "
+            "'**Asserção:**'",
+        )
+    )
+    cases.append(
+        review_case(
+            "review_rn_sem_assercao",
+            "RN com arquivo:linha mas sem a asserção reproduzida",
+            drop("- **Asserção:** `assert saldo - valor >= 0`"),
+            1,
+            "RN-01 (Cobertura por RN",
+        )
+    )
+    # A excecao do ADR - conformidade arquitetural nao exige assercao - ja e
+    # guardada por `review_valido`, cuja entrada de ADR nao tem o campo.
+    cases.append(
+        review_case(
             "review_adr_sem_evidencia",
             "ADR marcado como conforme sem citação arquivo:linha",
             swap(
