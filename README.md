@@ -60,6 +60,7 @@ leanwork-sdd/
 │   │   └── references/
 │   │       ├── review-template.md
 │   │       ├── review-checklist.md
+│   │       ├── discrimination-sensor.md
 │   │       └── stack-detection.md
 │   └── context-leanwork/
 │       ├── SKILL.md
@@ -68,6 +69,12 @@ leanwork-sdd/
 │           ├── claude-md-module-template.md
 │           ├── command-detection.md
 │           └── permission-catalog.md
+├── scripts/                         # gates determinísticos — exit 0 aprova, 1 reprova
+│   ├── _common.py                   # harness: diagnósticos, envelope, cerca de código
+│   ├── validate_plan.py             # gate do planner
+│   ├── validate_ids.py              # gate do /leanwork-execute
+│   ├── validate_review.py           # gate do /leanwork-review
+│   └── selftest.py                  # suíte dos três validadores
 ├── templates/                       # convenções compartilhadas, stack-agnósticas
 │   ├── id-conventions.md
 │   └── folder-conventions.md
@@ -110,8 +117,8 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 | `/leanwork-start` | Inicia o pipeline e identifica em que fase começar |
 | `/leanwork-next` | Inspeciona artefatos existentes e sugere a próxima ação (incluindo reviews pendentes) |
 | `/leanwork-prototype` | Invoca `prototype-leanwork`: indexa protótipo existente ou gera um, e produz a SPEC-UI |
-| `/leanwork-execute` | Executa uma tarefa do plano carregando o contexto declarado (RN/CA/ADR/UI) e atualiza o `Status` ao final |
-| `/leanwork-review` | Invoca `reviewer-leanwork` sobre uma tarefa específica. Finding bloqueante volta como `Status: Bloqueado` no plano |
+| `/leanwork-execute` | Executa uma tarefa do plano carregando o contexto declarado (RN/CA/ADR/UI) e atualiza o `Status` ao final. **Gate:** `validate_ids.py` barra ID referenciado que não existe no artefato de origem |
+| `/leanwork-review` | Invoca `reviewer-leanwork` num sub-agente de contexto limpo — autor e verificador não são o mesmo contexto. **Gate:** `validate_review.py` barra relatório sem evidência. Finding bloqueante volta como `Status: Bloqueado` no plano |
 | `/leanwork-trace` | Gera a matriz de rastreabilidade `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e aponta gaps |
 | `/leanwork-context` | Gera ou atualiza `CLAUDE.md` (raiz e módulos) e `.claude/settings.json`. Nunca automático, nunca destrutivo |
 
@@ -141,6 +148,7 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 **reviewer-leanwork/references/**
 - `review-template.md` — template completo do relatório de review
 - `review-checklist.md` — perguntas-guia detalhadas pelos 6 eixos + tabela de severidade
+- `discrimination-sensor.md` — protocolo de injeção de falha do eixo 4: sete passos, isolamento em scratch, catálogo de mutações
 - `stack-detection.md` — cascata de descoberta da stack do projeto
 
 **context-leanwork/references/**
@@ -155,6 +163,17 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 - `folder-conventions.md` — estrutura `docs/architecture/`, `docs/prds/`, `docs/prototype/`, `docs/plans/`, `docs/reviews/`, `docs/traceability/`, mais variantes para mono-repo
 
 > **Regra de manutenção.** `templates/` descreve o pipeline inteiro, então toda skill nova ou fase nova obriga uma varredura dos dois arquivos antes do release. A contagem de skills e as colunas da matriz são os pontos que envelhecem primeiro.
+
+### Gates determinísticos (raiz `scripts/`)
+
+Três regras do pipeline deixaram de depender de o agente lembrar delas. São scripts Python 3.8+, stdlib apenas, com contrato uniforme: **exit 0** aprova, **1** reprova por conteúdo, **2** por uso errado. `--strict` promove warning a erro.
+
+- `validate_plan.py` — plano com tarefa sem `Testes a escrever:`, sem `Critério de aceite`, com status fora do vocabulário ou com dependência circular não é apresentado
+- `validate_ids.py` — `RN-XX`, `CA-XX`, `ADR-XX` ou `UI-XX` citado pela tarefa e inexistente no artefato de origem barra a execução, em vez de virar código contra um requisito imaginário
+- `validate_review.py` — relatório sem `arquivo:linha` no finding, cobertura marcada como coberta sem a asserção reproduzida, ou `Bloqueante` no corpo com recomendação diferente de `Bloqueado` não é entregue
+- `selftest.py` — a suíte dos três, que roda antes de qualquer mudança neles ser commitada
+
+O gate é chamado pela skill ou comando que produz o artefato, antes de apresentá-lo. Sem ferramenta de execução no ambiente, a regra é conferir à mão **e dizer no chat que o gate automático não rodou** — degradação silenciosa é pior que gate nenhum, porque parece gate.
 
 ### Exemplos calibrados por stack (raiz `stacks/`)
 
@@ -385,7 +404,7 @@ Nenhuma delas usa `disable-model-invocation`: o modelo pode carregá-las quando 
 - `1.6.1` — catálogo de permissões corrigido na semântica de casamento do `Bash`: o `:*` equivale a ` *` e o espaço faz parte da regra, o que torna toda regra de prefixo dependente da ordem dos argumentos. O `deny` de force push passa de uma regra para seis, cobrindo `-f` e a flag depois do remote; `--force-with-lease` segue no `ask`, agora por escrito
 - `1.6.2` — a outra metade da mesma mecânica: qual regra decide. A precedência `deny` → `ask` → `allow` ignora especificidade, então regra estreita no `allow` sob regra larga no `ask` é código morto. `Bash(npx tsc:*)` removido da receita de Node, a nota que prescrevia esse padrão reescrita, e o catálogo ganha a seção "Sombra de prefixo entre baldes" com o procedimento de conferência
 - `1.6.3` — receita de Docker recalibrada: `docker compose down` sai do `allow` porque `down -v` remove volumes nomeados e anônimos — banco local, seed, fixtures —, e `stop`/`start` cobrem o ciclo cotidiano sem tocar em nada persistente. `docker volume rm` e `docker volume prune` entram no `deny`, rota mais curta para a mesma perda. Fica escrito por que estreitar o `allow` vence tentar negar só a flag, e qual buraco permanece
-- `1.6.4` — o plugin passa a calibrar as próprias permissões, não só as dos outros: os 13 comandos e skills declaram `allowed-tools`, cada um pré-aprovando leitura mais a pasta do artefato que ele mesmo produz (`Edit(docs/prds/**)` no PRD, `Edit(docs/reviews/**)` no review, e assim por diante). `Bash` não é pré-autorizado em lugar nenhum, e quem escreve fora de `docs/` — `/leanwork-execute`, que gera código, e `/leanwork-context`, que grava `.claude/settings.json` — continua pedindo confirmação
+- `1.6.4` — o plugin passa a calibrar as próprias permissões, não só as dos outros: os 13 comandos e skills declaram `allowed-tools`, cada um pré-aprovando leitura mais a pasta do artefato que ele mesmo produz (`Edit(docs/prds/**)` no PRD, `Edit(docs/reviews/**)` no review, e assim por diante). `Bash` não é pré-autorizado em lugar nenhum, e quem escreve fora de `docs/` — `/leanwork-execute`, que gera código, e `/leanwork-context`, que grava `.claude/settings.json` — continua pedindo confirmação. *(Revisto parcialmente na `1.10.0`: três arquivos passaram a declarar `Bash(python:*)` para rodar os gates. O resto da decisão continua valendo.)*
 - `1.6.5` — `templates/` sai da v1.0 e volta a descrever o pipeline que existe. O exemplo end-to-end ganha os dois artefatos que faltavam — SPEC-UI e relatório de review —, mais colunas `UI` e `R` na matriz e um `R-01` que devolve a tarefa para `Bloqueado`. Deixa de ser documentação solta: as cinco skills que produzem artefato passam a apontar para ele. `folder-conventions.md` para de mandar tirar a SPEC-UI de `docs/`, e o sufixo de estado se unifica em `.limiteExcedido`
 - `1.6.6` — o opt-in de `prototype-leanwork` e `context-leanwork` passa a dizer o que de fato promete. "Nunca se auto-invoca" usava o termo com sentido diferente do que ele tem no Claude Code, e travar a invocação pelo modelo — o caminho que o campo `disable-model-invocation` abriria — quebraria `/leanwork-prototype` e `/leanwork-context`, que delegam para essas skills. As duas continuam invocáveis; a promessa, agora escrita, é não rodar sem pedido direto ou aceite explícito do usuário
 - `1.6.7` — o parâmetro que dimensiona o plano inteiro passa a ter um número só. O tamanho de tarefa aparecia com seis redações em quatro arquivos — 4h, 2h, meio dia, "nunca mais de 1 dia" — e dois planos do mesmo PRD saíam estruturalmente diferentes conforme qual regra o modelo lesse primeiro. Teto único de **30min-4h**, declarado em `templates/id-conventions.md` na regra de `T-XX`, com o planner e os exemplos de tarefa apontando para lá. Fica explícito que a faixa é calibragem mental de quem planeja, não estimativa: ela nunca vira campo do plano, que continua registrando só `Complexidade` qualitativa
@@ -395,6 +414,7 @@ Nenhuma delas usa `disable-model-invocation`: o modelo pode carregá-las quando 
 - `1.7.0` — três práticas de engenharia entram no pipeline sem skill nova. `planner-leanwork` ganha o padrão **expandir-migrar-contrair** para refactors de alto *blast radius* (renomear coluna, retipar símbolo compartilhado) que não cabem em uma tarefa monolítica de 4h, e uma pergunta de entrevista sobre a **costura de teste** (seam) preferencial antes de quebrar em tarefas. `/leanwork-execute` passa a escrever o teste antes do código de produção na costura, quando praticável, e a rodar typecheck/build antes da suíte — typecheck quebrado bloqueia `Concluído` do mesmo jeito que teste vermelho. Fatiamento vertical por tarefa (tracer bullet) foi avaliado e **não adotado**: o `plan-template.md` fatia por camada técnica de propósito, divergência já registrada em `REFERENCES.md` com justificativa própria — trocar isso exige decisão explícita, não é ganho a implementar de passagem
 - `1.8.0` — a divergência de fatiamento horizontal registrada em `REFERENCES.md` ganha exceção seletiva: quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical passa a valer para a parte afetada do plano — não para o plano inteiro. `planner-leanwork/SKILL.md` ganha a seção "Orientação da fatia" com os dois gatilhos e duas ressalvas (fatia vertical gera mais tarefas, não menos; e carrega contexto de múltiplos projetos por execução na stack de referência em Clean Architecture). `task-examples.md` ganha o Exemplo 6 e uma exceção explícita ao sinal de "mexe em mais de 3 camadas → separar", e `plan-template.md` referencia a alternativa sem substituir o padrão. Horizontal continua default
 - `1.9.0` — os exemplos .NET saem do núcleo agnóstico e ganham endereço próprio em `stacks/dotnet/`. `templates/pipeline-example.md` (exemplo end-to-end das cinco fases) muda de lugar inteiro, e as cinco skills que produzem artefato repontam para lá. `task-examples.md` do planner e o diagrama C4 Nível 3 do architect (que usava MediatR/FluentValidation/EF Core numa Clean Architecture completa — a mesma combinação que a skill lista entre os modismos a não adotar por moda) passam a ter versão agnóstica no lugar original e versão calibrada em `stacks/dotnet/`. Placeholders `.NET` soltos em templates de preenchimento (`proposal-template.md`, `prd-template.md`, `plan-template.md`, `claude-md-root-template.md`) viram genéricos. `id-conventions.md` troca o bloco xUnit por pseudocódigo e aponta para a versão .NET. Novo `stacks/README.md` documenta a convenção para futuras stacks
+- `1.10.0` — a camada de verificação do pipeline era prosa inteira: nenhuma regra falhava, tudo dependia de o agente lembrar. Um plano sem `Testes a escrever:` era apresentado, uma tarefa citando `RN-42` inexistente virava código contra um requisito imaginário, e um relatório de review aprovava com "coberto por `CA_04_compra_decrementa_estoque`" — nome de método como evidência. Três frentes fecham isso. **(1) Gates determinísticos:** nova pasta `scripts/` com `validate_plan.py`, `validate_ids.py` e `validate_review.py`, chamados pela skill ou comando que produz o artefato antes de apresentá-lo — exit diferente de zero é PARE. Os três arquivos que os invocam passam a declarar `Bash(python:*)`, revisão parcial da decisão da `1.6.4`: a alternativa era manter a pureza da regra e a regra não rodar. **(2) Autor ≠ verificador:** `/leanwork-review` despacha um sub-agente de contexto limpo, com payload autossuficiente de sete itens e três exclusões nomeadas — o raciocínio da implementação fica de fora de propósito, porque quem recebe a justificativa julga se ela convence, não se o código cumpre o spec. **(3) Sensor de discriminação:** o eixo 4 deixa de perguntar só se o teste existe e passa, e passa a perguntar se ele **pegaria o bug** — injeta um defeito no código novo e observa se a suíte quebra, com isolamento em scratch fora da árvore do usuário. Mutante sobrevivente é `Bloqueante`. Junto vem a regra "evidência ou zero": cobertura sem `arquivo:linha` **e** sem a asserção reproduzida conta como não coberta
 
 ## Crédito e inspiração
 
