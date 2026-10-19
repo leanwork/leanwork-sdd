@@ -1,6 +1,6 @@
 ---
 name: prototype-leanwork
-description: Especificação de interface a partir de protótipo — ingestão de protótipo existente (HTML exportado, imagens, Figma via MCP, Lovable/v0 exportado) ou geração de protótipo navegável quando não houver. Produz o documento SPEC-UI com inventário de telas (UI-XX), estados por tela e mapeamento cruzado com regras de negócio (RN-XX) e cenários Gherkin (CA-XX) do PRD. Use quando o usuário pedir "especificar as telas", "documentar o protótipo", "criar protótipo", "mapear telas contra o PRD", "gerar SPEC-UI", "indexar o Figma", ou quando aceitar sugestão de especificar interface antes do plano de execução. Roda entre o PRD e o plano de execução, e é opcional — projetos sem interface (API, worker, CLI, biblioteca) pulam esta fase inteiramente. NÃO faz design visual próprio — delega o craft de tipografia, paleta e composição para skills de frontend disponíveis no ambiente. NÃO inventa telas ou estados não observados no protótipo — declara a lacuna e pergunta.
+description: Especifica a interface (SPEC-UI) a partir de protótipo existente — HTML, imagens, Figma, Lovable/v0 — ou gera um, mapeando telas UI-XX e estados contra RN-XX e CA-XX do PRD. Use quando pedirem para especificar telas, documentar ou criar protótipo, mapear telas contra o PRD ou gerar SPEC-UI. Projeto sem interface pula. Não faz design visual nem inventa tela.
 allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 ---
 
@@ -9,6 +9,15 @@ allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 Esta skill produz a **SPEC-UI**: o documento que transforma protótipo em especificação rastreável. É a ponte entre o PRD (que diz *o quê* e *por quê*) e o plano de execução (que diz *o que fazer*), respondendo *como isso aparece na tela*.
 
 O valor não está em desenhar bonito — está em **amarrar cada tela às regras de negócio que ela materializa**, para que o plano dimensione corretamente e o review consiga verificar conformidade.
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Não inventar tela nem estado: o que o protótipo não mostra vira lacuna declarada.
+2. Não gerar a tela faltante para fechar a matriz — a decisão fica com o usuário.
+3. Craft visual (tipografia, paleta, composição) é delegado; esta skill cuida de estrutura, estados e rastreabilidade.
+4. Opcional: ausência de SPEC-UI não bloqueia o pipeline.
 
 ## Princípios
 
@@ -128,7 +137,7 @@ Percorrer o PRD e verificar cobertura na direção inversa:
 | Tela sem `RN-XX` nem `CA-XX` | Tela que o PRD não pediu | Apontar — pode ser escopo extra ou lacuna do PRD |
 | Estado ausente | Cenário de erro do PRD sem tela correspondente | Apontar — a causa mais comum de bug de UI |
 
-**Nunca gerar a tela faltante silenciosamente para "fechar" a matriz.** Declarar a lacuna e deixar a decisão com o usuário: gerar a tela, ajustar o PRD, ou aceitar como fora de escopo.
+Declarar a lacuna e deixar a decisão com o usuário: gerar a tela, ajustar o PRD, ou aceitar como fora de escopo.
 
 ## Fase 5 — Produzir o documento
 
@@ -155,7 +164,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 **Para o trace:** `UI-XX` entra na cadeia `ADR → RN → CA → UI → T → R`.
 
-## O que NÃO incluir na SPEC-UI
+## O que não incluir na SPEC-UI
 
 - **Código de componente.** Isso é implementação, pertence às tarefas do plano.
 - **Regras de negócio redigidas de novo.** Referenciar `RN-XX`; não reescrever.
@@ -165,9 +174,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 ## Quando sugerir esta skill
 
-Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem:
-
-Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
+Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem. Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
 
 A sugestão é convite. Se o usuário pular, o pipeline segue sem fase de interface e o plano simplesmente não terá campo `Telas:`.
 

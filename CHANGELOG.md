@@ -20,3 +20,8 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 - "Degradação silenciosa é pior que gate nenhum" fica por extenso no README (seção dos gates). Planner, `/leanwork-execute` e `/leanwork-review` mantêm a regra em uma linha, com remissão.
 - "Sombra de prefixo entre baldes" fica só no `permission-catalog.md`. Os três arquivos com gate guardam a regra operacional em uma linha: confirmar ou ajustar as settings, nunca pular a validação.
 - A tabela "Quem sugere" fica no README, unificada para `context-leanwork` e `prototype-leanwork`. As duas skills apontam para ela e mantêm a regra de nunca rodar como efeito colateral.
+
+### Descriptions curtas e regras pinadas (T-16)
+
+- A `description` de cada skill fica só com gatilhos e exclusões. A soma das seis caiu de 6.437 para 2.006 caracteres; a linha de base de 2026-10-16 era 6.683.
+- Cada SKILL ganha uma seção **Regras pinadas**, com 4 ou 5 itens: o que não se negocia na skill. O restante do texto perde caixa alta e negrito de alarme: `NUNCA`/`PARE`/`NÃO` em caixa alta caem de 18 ocorrências para 0 fora das regras pinadas.

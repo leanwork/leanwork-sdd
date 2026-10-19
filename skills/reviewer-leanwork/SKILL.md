@@ -1,12 +1,22 @@
 ---
 name: reviewer-leanwork
-description: Code review estruturado de implementação contra plano + PRD + arquitetura, no padrão Leanwork. Stack-agnóstico — descobre a stack do projeto via proposta arquitetural, CLAUDE.md ou inspeção do repositório, e aplica padrões específicos do projeto. Use sempre que o usuário pedir "revisar PR", "code review", "validar implementação", "review da tarefa T-XX", "verificar se o código atende a tarefa", "fechar T-XX" ou variações. Também use quando o usuário trouxer um diff/PR e indicar qual tarefa do plano ele entrega, ou quando pedir auditoria pós-execução de uma feature. A skill avalia em 5 eixos (aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código calibrada pela stack), mais um sexto eixo de conformidade de interface quando o projeto tem SPEC-UI, produz documento com itens R-XX categorizados em Bloqueante/Importante/Sugestão, e fecha o último elo da matriz de rastreabilidade SDD (ADR → RN → CA → UI → T → R). NÃO faz code review de estilo (formatação automática), NÃO faz threat modeling completo (só segurança básica), NÃO inventa críticas quando faltar contexto — sinaliza lacuna.
+description: Code review de uma tarefa T-XX contra plano, PRD e arquitetura, em cinco eixos (mais interface quando há SPEC-UI), com findings R-XX por severidade e cobertura comprovada por evidência. Use quando pedirem para revisar PR, fazer code review, validar implementação ou fechar a T-XX. Não revisa estilo nem faz threat modeling.
 allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**)
 ---
 
 # Reviewer Leanwork — Code Review Estruturado contra o Pipeline SDD
 
 Esta skill realiza review de implementação cruzando o código entregue com os artefatos do pipeline SDD Leanwork (proposta arquitetural, PRD, plano de execução). O output é um relatório de review com itens numerados `R-XX` que se conectam ao restante da rastreabilidade `ADR → RN → CA → UI → T → R` (o elo `UI` só existe quando o projeto tem SPEC-UI).
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Evidência ou zero: `CA-XX` só conta como coberto com `arquivo:linha` e a asserção reproduzida.
+2. Um `Bloqueante` no corpo implica recomendação `Bloqueado`.
+3. Mutante sobrevivente é `Bloqueante`; o sensor só roda sobre suíte verde.
+4. Artefato ausente vira lacuna registrada, nunca critério inventado.
+5. O escopo é o diff da `T-XX`, não o codebase.
 
 ## Princípios
 
@@ -207,7 +217,7 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 - Em segundo round, criar novo relatório (`REVIEW-T-04-2026-07-02-round2.md`) — não editar o anterior. O `R-02` do round 2 é finding novo, sem relação com o `R-02` do round 1: a continuidade entre rounds vive na seção "Round anterior", nunca na numeração
 - Ao citar um finding fora do relatório — no plano, na matriz, na conversa —, qualificar com o arquivo: `R-01 (REVIEW-T-04-2026-06-15)`
 
-## O que NÃO incluir
+## O que não incluir
 
 - Opinião pessoal de estilo ("prefiro outra abordagem") sem fundamentar em padrão do projeto
 - Críticas a código fora do diff (escopo é a entrega de T-XX, não o codebase inteiro)
@@ -215,7 +225,7 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 - Linha "está tudo perfeito" se não estiver: review aprovador-de-tudo perde credibilidade rápido
 - Auto-elogio do estilo "review feito por IA" — irrelevante para o leitor
 
-## Quando NÃO gerar review
+## Quando não gerar review
 
 - Se T-XX não foi identificada e o usuário não responde a perguntas de identificação após tentativa razoável
 - Se o diff é vazio ou não acessível

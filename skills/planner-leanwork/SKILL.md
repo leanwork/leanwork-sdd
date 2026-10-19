@@ -1,6 +1,6 @@
 ---
 name: planner-leanwork
-description: Quebra de PRD em plano de execução incremental para devs (humanos ou agentes de IA), no padrão Leanwork. Use sempre que o usuário pedir para "criar plano de execução", "quebrar PRD em tarefas", "planejar implementação", "montar plan", "decompor feature", "fazer planning técnico" ou variações. Também use quando o usuário trouxer um PRD pronto e indicar que precisa transformar em tarefas executáveis, ou quando descrever uma feature já bem definida e pedir o plano. A skill conduz entrevista estruturada se o PRD vier incompleto, e produz markdown com tarefas em checkbox, granularidade calibrada (mistura de tarefas pequenas e médias), critérios de aceite testáveis por tarefa, dependências, riscos, testes a escrever e complexidade. Cada tarefa declara explicitamente o que **implementa** (RN-XX do PRD), o que **valida** (CA-XX do Gherkin) e quais **decisões base** (ADR-XX da arquitetura) materializa — fechando a matriz de rastreabilidade SDD. O plano é o artefato que o agente de IA (Claude Code, Codex, Cursor) consome para executar tarefa a tarefa. NÃO inclui cronograma, datas, alocação de pessoas ou estimativa em horas — o foco é "o que fazer, em que ordem, validado como".
+description: Quebra um PRD — ou uma mudança pequena, pela trilha rápida — em plano de execução com tarefas T-XX fatiadas por CA-XX, critérios de aceite, testes e rastreabilidade RN/CA/ADR/UI. Use quando pedirem plano de execução, quebrar PRD em tarefas, planejar implementação ou atualizar status de tarefa. Não inclui cronograma, alocação nem horas.
 allowed-tools: Read, Glob, Grep, Edit(docs/plans/**), Bash(python:*)
 ---
 
@@ -9,6 +9,16 @@ allowed-tools: Read, Glob, Grep, Edit(docs/plans/**), Bash(python:*)
 Esta skill transforma um PRD aprovado em um plano de execução técnico, incremental e rastreável. O plano é o artefato consumido pelo dev (humano ou agente de IA) durante a execução: cada tarefa é pequena o suficiente para virar 1 commit, tem critério de aceite verificável, e sabe quais testes precisa escrever.
 
 O público-alvo do plano são os executores: devs do time e agentes de IA (Claude Code, Codex, Cursor, Gemini CLI). O documento precisa ser preciso ao ponto de um agente conseguir pegar uma tarefa, executar e marcar como concluída sem ambiguidade. Cronograma, datas e alocação ficam **fora** — isso é gestão de projeto, não plano técnico. O plano responde "o que fazer, em que ordem, e como saberemos que ficou pronto".
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Plano reprovado no gate não é apresentado, nem com ressalva.
+2. `**Status:**` é o único estado da tarefa, com os quatro valores do vocabulário fixo.
+3. Toda tarefa tem critério de aceite testável e `Testes a escrever:`.
+4. O plano consome decisões, não cria: decisão arquitetural nova vira questão em aberto com `bloqueia: T-XX` e sugestão da `architect-leanwork`.
+5. Sem cronograma, datas, alocação de pessoas ou horas.
 
 ## Fluxo geral
 
@@ -88,7 +98,7 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 ### Gate — validar o plano antes de apresentar
 
 O hook do plugin roda `validate_plan.py` a cada gravação em `docs/plans/` e devolve os `ERROR`: corrigir até passar, nunca apresentar plano reprovado; `WARN` é sinal para decidir, não reprovação.
-Sem o hook (plugin sem hooks, outra ferramenta), rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md` — exit diferente de zero é PARE. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
+Sem o hook (plugin sem hooks, outra ferramenta), rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md` — exit diferente de zero interrompe a entrega. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
 Sem execução de código, conferir à mão e dizer no chat que o plano não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 ## Trilha rápida
@@ -116,7 +126,7 @@ Mudança pequena e reversível não precisa de PRD nem de plano completo. A tril
 - **Referência à SPEC-UI (quando existir):** tarefas de interface preenchem o campo `Telas:` com os `UI-XX` e os estados que implementam (ex.: `UI-02 (default, limite, esgotado)`). Antes de decompor a fase de Interface, ler `docs/prototype/SPEC-UI-XXX-*.md`: o inventário de telas dimensiona as tarefas, e a seção de componentes reutilizáveis evita criar tarefas duplicadas para o mesmo componente. Se o projeto não tem SPEC-UI, omitir o campo e decompor a fase de Interface a partir dos fluxos do PRD.
 - **Referência ao PRD e arquitetura (rastreabilidade SDD):** toda tarefa que implementa regra de negócio precisa preencher o campo **Implementa:** com os códigos das regras (RN-XX). Toda tarefa cuja conclusão valida cenário(s) Gherkin precisa preencher **Valida:** com os códigos dos cenários (CA-XX). Tarefas que materializam uma decisão arquitetural específica devem preencher **Decisões base:** com o(s) ADR-XX correspondente(s). Isso fecha a matriz `ADR → RN → CA → UI → T → teste` (o elo `UI` só entra quando há SPEC-UI), permitindo análise de impacto reversa (mudou RN-05, quais tarefas e testes são afetados?).
 
-## O que NÃO incluir
+## O que não incluir
 
 - **Cronograma, datas, prazos.** O plano é sobre ordem e dependências, não sobre quando. Datas pertencem ao Azure DevOps / gestão de projeto.
 - **Alocação de pessoas.** "T-03: João" não vai no plano. Quem pega a tarefa é decisão de planning/daily.

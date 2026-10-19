@@ -1,6 +1,6 @@
 ---
 name: context-leanwork
-description: Geração e atualização do contexto de projeto para agentes de IA, no padrão Leanwork — arquivos CLAUDE.md (raiz e por módulo) e permissões em .claude/settings.json. Use quando o usuário pedir explicitamente para "gerar CLAUDE.md", "criar contexto do projeto", "atualizar CLAUDE.md", "configurar permissões do Claude Code", "gerar settings.json", "documentar convenções do projeto para o agente", "criar CLAUDE.md do módulo X" ou variações diretas. Também use quando o usuário aceitar uma sugestão de rodar a skill vinda de outra skill do pipeline SDD. A skill detecta stack e comandos reais inspecionando o repositório, lê os artefatos do pipeline (proposta arquitetural, ADRs, PRDs, planos) para extrair convenções e restrições, e produz CLAUDE.md com seções Resumo, Stack, Comandos, Convenções, Restrições e índice de documentação, além de permissões allow/ask/deny calibradas pela stack detectada. NUNCA sobrescreve conteúdo escrito por humanos — faz merge conservador em blocos delimitados e mostra diff antes de gravar. CLAUDE.md de módulo é opt-in, nunca gerado em massa sem escolha do usuário. NÃO gera CLAUDE.md automaticamente durante outras tarefas — precisa ser invocada explicitamente.
+description: Gera ou atualiza CLAUDE.md (raiz e módulos) e as permissões de .claude/settings.json a partir do repositório e dos artefatos do pipeline. Use quando pedirem para gerar ou atualizar CLAUDE.md, contexto do projeto ou permissões do Claude Code, ou ao aceitar a sugestão de outra skill. Não roda como efeito colateral de outra tarefa.
 allowed-tools: Read, Glob, Grep
 ---
 
@@ -8,10 +8,20 @@ allowed-tools: Read, Glob, Grep
 
 Esta skill produz e mantém os arquivos `CLAUDE.md` que dão contexto de projeto a agentes de IA (Claude Code, Codex, Cursor). É a ponte entre os artefatos do pipeline SDD (que são escritos para humanos) e o que o agente precisa saber em cada sessão sem ler 400 linhas de proposta arquitetural.
 
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Só roda por pedido direto ou aceite de sugestão, nunca como efeito colateral.
+2. Conteúdo escrito por humano não é sobrescrito; o diff é mostrado antes de gravar.
+3. Comandos vêm de inspeção real do repositório; o que não tem fonte vira `<!-- TODO -->`.
+4. Credenciais, connection strings e tokens nunca entram no `CLAUDE.md`.
+5. `CLAUDE.md` de módulo só com escolha explícita do usuário.
+
 ## Princípios
 
-- **Nunca automática.** Só roda por pedido direto do usuário ou quando ele aceita uma sugestão — nunca como efeito colateral de outra tarefa. Outras skills do pipeline sugerem; nenhuma gera por conta própria.
-- **Nunca destrutiva.** Conteúdo escrito por humano é preservado. Merge acontece apenas dentro de blocos delimitados como auto-gerados. Sempre mostra diff antes de gravar.
+- **Opt-in.** Outras skills do pipeline sugerem; nenhuma gera por conta própria.
+- **Conservadora.** Merge acontece apenas dentro de blocos delimitados como auto-gerados.
 - **Baseada em evidência do repositório.** Comandos de build/test vêm de inspeção real (`package.json`, `.csproj`, `Makefile`), não de suposição sobre a stack.
 - **Sem duplicação entre raiz e módulo.** Módulo nunca repete stack nem comandos globais. Duplicação vira divergência em poucas semanas.
 - **Enxuta.** `CLAUDE.md` é lido em toda sessão do agente — cada linha custa contexto. Se a informação vive melhor num doc referenciado, referencie em vez de copiar.
@@ -43,7 +53,7 @@ A opção **E** é modo somente-leitura: útil quando o usuário quer saber se v
 
 **Momento certo:** permissões só ficam boas **depois que existe código** — em repositório vazio não há stack para detectar. Se o usuário pedir permissões num repo sem código, gerar apenas o deny universal e as regras de git, e avisar que vale rodar de novo após o scaffolding.
 
-**Nunca gerar `CLAUDE.md` para todos os módulos sem escolha explícita.** Projeto LMA com 8 módulos rende 8 arquivos, e vários deles (módulos triviais de CRUD) só viram ruído. Detecte os módulos, liste, e deixe o usuário escolher.
+Módulos: detectar e listar, sem gerar em massa. Projeto LMA com 8 módulos rende 8 arquivos, e vários deles (módulos triviais de CRUD) só viram ruído. Detecte os módulos, liste, e deixe o usuário escolher.
 
 ## Fase 2 — Coletar contexto
 
@@ -196,7 +206,7 @@ Regra que evita duplicação e divergência:
 
 Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de aplicar essa divisão, provavelmente ele não se justifica. Avisar o usuário e sugerir não criar.
 
-## O que NÃO incluir no CLAUDE.md
+## O que não incluir no CLAUDE.md
 
 - **Conteúdo copiado dos artefatos do pipeline.** Referencie o caminho; não duplique regras de negócio, ADRs completos ou critérios de aceite.
 - **Histórico ou changelog.** Isso é papel do git e do campo `Status:` das tarefas do plano.
@@ -207,9 +217,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 
 ## Quando sugerir que o usuário rode esta skill
 
-Esta skill nunca roda como efeito colateral de outra tarefa — exige pedido direto ou aceite de sugestão. As outras skills e comandos do pipeline devem sugeri-la nestes momentos:
-
-Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
+Esta skill exige pedido direto ou aceite de sugestão (regra pinada 1). Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
 
 A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário ignorar, o pipeline segue normalmente.
 

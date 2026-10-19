@@ -1,6 +1,6 @@
 ---
 name: architect-leanwork
-description: Avaliação arquitetural e proposta de solução técnica para projetos de software, no padrão Leanwork. Use sempre que o usuário pedir para "pensar arquitetura de", "propor solução técnica", "avaliar arquitetura", "desenhar arquitetura", "definir stack", "como construir esse sistema", "qual a melhor arquitetura para", "modelar essa solução" ou variações. Também use quando o usuário descrever um projeto novo (interno ou de cliente) e pedir o desenho da solução, ou trouxer uma arquitetura existente para revisar/criticar. A skill é stack-agnóstica por padrão — só fixa tecnologia se for restrição declarada — e produz um documento markdown com objetivos de negócio, atributos de qualidade, restrições, decisões arquiteturais com justificativa (ADRs), trade-offs explícitos e diagramas C4 (Context, Container e/ou Component) em Mermaid. Inspirada no Manual do Arquiteto de Software de Elemar Júnior. NÃO entrega estimativa de esforço, cronograma ou código pronto — entrega arquitetura.
+description: Proposta arquitetural no padrão Leanwork — objetivos de negócio, atributos de qualidade, restrições, ADRs e C4 em Mermaid. Use quando pedirem para pensar, propor, avaliar ou desenhar arquitetura, definir stack, modelar uma solução nova ou criticar uma arquitetura existente. Não entrega estimativa, cronograma nem código.
 allowed-tools: Read, Glob, Grep, Edit(docs/architecture/**)
 ---
 
@@ -15,6 +15,16 @@ A inspiração filosófica é o Manual do Arquiteto de Software de Elemar Júnio
 - **Assertividade arquitetural** = decisão tomada + decisão justificada + decisão comunicada. Decisão sem justificativa é fé; justificativa não comunicada é segredo.
 - **Stack-agnóstico por padrão.** A skill conhece tecnologias e propõe a melhor para o contexto. Se o cliente impuser uma stack (ex.: "tem que ser Go", "só Azure", "obrigatório SAP"), isso vira **restrição** e a skill respeita — mas registra no documento que essa foi uma restrição, não uma escolha arquitetural.
 - **Sem modismos.** Microsserviços, Clean Architecture, Event Sourcing, serverless — nenhum desses é "o jeito certo". Cada um é "um jeito certo" para um contexto. A skill nunca recomenda algo só porque é tendência.
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Restrição declarada pelo cliente entra como restrição, nunca como decisão arquitetural.
+2. Toda decisão é justificada por objetivo de negócio, atributo de qualidade ou restrição — tendência de mercado não é justificativa.
+3. A proposta não gera número de custo, esforço ou prazo; valor e data só aparecem como restrição declarada.
+4. Nada de `[A DEFINIR]`: lacuna que muda decisão volta como pergunta.
+5. Não gerar `CLAUDE.md` por conta própria — só sugerir a `context-leanwork`.
 
 ## Fluxo geral
 
@@ -234,7 +244,7 @@ Depois de entregar o documento, **sugerir** (não executar) a geração do conte
 
 Mencionar que a seção **Comandos** do `CLAUDE.md` só fica completa depois do primeiro scaffolding — antes disso não há comando de build ou teste para detectar.
 
-A sugestão é um convite, não etapa obrigatória. Se o usuário ignorar, seguir normalmente. **Nunca gerar o `CLAUDE.md` por conta própria** — o arquivo é território do dev.
+A sugestão é um convite, não etapa obrigatória. Se o usuário ignorar, seguir normalmente. O `CLAUDE.md` é território do dev (regra pinada 5).
 
 ---
 

@@ -496,7 +496,7 @@ Edição em `docs/plans/**` dispara `validate_plan.py`; em `docs/reviews/**`, `v
 
 #### T-16 — Descriptions curtas e ênfase restrita
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-15
 - **Camadas/arquivos afetados:**

@@ -1,6 +1,6 @@
 ---
 name: prd-leanwork
-description: Levantamento estruturado de requisitos e geração de PRDs (Product Requirement Documents) detalhados em português, no padrão Leanwork. Use sempre que o usuário pedir explicitamente para "criar PRD", "levantar requisito", "documentar demanda", "detalhar feature", "escrever especificação" ou qualquer variação dessas expressões. Também use quando o usuário descrever uma demanda nova e indicar que precisa virar documento para os devs executarem. A skill conduz uma entrevista estruturada quando o contexto está incompleto, e produz markdown com hierarquia Epic→Feature→PBI, regras de negócio numeradas (RN-XX), critérios de aceite em Gherkin (PT-BR) com IDs (CA-XX) e diagramas Mermaid. Os IDs RN/CA são o ponto de costura com o plano de execução (planner-leanwork) e a arquitetura (architect-leanwork) — formam a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T. NÃO inclui estimativa de esforço, t-shirt sizing ou complexidade — o foco é "o quê" e "por quê", não "quanto custa".
+description: Levanta requisitos e gera PRD em PT-BR com regras RN-XX, cenários Gherkin CA-XX e diagramas Mermaid. Use quando pedirem para criar PRD, levantar requisito, documentar demanda, detalhar feature ou escrever especificação, ou quando uma demanda nova precisar virar documento para os devs. Não inclui estimativa, complexidade nem cronograma.
 allowed-tools: Read, Glob, Grep, Edit(docs/prds/**)
 ---
 
@@ -9,6 +9,15 @@ allowed-tools: Read, Glob, Grep, Edit(docs/prds/**)
 Esta skill ajuda a transformar uma demanda (ideia, conversa com cliente, feature solicitada) em um Product Requirement Document detalhado o suficiente para que um desenvolvedor execute sem precisar adivinhar nada.
 
 O público-alvo do PRD são os devs do time. O documento precisa ser preciso o bastante para eliminar ambiguidade, mas não tão burocrático que ninguém leia. Estimativa, esforço e complexidade ficam **fora** deste documento — são tratados em outro momento (planning, refinamento). O PRD responde "o quê" e "por quê", não "quanto custa".
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Não inventar nem preencher com `[A DEFINIR]`: sem insumo, perguntar; com "gera assim mesmo", marcar `> ⚠️ **Premissa:**`.
+2. Regras `RN-XX` e cenários `CA-XX` sempre presentes, mesmo em PRD curto — são o que o plano e o review consomem.
+3. Gherkin em PT-BR (`Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`), sem mistura com inglês.
+4. Sem estimativa, complexidade ou cronograma.
 
 ## Fluxo geral
 
@@ -34,7 +43,7 @@ Antes de escrever uma linha do PRD, garantir que as informações abaixo estão 
 - Quais usuários serão impactados? (perfis, papéis, personas)
 - O que está **dentro** do escopo desta entrega?
 - O que está **fora** do escopo? (tão importante quanto o que está dentro — evita scope creep)
-- Existe alguma demanda relacionada que NÃO faz parte desta, mas pode confundir? Listar para excluir explicitamente.
+- Existe alguma demanda relacionada que não faz parte desta, mas pode confundir? Listar para excluir explicitamente.
 
 ### Bloco 3 — Comportamento e regras
 
@@ -93,7 +102,7 @@ A sugestão é convite, não etapa obrigatória. Ignorá-la não bloqueia o pipe
 - **Numeração de regras e cenários:** `RN-01`, `RN-02` para regras de negócio; `CA-01`, `CA-02` para cenários Gherkin (critérios de aceite). Essa numeração é o ponto de costura com o plano de execução: o planner referencia esses IDs nas tarefas (`Implementa: RN-03`, `Valida: CA-01`), permitindo rastrear do código até a regra de negócio original.
 - **Referência cruzada com arquitetura:** quando uma regra ou cenário existe por causa de uma decisão arquitetural já tomada, citar o ADR correspondente entre parênteses (ex.: "RN-05: estoque decrementado atomicamente (ADR-002)").
 
-## O que NÃO incluir
+## O que não incluir
 
 - Estimativas (story points, horas, t-shirt sizing P/M/G).
 - Complexidade técnica subjetiva.
