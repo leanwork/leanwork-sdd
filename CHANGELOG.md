@@ -31,3 +31,9 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 - Architect, PRD, planner e prototype declaram a mesma regra. Fato se busca no repositório, no `CLAUDE.md`, nos artefatos e na conversa. Decisão se pergunta, no máximo duas por vez, com opções concretas e a recomendação marcada.
 - Os blocos de perguntas viraram **dimensões a cobrir**. Cada dimensão termina respondida ou marcada `n/a — motivo`; sem isso, é lacuna e impede a geração. Todas as dimensões anteriores foram mantidas.
 - Na prototype, a pergunta de modo (ingestão, geração, híbrido) vem com a recomendação tirada do que a busca encontrou.
+
+### Architect e PRD sem conteúdo de livro-texto (T-18)
+
+- `skills/architect-leanwork/SKILL.md`: 248 → 147 linhas. Saíram a explicação de Cynefin (fica a consequência prática), a lista genérica de trade-offs, a lista de isomorfismos (está em `architectural-styles.md`), a explicação dos níveis do C4 e os princípios de escrita genéricos. Ficaram as posições Leanwork: restrição como restrição, sem modismo, sem estimativa, regra de escolha do nível C4 e o checklist final. Os catálogos em `references/` não mudaram.
+- PRD: a hierarquia Epic → Feature → PBI passa a opcional, para quem cadastra no Azure DevOps, na SKILL e no template. O template perde a seção 7.2 (fluxos alternativos e de erro), que redescrevia os cenários `CA-XX`. A numeração das seções foi mantida porque `id-conventions.md` cita as seções 8 e 9.
+- `REFERENCES.md`: a entrada de Cynefin passa de reprodução a adaptação.

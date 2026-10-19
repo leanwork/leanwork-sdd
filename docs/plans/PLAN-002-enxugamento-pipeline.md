@@ -538,7 +538,7 @@ Regra comum às quatro: fato se busca no repositório e nos artefatos; decisão 
 
 #### T-18 — Architect e PRD sem conteúdo de livro-texto
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-17
 - **Camadas/arquivos afetados:**

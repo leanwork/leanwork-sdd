@@ -6,15 +6,13 @@ allowed-tools: Read, Glob, Grep, Edit(docs/architecture/**)
 
 # Architect Leanwork — Proposta Arquitetural
 
-Esta skill ajuda a transformar uma demanda (projeto novo, evolução, integração, modernização) em uma **proposta arquitetural assertiva**: decisões tomadas, justificadas e comunicadas.
+Esta skill transforma uma demanda (projeto novo, evolução, integração, modernização) numa **proposta arquitetural assertiva**: decisão tomada, justificada e comunicada. Decisão sem justificativa é fé; justificativa não comunicada é segredo.
 
-A inspiração filosófica é o Manual do Arquiteto de Software de Elemar Júnior. Os princípios que regem tudo aqui são:
+O que a Leanwork defende aqui, inspirada no Manual do Arquiteto de Software de Elemar Júnior:
 
-- **Arquitetura é a arte de resolver trade-offs.** Não há bala de prata. Toda decisão tem vantagens e desvantagens marcantes — priorizar resiliência sacrifica performance, melhorar segurança pode comprometer disponibilidade, combater acoplamento vai contra reuso. Não há almoço grátis.
-- **Objetivo de toda arquitetura**: atender expectativas do **negócio**, respeitando **restrições** e atingindo **atributos de qualidade**, com o **menor custo e risco possíveis** dado o contexto.
-- **Assertividade arquitetural** = decisão tomada + decisão justificada + decisão comunicada. Decisão sem justificativa é fé; justificativa não comunicada é segredo.
-- **Stack-agnóstico por padrão.** A skill conhece tecnologias e propõe a melhor para o contexto. Se o cliente impuser uma stack (ex.: "tem que ser Go", "só Azure", "obrigatório SAP"), isso vira **restrição** e a skill respeita — mas registra no documento que essa foi uma restrição, não uma escolha arquitetural.
-- **Sem modismos.** Microsserviços, Clean Architecture, Event Sourcing, serverless — nenhum desses é "o jeito certo". Cada um é "um jeito certo" para um contexto. A skill nunca recomenda algo só porque é tendência.
+- **Arquitetura resolve trade-offs.** O objetivo é atender o negócio, respeitando restrições e atingindo os atributos de qualidade prioritários, com o menor custo e risco para o contexto.
+- **Stack-agnóstica por padrão.** A skill propõe a melhor tecnologia para o contexto; stack imposta pelo cliente vira restrição registrada como tal.
+- **Sem modismo.** Microsserviços, Clean Architecture, Event Sourcing, serverless: cada um é *um* jeito certo para *um* contexto, nunca *o* jeito certo.
 
 ## Regras pinadas
 
@@ -28,13 +26,9 @@ O que não se negocia nesta skill. O restante do texto é orientação; isto é 
 
 ## Fluxo geral
 
-A skill opera em três fases:
-
-1. **Entrevista estruturada** — extrair objetivos de negócio, atributos de qualidade prioritários, restrições e contexto organizacional. Sem isso, qualquer arquitetura é chute.
-2. **Análise e decisão** — classificar a natureza do problema, identificar trade-offs, escolher estilo arquitetural e tecnologias com justificativa.
-3. **Geração da proposta** — markdown estruturado com seção executiva (público de negócio) e seção técnica (público técnico), incluindo C4 em Mermaid e ADRs.
-
-Cada fase tem regras específicas — leia as próximas seções antes de gerar qualquer coisa.
+1. **Entrevista** — objetivos de negócio, atributos de qualidade prioritários, restrições e contexto. Sem isso, qualquer arquitetura é chute.
+2. **Análise e decisão** — trade-offs, estilo arquitetural e tecnologias, cada escolha amarrada ao que a entrevista levantou.
+3. **Proposta** — markdown com seção executiva (negócio) e técnica, C4 em Mermaid e ADRs.
 
 ---
 
@@ -90,119 +84,36 @@ Você consegue justificar cada decisão sem inventar. Lacuna que muda a decisão
 
 ## Fase 2 — Análise e decisão
 
-Tendo o material da entrevista, antes de escrever a proposta, pense (silenciosamente, na sua cabeça):
+Antes de escrever, decidir — em silêncio, sem despejar a análise no documento:
 
-### Passo 1 — Classifique a natureza do problema (Cynefin)
-
-- **Óbvio/Simples**: causa-efeito clara, "best practice" se aplica. Raro em arquitetura — geralmente só ferramental utilitário.
-- **Complicado**: causa-efeito clara mas múltiplas soluções viáveis. Comum em design não-arquitetural; aqui o trabalho é escolher entre alternativas conhecidas.
-- **Complexo**: causa-efeito só fica clara depois da ação; muitas variáveis. **A maioria dos desafios arquiteturais cai aqui.** Implica em propor MVP/PoC, métricas claras, possibilidade de pivotar.
-- **Caótico**: sem relação causal estabelecida. Sistemas distribuídos malfeitos vivem aqui. Se o problema parece caótico, a primeira proposta arquitetural deve ser "estabilizar antes de evoluir".
-
-Use isso para calibrar o tom da proposta. Em complexo, evite tom de certeza absoluta — proponha experimentos, marcos de decisão, pontos de revisão. Em complicado, pode ser mais firme.
-
-### Passo 2 — Identifique trade-offs candidatos
-
-Liste mentalmente os trade-offs centrais do projeto. Exemplos:
-
-- Acoplamento × reuso
-- Consistência × disponibilidade (CAP)
-- Performance × resiliência
-- Time-to-market × manutenibilidade
-- Segurança × disponibilidade
-- Simplicidade operacional × escalabilidade horizontal
-- Custo de infra × custo de desenvolvimento
-
-Para cada trade-off, identifique qual lado o **negócio** prioriza dado o que você ouviu na entrevista. Esse é o input central para escolher estilo arquitetural.
-
-### Passo 3 — Procure isomorfismo entre domínio e arquitetura
-
-Alguns domínios "cabem" naturalmente em alguns estilos. Quando há match, a arquitetura quase se autoescolhe:
-
-- **Sequência de transformações bem definida** (ETL, processamento de pedidos linear) → Pipes & Filters
-- **Customização heavy por cliente/contexto** → Microkernel / Plugin Architecture
-- **Domínios independentes com times separados que precisam evoluir em paralelo** → Microsserviços
-- **CRUD com regras de negócio moderadas, time pequeno/médio, deploy unificado** → Monolito em camadas (sim, ainda é a resposta certa em muitos casos)
-- **Sistemas reativos a eventos do mundo real** → Event-Driven Architecture
-- **Alta leitura, baixa escrita, dados que podem ser eventualmente consistentes** → CQRS + Read Models + cache agressivo
-- **Integrações múltiplas e diversas com sistemas externos** → REST/API Gateway + adapters
-- **Necessidade de auditar tudo o que aconteceu** → Event Sourcing
-- **Cargas variáveis e imprevisíveis com baixa demanda média** → Serverless
-
-Se há isomorfismo claro, use-o. Se não há, o estilo arquitetural será ditado pelos atributos de qualidade prioritários e restrições.
-
-### Passo 4 — Escolha estilo arquitetural e tecnologias
-
-Para o estilo: justifique **com base em (a) o que o negócio prioriza, (b) os atributos de qualidade dominantes, (c) as restrições, (d) o que o time consegue operar**. Não escolha pelo que está em alta.
-
-Para tecnologias: se há restrição declarada, respeite e registre como restrição (não como decisão). Se não há, proponha a stack que **melhor atende o contexto**, considerando:
-
-- **Maturidade da tecnologia**: hype-driven é dívida técnica plantada
-- **Conhecimento do time**: a melhor stack que ninguém sabe operar é pior que a segunda melhor que todos dominam
-- **Ecossistema**: bibliotecas, suporte, contratação
-- **Custo total**: licença + infra + curva de aprendizado + manutenção
-- **Aderência aos atributos prioritários**
-
-Lembre: você não é obrigado a propor stack moderna. Se um monolito Django + PostgreSQL resolve, proponha isso. Se .NET + SQL Server resolve, proponha isso. A questão é se resolve, não se impressiona.
-
-### Passo 5 — Avalie dívidas técnicas plantadas
-
-Toda arquitetura proposta planta sementes de dívida em algum lugar. Identifique conscientemente:
-
-- O que **não** está sendo feito agora (e quando vai precisar ser feito)?
-- Qual o "juro" antecipado dessas decisões?
-- Em que cenário essa dívida se torna problema (volume, time, regulação)?
-
-Inclua isso na proposta sob "Dívidas técnicas conscientes" — é honesto e demonstra maturidade.
+1. **Tom pela incerteza.** Problema em que causa e efeito só aparecem depois da ação (a maioria dos desafios arquiteturais) pede proposta com MVP/PoC, métricas e marcos de revisão, não certeza absoluta. Sistema hoje instável pede "estabilizar antes de evoluir".
+2. **Trade-offs centrais.** Para cada um, qual lado o negócio prioriza segundo a entrevista — é o insumo da escolha de estilo.
+3. **Estilo.** Se o domínio tem isomorfismo claro com um estilo, usá-lo (catálogo em `references/architectural-styles.md`). Senão, decidem os atributos prioritários e as restrições. Monolito em camadas continua sendo a resposta certa em muitos casos.
+4. **Tecnologia.** Restrição declarada se respeita e se registra como restrição. Sem restrição, a stack que melhor atende o contexto: maturidade, domínio do time, ecossistema, custo total e aderência aos atributos. A melhor stack que ninguém sabe operar perde para a segunda melhor que todos dominam; a questão é se resolve, não se impressiona.
+5. **Dívidas plantadas.** O que não está sendo feito agora, quando vai precisar ser, e em que cenário (volume, time, regulação) vira problema. Vai para a seção "Dívidas técnicas conscientes" da proposta.
 
 ---
 
 ## Fase 3 — Geração da proposta
 
-Use o template abaixo. Adapte seções: omita as que não fazem sentido para a demanda, mas **não invente conteúdo para preencher** seções vazias.
+Ler `references/proposal-template.md` antes de gerar: ele traz a estrutura exata (sumário executivo, contexto, atributos, restrições, ADRs, visão C4, fluxos críticos, trade-offs, dívidas conscientes, riscos, próximos passos, apêndice). Omitir seção que não se aplica; não inventar conteúdo para preencher.
 
-### Sobre os níveis do C4
+**Nível do C4 pela complexidade**, justificado em uma frase no início da seção de arquitetura:
 
-O C4 model tem 4 níveis. Quanto **menor o número, mais alto o nível** de abstração:
+- PoC, sistema simples ou time pequeno: Container + uma frase de contexto
+- Padrão: Context + Container
+- Sistema complexo, com vários containers críticos: Context + Container + Component dos containers mais relevantes
+- Code: praticamente nunca — o código é a fonte de verdade
 
-- **Nível 1 — Context**: o sistema como caixa preta, suas pessoas e sistemas vizinhos
-- **Nível 2 — Container**: as unidades deployáveis dentro do sistema (apps, APIs, bancos, filas)
-- **Nível 3 — Component**: componentes lógicos dentro de um container
-- **Nível 4 — Code**: classes/módulos. **Quase nunca vale documentar** — código é a fonte de verdade.
+Diagramas em Mermaid: `flowchart` para containers e componentes, `sequenceDiagram` quando um fluxo crítico explica uma decisão. Frases afirmativas ("adotamos X"), números no lugar de adjetivos ("5k RPS sustentado", não "altamente escalável"), e o que ficou de fora registrado no apêndice.
 
-**Regra de escolha do nível**, conforme a complexidade da demanda:
+Recursos auxiliares, sob demanda:
 
-- **PoC / sistema simples / time pequeno**: apenas Nível 2 (Container) + uma frase descrevendo o contexto
-- **Padrão (maioria dos casos)**: Nível 1 (Context) + Nível 2 (Container)
-- **Sistema complexo, com múltiplos containers críticos ou interno cheio de módulos**: Nível 1 + Nível 2 + Nível 3 (apenas dos containers mais relevantes)
-- **Nível 4**: praticamente nunca. Só se houver razão excepcional explicitamente pedida.
-
-A skill **decide o nível pela complexidade**. Justifica brevemente a escolha no início da seção de arquitetura.
-
-### Diagramas em Mermaid
-
-Use Mermaid para todos os diagramas. Exemplos de templates em `references/c4-mermaid-templates.md`. Prefira `flowchart` para containers e componentes; `sequenceDiagram` para fluxos críticos quando ajudam a explicar uma decisão.
-
-### Template da proposta
-
-Use o template completo em `references/proposal-template.md`. Leia o arquivo antes de gerar a proposta; ele contém a estrutura exata com todas as seções (sumário executivo, contexto, atributos de qualidade, restrições, ADRs, visão arquitetural C4, fluxos críticos, trade-offs, dívidas conscientes, riscos, próximos passos, apêndice).
-
-Recursos auxiliares (carregue conforme necessidade):
-
-- `references/c4-mermaid-templates.md` — templates Mermaid para os 4 níveis do C4 + sequence + state diagrams, com anti-padrões comuns
-- `references/quality-attributes.md` — catálogo de atributos de qualidade (performance, escalabilidade, disponibilidade, resiliência, segurança, manutenibilidade, observabilidade) com perguntas-gatilho, sinais de prioridade, padrões que atendem, e trade-offs a explicitar
-- `references/architectural-styles.md` — catálogo de estilos arquiteturais (monolito, modular monolith, microsserviços, pipes & filters, EDA, CQRS, event sourcing, microkernel, serverless, REST+gateway) com forças, fraquezas, isomorfismo natural e quando evitar
-- `references/adr-template.md` — template standalone de ADR (quando o usuário preferir ADRs como arquivos separados em vez de inline na proposta)
-- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET) da mesma demanda nas cinco fases; consultar para ver como um `ADR-XX` desta proposta é citado depois no PRD, no plano e no review
-
-### Princípios de escrita da proposta
-
-- **Frases afirmativas, não condicionais.** "Adotamos X" e não "poderia ser X".
-- **Sempre justificar.** Cada decisão tem o "porquê" explícito ligado a um objetivo, atributo ou restrição.
-- **Sem jargão sem propósito.** Se você usar "CQRS" ou "Saga", explique numa frase no contexto local. O sumário executivo precisa ser legível por não-técnicos.
-- **Evite adjetivos vazios.** "Robusto", "escalável", "moderno" — substitua por números ou descarte. "Suporta 5k RPS sustentado" é melhor que "altamente escalável".
-- **Documente o que ficou de fora.** A seção 12 (Apêndice) existe para isso. Mostra disciplina e protege o escopo.
-- **Honesto sobre dívida.** A seção 9 não é fraqueza — é maturidade. Toda arquitetura tem dívida; quem nega está mentindo ou não pensou.
+- `references/c4-mermaid-templates.md` — templates Mermaid dos níveis do C4, sequence e state, com anti-padrões
+- `references/quality-attributes.md` — atributos de qualidade com perguntas-gatilho, sinais de prioridade, padrões e trade-offs
+- `references/architectural-styles.md` — estilos com forças, fraquezas, isomorfismo natural e quando evitar
+- `references/adr-template.md` — ADR standalone, para quem prefere ADRs em arquivos separados
+- `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/pipeline-example.md` — exemplo end-to-end (calibrado em .NET); mostra como um `ADR-XX` desta proposta é citado no PRD, no plano e no review
 
 ---
 
@@ -232,12 +143,5 @@ Mencionar que a seção **Comandos** do `CLAUDE.md` só fica completa depois do 
 A sugestão é um convite, não etapa obrigatória. Se o usuário ignorar, seguir normalmente. O `CLAUDE.md` é território do dev (regra pinada 5).
 
 ---
-
-## Referências
-
-- `references/c4-mermaid-templates.md` — Templates Mermaid para C4 (Context, Container, Component, Sequence)
-- `references/quality-attributes.md` — Catálogo de atributos de qualidade com perguntas-gatilho e padrões que os atendem
-- `references/architectural-styles.md` — Resumo dos estilos arquiteturais com forças, fraquezas e quando usar
-- `references/adr-template.md` — Template completo de ADR (caso o usuário queira ADRs separados, fora do documento principal)
 
 Inspiração: Manual do Arquiteto de Software, Elemar Júnior — https://elemarjr.com/livros/arquiteturadesoftware/volume-1/

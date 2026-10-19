@@ -10,7 +10,7 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 # PRD: [Título da demanda]
 
 **Cliente/Produto:** [Contoso / LeanOps / Projeto X / ...]
-**Tipo:** [Epic / Feature / PBI]
+**Tipo:** [Epic / Feature / PBI] *(só quando a seção 6 for usada)*
 **Autor:** [nome]
 **Data:** [AAAA-MM-DD]
 **Status:** [Rascunho / Em revisão / Aprovado]
@@ -55,9 +55,9 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 |---------|-------|----------------------------|
 | [nome]  | [perfil] | [resumo] |
 
-## 6. Hierarquia de entrega *(obrigatória)*
+## 6. Hierarquia de entrega *(opcional — para quem cadastra no Azure DevOps)*
 
-Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
+Sugestão de quebra em Epic → Feature → PBI. Sem Azure DevOps, omitir a seção: o comportamento já está nas seções 8 e 9.
 
 - **Epic:** [nome do épico — abrange a demanda inteira e tipicamente entrega valor de negócio mensurável]
   - **Feature:** [feature 1 — entregável funcional coerente]
@@ -70,9 +70,7 @@ Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
 >
 > **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução é uma fatia que fecha um ou mais `CA-XX` num ciclo de execução + review (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
 
-## 7. Fluxos *(obrigatória se houver interação)*
-
-### 7.1. Fluxo principal
+## 7. Fluxo principal *(obrigatória se houver interação)*
 
 ```mermaid
 flowchart TD
@@ -83,11 +81,7 @@ flowchart TD
     D --> E
 ```
 
-[Descrição textual do fluxo, passo a passo.]
-
-### 7.2. Fluxos alternativos / de erro
-
-[Cada um com seu próprio diagrama Mermaid se for complexo, ou descrição textual se for simples.]
+Fluxos alternativos e de erro são os cenários `CA-XX` da seção 9 — não redescrever aqui. Diagrama extra só quando um desvio tiver ramificação que o Gherkin não mostra bem.
 
 ## 8. Regras de negócio *(obrigatória)*
 

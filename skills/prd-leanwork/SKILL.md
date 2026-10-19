@@ -69,7 +69,7 @@ Dá para escrever cada seção do template sem inventar: nenhuma seção ficaria
 
 ## Fase 2 — Geração do PRD
 
-Use o template completo em `references/prd-template.md`. Leia o arquivo antes de gerar o PRD; ele contém a estrutura exata com todas as seções obrigatórias (visão, problema, objetivo, escopo, hierarquia Epic→Feature→PBI, fluxos, regras de negócio com IDs `RN-XX`, critérios de aceite Gherkin com IDs `[CA-XX]`, riscos) e opcionais (personas, permissionamento, integrações, diagrama de estados, arquitetura técnica).
+Use o template completo em `references/prd-template.md`. Leia o arquivo antes de gerar o PRD; ele contém a estrutura exata com todas as seções obrigatórias (visão, problema, objetivo, escopo, regras de negócio com IDs `RN-XX`, critérios de aceite Gherkin com IDs `[CA-XX]`, riscos), as condicionais (personas e fluxo com UI, permissionamento, integrações) e as opcionais (hierarquia Epic→Feature→PBI, diagrama de estados, arquitetura técnica).
 
 Recursos auxiliares:
 
@@ -95,7 +95,7 @@ A sugestão é convite, não etapa obrigatória. Ignorá-la não bloqueia o pipe
 - **Idioma:** todo o PRD em português (Brasil), incluindo títulos das seções, regras de negócio e Gherkin. Termos técnicos consagrados (API, endpoint, queue, webhook) podem permanecer em inglês.
 - **Mermaid:** usar sempre que houver fluxo, máquina de estados ou arquitetura. Diagramas devem caber em uma tela — se ficar grande demais, quebrar em sub-fluxos.
 - **Gherkin em PT-BR:** `Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`, `E`, `Mas`. Não misturar com inglês.
-- **Hierarquia:** Epic → Feature → PBI, sempre. Mesmo que a demanda inteira caiba em uma única Feature, deixar a hierarquia explícita para facilitar o cadastro no Azure DevOps.
+- **Hierarquia Epic → Feature → PBI:** opcional, para quem cadastra o backlog no Azure DevOps. Quando pedida, segue a seção 6 do template; quando não, a seção sai e o PRD não perde nada — o comportamento está nas `RN-XX` e nos `CA-XX`.
 - **Numeração de regras e cenários:** `RN-01`, `RN-02` para regras de negócio; `CA-01`, `CA-02` para cenários Gherkin (critérios de aceite). Essa numeração é o ponto de costura com o plano de execução: o planner referencia esses IDs nas tarefas (`Implementa: RN-03`, `Valida: CA-01`), permitindo rastrear do código até a regra de negócio original.
 - **Referência cruzada com arquitetura:** quando uma regra ou cenário existe por causa de uma decisão arquitetural já tomada, citar o ADR correspondente entre parênteses (ex.: "RN-05: estoque decrementado atomicamente (ADR-002)").
 

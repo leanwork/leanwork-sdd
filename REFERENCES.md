@@ -112,7 +112,7 @@ O `stateDiagram-v2` incluído em `c4-mermaid-templates.md` **não pertence ao C4
 
 - **Dave Snowden e Mary Boone** — ["A Leader's Framework for Decision Making"](https://hbr.org/2007/11/a-leaders-framework-for-decision-making), Harvard Business Review, 2007.
 
-**Reprodução** dos quatro domínios (simples, complicado, complexo, caótico). O repositório omite *disorder*, o quinto domínio.
+**Adaptação.** Até a 1.10.0 a SKILL do architect reproduzia os quatro domínios (simples, complicado, complexo, caótico), omitindo *disorder*, o quinto. Na 2.0.0 a explicação saiu: fica só a consequência prática, sem o nome do framework. Problema em que causa e efeito só aparecem depois da ação pede proposta com MVP/PoC e marcos de revisão; sistema instável pede estabilizar antes de evoluir. A explicação dos domínios está na fonte.
 
 ### Catálogo de estilos arquiteturais
 
