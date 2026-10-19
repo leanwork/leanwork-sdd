@@ -29,7 +29,7 @@ Abrir e ler na íntegra o que a tarefa referencia. **Não deduzir pelo título:*
 - `Decisões base:` → a proposta arquitetural, cada `ADR-XX`
 - `Telas:` → a SPEC-UI, a tela e **cada estado** listado (campo ausente em projeto sem interface — não é lacuna)
 
-Antes de ler, rodar o gate de rastreabilidade — sem hook, porque não depende de edição: `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_ids.py" docs/plans/PLAN-XXX-nome.md`.
+Antes de ler, rodar o gate de rastreabilidade — sem hook, porque não depende de edição: `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_ids.py" docs/plans/PLAN-XXX-nome.md`. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
 Exit diferente de zero é PARE: cada `ERROR` é um ID citado que não existe na origem — reportar o gap e aguardar, sem inventar o ID. `WARN` não interrompe (origem ausente = verificação pulada, não aprovada).
 Sem execução de código, conferir os IDs à mão e avisar no chat que a rastreabilidade não passou pelo gate automático (ver README, "Degradação silenciosa").
 

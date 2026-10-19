@@ -171,7 +171,9 @@ Três regras do pipeline deixaram de depender de o agente lembrar delas. São sc
 - `check_commit.py` — mensagem de commit sem o trailer `Refs: T-XX, CA-XX`, com ID malformado ou com tarefa inexistente no plano é reprovada; o elo código → requisito passa a vir do `git log`
 - `selftest.py` — a suíte dos validadores, que roda antes de qualquer mudança neles ser commitada
 
-O gate é chamado pela skill ou comando que produz o artefato, antes de apresentá-lo. Sem ferramenta de execução no ambiente, a regra é conferir à mão **e dizer no chat que o gate automático não rodou** — degradação silenciosa é pior que gate nenhum, porque parece gate.
+`validate_plan.py` e `validate_review.py` rodam por hook do plugin (`hooks/hooks.json`): toda gravação em `docs/plans/` ou `docs/reviews/` dispara o validador, e a reprovação volta ao modelo para correção — o gate não depende de o agente lembrar dele. `validate_ids.py` é chamado por `/leanwork-execute` antes de implementar, porque não depende de edição.
+
+**Degradação silenciosa.** Sem hook e sem ferramenta de execução no ambiente, a regra é conferir à mão **e dizer no chat que o gate automático não rodou**. Degradação silenciosa é pior que gate nenhum, porque parece gate: quem lê o resultado confia numa verificação que não aconteceu. Toda skill e comando com gate aplica esta regra e aponta para cá.
 
 ### Exemplos calibrados por stack (raiz `stacks/`)
 
@@ -277,11 +279,23 @@ Nenhuma skill gera `CLAUDE.md` automaticamente. O arquivo é território do dev 
 
 | Momento | Quem sugere |
 |---------|-------------|
-| Proposta arquitetural concluída | `architect-leanwork` |
+| Proposta arquitetural concluída | `architect-leanwork` (checklist final) |
 | Review rodou degradado por falta de `CLAUDE.md` | `reviewer-leanwork` |
-| Review detectou padrão emergente não documentado | `reviewer-leanwork` |
+| Review detectou padrão emergente não documentado | `reviewer-leanwork` (Notas ao processo) |
 | Projeto tem artefatos do pipeline mas nenhum `CLAUDE.md` | `/leanwork-pipeline` |
 | Módulo novo apareceu no repositório | `/leanwork-pipeline` |
+| Projeto tem código mas nenhum `.claude/settings.json` | `/leanwork-pipeline` |
+| Primeiro scaffolding concluído (comandos de build passam a existir) | `/leanwork-pipeline` |
+
+A `prototype-leanwork` segue a mesma regra — também opcional, também só por sugestão ou pedido direto:
+
+| Momento | Quem sugere |
+|---------|-------------|
+| PRD com interface aprovado, sem SPEC-UI | `prd-leanwork` ao concluir; `/leanwork-pipeline` |
+| Plano prestes a ser gerado para PRD com UI | `planner-leanwork` |
+| Review encontrou tela sem especificação | `reviewer-leanwork` |
+
+Em todos os casos a sugestão é convite: se o usuário ignorar, o pipeline segue normalmente.
 
 ### Nunca destrutiva
 

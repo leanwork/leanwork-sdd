@@ -90,7 +90,7 @@ A skill `reviewer-leanwork` continua sendo a fonte do método — os 5 eixos (ad
 Sugira salvar em `docs/reviews/REVIEW-{T-XX}-{data-iso}.md`. Se o projeto usa outra convenção (ex.: comentário direto no PR sem versionar), perguntar ao usuário.
 
 **Gate — validar o relatório antes de entregar.** O hook do plugin roda `validate_review.py` a cada gravação em `docs/reviews/` e devolve os `ERROR` (finding sem `arquivo:linha`, cobertura sem evidência, recomendação fora do vocabulário ou incoerente com `Bloqueante`): corrigir até passar; relatório reprovado não é entregue.
-Sem o hook, rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md` — exit diferente de zero é PARE; `WARN` não reprova.
+Sem o hook, rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md` — exit diferente de zero é PARE; `WARN` não reprova. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
 Sem execução de código, conferir à mão e dizer no chat que o relatório não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 Após gerar o relatório, mostrar ao usuário:

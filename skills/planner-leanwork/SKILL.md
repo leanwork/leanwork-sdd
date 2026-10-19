@@ -88,7 +88,7 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 ### Gate — validar o plano antes de apresentar
 
 O hook do plugin roda `validate_plan.py` a cada gravação em `docs/plans/` e devolve os `ERROR`: corrigir até passar, nunca apresentar plano reprovado; `WARN` é sinal para decidir, não reprovação.
-Sem o hook (plugin sem hooks, outra ferramenta), rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md` — exit diferente de zero é PARE.
+Sem o hook (plugin sem hooks, outra ferramenta), rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md` — exit diferente de zero é PARE. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
 Sem execução de código, conferir à mão e dizer no chat que o plano não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 ## Trilha rápida

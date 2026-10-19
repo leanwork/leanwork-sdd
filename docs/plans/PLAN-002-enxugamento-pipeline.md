@@ -475,7 +475,7 @@ Edição em `docs/plans/**` dispara `validate_plan.py`; em `docs/reviews/**`, `v
 
 #### T-15 — Consolidar justificativas repetidas
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-14
 - **Camadas/arquivos afetados:**

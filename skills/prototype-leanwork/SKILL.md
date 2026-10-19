@@ -167,11 +167,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem:
 
-| Momento | Quem sugere |
-|---|---|
-| PRD com interface aprovado, sem SPEC-UI | `prd-leanwork` ao concluir; `/leanwork-pipeline` |
-| Plano prestes a ser gerado para PRD com UI | `planner-leanwork` |
-| Review encontrou tela sem especificação | `reviewer-leanwork` |
+Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
 
 A sugestão é convite. Se o usuário pular, o pipeline segue sem fase de interface e o plano simplesmente não terá campo `Telas:`.
 

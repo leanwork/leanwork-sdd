@@ -209,15 +209,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 
 Esta skill nunca roda como efeito colateral de outra tarefa — exige pedido direto ou aceite de sugestão. As outras skills e comandos do pipeline devem sugeri-la nestes momentos:
 
-| Momento | Quem sugere |
-|---------|-------------|
-| Proposta arquitetural concluída | `architect-leanwork` (checklist final) |
-| Review detectou padrão emergente | `reviewer-leanwork` (Notas ao processo) |
-| Review rodou em modo degradado por falta de CLAUDE.md | `reviewer-leanwork` |
-| Projeto tem artefatos do pipeline mas nenhum CLAUDE.md | `/leanwork-pipeline` |
-| Módulo novo apareceu no repositório | `/leanwork-pipeline` |
-| Projeto tem código mas nenhum `.claude/settings.json` | `/leanwork-pipeline` |
-| Primeiro scaffolding concluído (comandos de build passam a existir) | `/leanwork-pipeline` |
+Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
 
 A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário ignorar, o pipeline segue normalmente.
 

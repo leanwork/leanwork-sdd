@@ -14,3 +14,9 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
   - Edição que troca `Status: Pendente` por `Status: Feito` → o modelo recebeu `hook_gate: validate_plan.py reprovou PLAN-001-fixture.md` com o `ERROR T-01 (linha 17): Status 'Feito' fora do vocabulario fixo`.
   - Edição seguinte para `Status: Em andamento` → nenhum retorno do hook.
 - `selftest.py` ganha cinco casos do hook: plano válido, plano inválido, review inválido, arquivo fora do escopo e entrada ilegível.
+
+### Justificativas escritas uma vez (T-15)
+
+- "Degradação silenciosa é pior que gate nenhum" fica por extenso no README (seção dos gates). Planner, `/leanwork-execute` e `/leanwork-review` mantêm a regra em uma linha, com remissão.
+- "Sombra de prefixo entre baldes" fica só no `permission-catalog.md`. Os três arquivos com gate guardam a regra operacional em uma linha: confirmar ou ajustar as settings, nunca pular a validação.
+- A tabela "Quem sugere" fica no README, unificada para `context-leanwork` e `prototype-leanwork`. As duas skills apontam para ela e mantêm a regra de nunca rodar como efeito colateral.
