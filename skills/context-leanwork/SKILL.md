@@ -217,7 +217,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 
 ## Quando sugerir que o usuário rode esta skill
 
-Esta skill exige pedido direto ou aceite de sugestão (regra pinada 1). Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
+Esta skill exige pedido direto ou aceite de sugestão (regra pinada 1). Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção "Contexto para o agente", subseção "Sempre opt-in").
 
 A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário ignorar, o pipeline segue normalmente.
 

@@ -560,7 +560,7 @@ No architect, saem a explicação de Cynefin, a lista genérica de trade-offs, a
 
 #### T-19 — README enxuto e `CHANGELOG.md`
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Baixa
 - **Depende de:** T-18
 - **Camadas/arquivos afetados:**

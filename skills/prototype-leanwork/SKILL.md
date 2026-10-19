@@ -176,7 +176,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 ## Quando sugerir esta skill
 
-Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem. Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção da `context-leanwork`, "Sempre opt-in").
+Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem. Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção "Contexto para o agente", subseção "Sempre opt-in").
 
 A sugestão é convite. Se o usuário pular, o pipeline segue sem fase de interface e o plano simplesmente não terá campo `Telas:`.
 
