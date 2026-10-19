@@ -27,7 +27,7 @@ Esta skill produz e mantém os arquivos `CLAUDE.md` que dão contexto de projeto
 
 ## Fase 1 — Determinar o escopo
 
-Perguntar ao usuário **uma vez**, com opções claras, a menos que ele já tenha especificado:
+Perguntar ao usuário **uma vez**, com opções claras, a menos que ele já tenha especificado — inclusive como argumento da invocação: `/leanwork-sdd:context-leanwork raiz` (A), `modulo <nome>` (B), `permissoes` (C) ou `auditar` (E) pulam a pergunta:
 
 > O que você quer gerar ou atualizar?
 >
@@ -133,7 +133,7 @@ Quando já existe um `CLAUDE.md`, comparar o conteúdo dele com a realidade cole
 | Stack nova sem permissões | Projeto ganhou frontend, `settings.json` só cobre backend | Média |
 | Segredo sem deny | Apareceu `terraform.tfstate` ou `.npmrc` no repo, sem regra de bloqueio | **Alta** |
 
-Apresentar o drift ao usuário **antes** de propor a escrita. Em modo auditoria (opção D da Fase 1), o relatório de drift é o output final — não grava nada.
+Apresentar o drift ao usuário **antes** de propor a escrita. Em modo auditoria (opção E da Fase 1), o relatório de drift é o output final — não grava nada.
 
 ## Fase 4 — Gerar ou fazer merge
 
@@ -199,7 +199,7 @@ Se o `CLAUDE.md` de um módulo ficar com menos de ~15 linhas úteis depois de ap
 ## O que NÃO incluir no CLAUDE.md
 
 - **Conteúdo copiado dos artefatos do pipeline.** Referencie o caminho; não duplique regras de negócio, ADRs completos ou critérios de aceite.
-- **Histórico ou changelog.** Isso é papel do git e do `PROGRESS`/histórico de execução do plano.
+- **Histórico ou changelog.** Isso é papel do git e do campo `Status:` das tarefas do plano.
 - **Instruções genéricas de boa prática** ("escreva código limpo", "use nomes descritivos"). O agente já sabe; só ocupa contexto.
 - **Permissões afrouxadas a pedido.** Se o usuário pedir para remover um item do deny universal, explicar o risco específico antes. `terraform.tfstate` e `.npmrc` guardam segredo em texto puro e são os mais esquecidos.
 - **Credenciais, connection strings, tokens.** Nunca, em nenhuma circunstância. Se encontrar algum no arquivo existente, **alertar o usuário** em vez de propagar.
@@ -214,10 +214,10 @@ Esta skill nunca roda como efeito colateral de outra tarefa — exige pedido dir
 | Proposta arquitetural concluída | `architect-leanwork` (checklist final) |
 | Review detectou padrão emergente | `reviewer-leanwork` (Notas ao processo) |
 | Review rodou em modo degradado por falta de CLAUDE.md | `reviewer-leanwork` |
-| Projeto tem artefatos do pipeline mas nenhum CLAUDE.md | `/leanwork-next` |
-| Módulo novo apareceu no repositório | `/leanwork-next` |
-| Projeto tem código mas nenhum `.claude/settings.json` | `/leanwork-next` |
-| Primeiro scaffolding concluído (comandos de build passam a existir) | `/leanwork-next` |
+| Projeto tem artefatos do pipeline mas nenhum CLAUDE.md | `/leanwork-pipeline` |
+| Módulo novo apareceu no repositório | `/leanwork-pipeline` |
+| Projeto tem código mas nenhum `.claude/settings.json` | `/leanwork-pipeline` |
+| Primeiro scaffolding concluído (comandos de build passam a existir) | `/leanwork-pipeline` |
 
 A sugestão é sempre **um convite, não uma etapa obrigatória**. Se o usuário ignorar, o pipeline segue normalmente.
 

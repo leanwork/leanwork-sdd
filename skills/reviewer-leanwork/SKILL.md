@@ -65,7 +65,7 @@ Extrair da tarefa T-XX no plano:
 - `Valida: CA-XX, CA-YY` — lista de cenários Gherkin que devem ter teste passando
 - `Decisões base: ADR-XX` — decisões arquiteturais que precisam ser respeitadas
 - `Telas: UI-XX (estados)` — telas e estados da SPEC-UI que a tarefa implementa (quando houver)
-- `Camadas/arquivos afetados:` — escopo declarado
+- `Portas de mão única:` — o que é caro de reverter e a tarefa declarou tocar (planos anteriores à 2.0.0 trazem `Camadas/arquivos afetados:`; ler como lista de escopo, sem cobrar arquivo extra)
 - `Critério de aceite (testável):` — checklist específico da tarefa
 - `Testes a escrever:` — testes que deveriam existir
 
@@ -105,17 +105,19 @@ Detalhes de critérios e perguntas-guia por eixo em `references/review-checklist
 
 ### Eixo 1 — Aderência ao plano
 
-A implementação faz **exatamente o que T-XX prometeu**, nada mais, nada menos?
+A implementação faz **o que T-XX prometeu**, e não abre porta de mão única que a tarefa não declarou?
 
-- Arquivos modificados batem com `Camadas/arquivos afetados`? (extra = escopo expandido sem justificativa; falta = tarefa incompleta)
+- O diff toca migration, contrato público, schema ou configuração de permissão fora de `Portas de mão única:`? (não declarada = Bloqueante; declarada e não entregue = tarefa incompleta). Arquivo extra fora disso **não** é finding — onde o código mora é decisão reversível e visível no diff
 - Os `Critério de aceite (testável)` da tarefa estão atendidos?
 - Tarefa com `Status: Concluído` sem cobrir todos os critérios → Bloqueante
+
+**Fonte:** o campo `Portas de mão única:` da tarefa, cuja presença o `validate_plan.py` garante. **Fallback:** plano anterior à 2.0.0 traz `Camadas/arquivos afetados:` no lugar — ler como lista de escopo, cobrar só a porta de mão única evidente no diff e registrar no relatório que o campo novo estava ausente.
 
 ### Eixo 2 — Rastreabilidade
 
 A implementação preserva os elos da matriz SDD?
 
-- Mensagem de commit cita `T-XX`?
+- Os commits da tarefa passam no `check_commit.py` — trailer `Refs:` com a `T-XX`, IDs bem formados, tarefa existente no plano? A saída do script vem no payload; exit 1 é finding Importante citando o commit. **Fallback:** sem commit ainda (diff na árvore de trabalho), o trailer não é verificável — registrar isso, não reprovar; sem o script, conferir a mensagem à mão e dizer que o gate não rodou
 - Nome de teste segue convenção `CA_XX_descricao` (ver `${CLAUDE_PLUGIN_ROOT}/templates/id-conventions.md`)?
 - Comentários no código referenciam `RN-XX` ou `ADR-XX` quando útil (não obrigatório, mas valorizado)?
 
@@ -154,20 +156,11 @@ Aplicar imaginando a implementação errada mais provável para aquele comportam
 
 Aqui entra o conhecimento da stack descoberta na Fase 2 e dos padrões lidos do `CLAUDE.md` do projeto.
 
-**Critérios universais (aplicam em qualquer stack):**
+**Piso de segurança (vale em qualquer stack):** segredo hardcoded e PII (CPF, e-mail, telefone) em log são `Bloqueante`. É a segurança básica que a skill promete — fora disso, nada de lista genérica de boas práticas.
 
-- Nomes consistentes com o resto do projeto (ler convenções existentes antes de criticar)
-- Tratamento de erro coerente com padrão do projeto
-- Ausência de PII (CPF, e-mail, telefone) em logs
-- Logging estruturado nos pontos críticos (entradas, falhas, decisões de negócio relevantes)
-- Async/concurrent correto onde aplicável (sem deadlock, sem fire-and-forget acidental)
-- Sem segredos hardcoded
-- Sem dead code dentro do diff
-- Funções/métodos não excessivamente longos (calibrar pelo padrão do projeto)
+**Critérios específicos da stack:** lidos do `CLAUDE.md` do projeto. O eixo cobra **o que o projeto declarou**, não preferência do reviewer. Se o projeto não tem `CLAUDE.md` com padrões definidos, aplicar apenas o piso de segurança e registrar no relatório que padrões específicos da stack não foram avaliados por falta de declaração.
 
-**Critérios específicos da stack:** lidos do `CLAUDE.md` do projeto. Se o projeto não tem `CLAUDE.md` com padrões definidos, aplicar apenas os universais e registrar no relatório que padrões específicos da stack não foram avaliados por falta de declaração.
-
-Nesse caso, **sugerir ao usuário** (fora do relatório, na conversa) rodar a skill `context-leanwork` via `/leanwork-context raiz` para que os próximos reviews sejam completos. É sugestão, não exigência — não bloquear o review por isso, nem gerar o arquivo por conta própria.
+Nesse caso, **sugerir ao usuário** (fora do relatório, na conversa) rodar a skill `context-leanwork` via `/leanwork-sdd:context-leanwork raiz` para que os próximos reviews sejam completos. É sugestão, não exigência — não bloquear o review por isso, nem gerar o arquivo por conta própria.
 
 ### Eixo 6 — Conformidade de interface *(apenas quando existe SPEC-UI)*
 
@@ -226,7 +219,7 @@ Salvar como `docs/reviews/REVIEW-{T-XX}-{data-iso}.md` (perguntar caminho se a c
 
 - Se T-XX não foi identificada e o usuário não responde a perguntas de identificação após tentativa razoável
 - Se o diff é vazio ou não acessível
-- Se o projeto não tem nenhum artefato do pipeline (sem plano, sem PRD): nesse caso, sugerir que o usuário rode `/leanwork-start` primeiro — review SDD pressupõe pipeline SDD. Pode-se oferecer um code review genérico em vez disso, mas avisar que será sem rastreabilidade.
+- Se o projeto não tem nenhum artefato do pipeline (sem plano, sem PRD): nesse caso, sugerir que o usuário rode `/leanwork-pipeline` primeiro — review SDD pressupõe pipeline SDD. Pode-se oferecer um code review genérico em vez disso, mas avisar que será sem rastreabilidade.
 
 ## Recursos auxiliares
 

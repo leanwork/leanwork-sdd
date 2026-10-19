@@ -79,17 +79,9 @@ Depois de receber a resposta, **sugerir documentar no `CLAUDE.md` do projeto** p
 
 ## O que fazer com a stack descoberta
 
-### Padrões universais (independentes de stack)
+### Piso de segurança (independente de stack)
 
-Sempre aplicam, independentemente do que foi detectado:
-
-- Nomes consistentes com convenções do projeto
-- Tratamento de erro coerente
-- Ausência de PII em logs
-- Sem segredos hardcoded
-- Sem dead code dentro do diff
-- Async/concurrent correto (sem deadlock, sem race condition óbvia)
-- Funções/métodos não excessivamente longos
+Sempre aplica: PII em log e segredo hardcoded são `Bloqueante`. Fora disso o eixo 5 não traz lista universal — cobra o que o projeto declarou.
 
 ### Padrões específicos da stack
 
@@ -101,11 +93,11 @@ Sempre aplicam, independentemente do que foi detectado:
 
 ### Heurísticas mínimas por stack (quando o `CLAUDE.md` não declara)
 
-Se o `CLAUDE.md` não existe ou não declara padrões específicos, e a stack foi inferida por inspeção, aplicar apenas heurísticas universais. **Não inventar** que "em .NET deveria ter MediatR" — isso é opinião, não regra do projeto.
+Se o `CLAUDE.md` não existe ou não declara padrões específicos, e a stack foi inferida por inspeção, aplicar apenas o piso de segurança. **Não inventar** que "em .NET deveria ter MediatR" — isso é opinião, não regra do projeto.
 
 O que registrar no relatório nesse caso:
 
-> ⚠️ **Stack detectada por inspeção do repositório** (`.csproj` indica .NET 8). Padrões específicos do projeto não estão documentados em `CLAUDE.md` — foram aplicados apenas critérios universais de qualidade. Recomenda-se documentar convenções do time em `CLAUDE.md` para futuros reviews.
+> ⚠️ **Stack detectada por inspeção do repositório** (`.csproj` indica .NET 8). Padrões específicos do projeto não estão documentados em `CLAUDE.md` — foi aplicado apenas o piso de segurança (PII em log, segredo hardcoded). Recomenda-se documentar convenções do time em `CLAUDE.md` para futuros reviews.
 
 ## Edge cases
 
@@ -123,7 +115,7 @@ Se o projeto está migrando (ex.: AngularJS para Vue, ASP.NET Framework para ASP
 ### Stack não-mainstream
 
 Para stacks menos comuns (Elixir, Rust, Crystal, Nim, etc.), o reviewer pode:
-- Aplicar critérios universais
+- Aplicar o piso de segurança
 - Pedir ao usuário esclarecimento sobre convenções específicas se algo soar estranho
 - Ser explícito sobre limitação no relatório
 

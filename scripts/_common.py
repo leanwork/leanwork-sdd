@@ -10,8 +10,10 @@ Contrato de saida, identico nos tres validadores:
 Diagnosticos saem como "  ERROR <mensagem>" / "  WARN <mensagem>", em ordem de
 descoberta, fechando com "<script>: N error(s), M warning(s) in <path>".
 
-Nada especifico de plano, de ID ou de review vive aqui: este modulo so conhece
-markdown generico, resolucao de caminho e o contrato de saida.
+Alem do contrato de saida e do markdown generico, este modulo guarda o parsing
+de plano e de review que mais de um script le: tarefas `#### T-XX`, cabecalho de
+trilha rapida, recomendacao final e nome do relatorio. As regras - o que e erro,
+o que e aviso - ficam em cada validador; aqui so se le.
 
 Python 3.8+, stdlib apenas.
 """
@@ -184,7 +186,7 @@ def fence_mask(lines):
 INLINE_CODE = re.compile(r"`[^`]*`")
 PLACEHOLDER_DATE = re.compile(r"AAAA-MM-DD")
 PLACEHOLDER_ELLIPSIS = re.compile(r"\[\.\.\.\]")
-PLACEHOLDER_OPTIONS = re.compile(r"(?<![\w`])\[[^\[\]]*[/|][^\[\]]*\]")
+PLACEHOLDER_OPTIONS = re.compile(r"(?<![\w`])\[[^\[\]]*[/|][^\[\]]*\](?!\()")
 PLACEHOLDER_PROSE = re.compile(r"(?<![\w`])\[[a-z][^\[\]]{11,}\](?!\()")
 
 
@@ -251,3 +253,186 @@ def enable_utf8_output():
                 reconfigure(encoding="utf-8", errors="replace")
             except (ValueError, OSError):
                 pass
+
+
+# --------------------------------------------------------------------------
+# Plano
+# --------------------------------------------------------------------------
+
+STATUS_VOCAB = ("Pendente", "Em andamento", "Concluído", "Bloqueado")
+
+HEADING = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.*?)\s*$")
+TASK_HEADING = re.compile(r"^####\s+(?P<id>\S+)\s*(?:[—–-]\s*(?P<title>.*))?$")
+BLOCK_MARKER = re.compile(r"^\*\*(?P<name>[^*]+?):\*\*\s*$")
+THEMATIC_BREAK = re.compile(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$")
+TASK_ID = re.compile(r"^T-\d{2,}$")
+TASK_REFERENCE = re.compile(r"T-\d+")
+QUICK_TRACK_HEADER = re.compile(
+    r"^\*\*PRD de refer[êe]ncia:\*\*.*trilha r[áa]pida", re.IGNORECASE
+)
+
+
+class Task:
+    def __init__(self, task_id, line_number, title):
+        self.id = task_id
+        self.line = line_number
+        self.title = title or ""
+        self.fields = {}
+        self.markers = {}
+        self.body = []
+
+    @property
+    def number(self):
+        return int(self.id.split("-")[1])
+
+    def field(self, name):
+        return self.fields.get(name)
+
+    def marker_lines(self, prefix):
+        for name, content in self.markers.items():
+            if name.startswith(prefix):
+                return content
+        return None
+
+    def has_marker(self, prefix):
+        return self.marker_lines(prefix) is not None
+
+    def block_reason(self):
+        """Valor de `**Bloqueio:**`, mesmo quando o campo veio depois de um bloco."""
+        reason = self.field("Bloqueio")
+        if reason is not None:
+            return reason
+        for _, text in self.body:
+            field = parse_field(text)
+            if field and field[0] == "Bloqueio":
+                return field[1]
+        return None
+
+    def dependencies(self):
+        """IDs citados em `Depende de:`; vazio para `nenhuma` ou campo ausente."""
+        raw = self.field("Depende de") or ""
+        if raw.strip().lower().startswith("nenhuma"):
+            return []
+        return TASK_REFERENCE.findall(raw)
+
+
+def load_document(path):
+    """Le o artefato, descasca o envelope de template e marca as cercas."""
+    lines = unwrap_envelope(read_lines(path))
+    return lines, fence_mask(lines)
+
+
+def parse_tasks(lines, mask, diagnostics=None):
+    """Extrai as tarefas do plano.
+
+    So um cabecalho `#### T-XX` fora de cerca abre tarefa. Mencao a `T-XX` numa
+    linha `Depende de:` ou num no de diagrama Mermaid nao abre - confundir os
+    dois produz falso positivo de tarefa duplicada.
+    """
+    tasks = []
+    current = None
+    current_marker = None
+
+    for index, line in enumerate(lines):
+        if mask[index]:
+            if current is not None:
+                current.body.append((index + 1, line))
+                if current_marker is not None:
+                    current.markers[current_marker].append(line)
+            continue
+
+        heading = HEADING.match(line)
+        if heading:
+            task_match = TASK_HEADING.match(line)
+            if task_match and task_match.group("id").startswith("T-"):
+                raw_id = task_match.group("id")
+                if not TASK_ID.match(raw_id):
+                    if diagnostics is not None:
+                        diagnostics.error(
+                            "linha {}: ID de tarefa malformado '{}' - o padrao e "
+                            "T-NN com no minimo dois digitos".format(index + 1, raw_id)
+                        )
+                    current = None
+                    current_marker = None
+                    continue
+                current = Task(raw_id, index + 1, task_match.group("title"))
+                tasks.append(current)
+                current_marker = None
+                continue
+            current = None
+            current_marker = None
+            continue
+
+        if current is None:
+            continue
+
+        current.body.append((index + 1, line))
+
+        if THEMATIC_BREAK.match(line):
+            current_marker = None
+            continue
+
+        marker = BLOCK_MARKER.match(line)
+        if marker:
+            current_marker = marker.group("name").strip()
+            current.markers.setdefault(current_marker, [])
+            continue
+
+        field = parse_field(line)
+        if field and current_marker is None:
+            current.fields[field[0]] = field[1]
+            continue
+
+        if current_marker is not None:
+            current.markers[current_marker].append(line)
+
+    return tasks
+
+
+def is_quick_track(lines, mask):
+    """O plano e de trilha rapida quando o cabecalho declara isso.
+
+    So o cabecalho conta - antes da primeira secao `## ` -, para que uma mencao
+    a trilha rapida no corpo de um plano completo nao mude as regras dele.
+    """
+    for index, line in enumerate(lines):
+        if mask[index]:
+            continue
+        heading = HEADING.match(line)
+        if heading and len(heading.group("hashes")) == 2:
+            return False
+        if QUICK_TRACK_HEADER.match(line.strip()):
+            return True
+    return False
+
+
+# --------------------------------------------------------------------------
+# Review
+# --------------------------------------------------------------------------
+
+RECOMMENDATION_VOCAB = ("Aprovado", "Aprovado com ressalvas", "Bloqueado")
+RECOMMENDATION_LINE = re.compile(r"\*\*Recomendação final:\*\*\s*(?P<value>.*?)\s*$")
+REVIEW_NAME = re.compile(
+    r"^REVIEW-(?P<task>T-\d{2,})-(?P<date>\d{4}-\d{2}-\d{2})(?:-round(?P<round>\d+))?\.md$",
+    re.IGNORECASE,
+)
+
+
+def find_recommendation(lines, mask):
+    """Devolve (valor sem decoracao, indice da linha), ou (None, None)."""
+    for index, line in enumerate(lines):
+        if mask[index]:
+            continue
+        match = RECOMMENDATION_LINE.search(line)
+        if match:
+            return strip_decoration(match.group("value")), index
+    return None, None
+
+
+def parse_review_name(path):
+    """Le `REVIEW-T-XX-AAAA-MM-DD[-roundN].md`. Devolve (tarefa, data, round)
+    ou None quando o nome foge da convencao. Sem sufixo, o round e 1."""
+    match = REVIEW_NAME.match(Path(path).name)
+    if not match:
+        return None
+    return match.group("task").upper(), match.group("date"), int(match.group("round") or 1)

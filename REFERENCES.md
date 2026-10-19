@@ -69,7 +69,7 @@ O conteúdo validado é inteiramente do pipeline Leanwork — `T-XX`, `RN-XX`, `
 - **Gherkin PT-BR em vez de EARS.** O TLC usa EARS para requisitos. Aqui `CA-XX` é a costura de todo o pipeline — nome de teste, campo `Valida:` da tarefa, coluna da matriz de rastreabilidade, seção de cobertura do relatório. Trocar o formato do cenário significaria refazer os seis elos, e o ganho de precisão do EARS não paga isso.
 - **Seis skills em vez de uma.** O TLC concentra o pipeline numa skill só. O Leanwork mantém a segregação por fase, que é o que permite entrar no meio do pipeline (projeto que já tem arquitetura, projeto sem interface) sem carregar contexto das fases que não se aplicam.
 
-**Lacuna que permanece.** Três mecanismos do TLC foram avaliados e **não adotados**, e seguem fora do escopo: *auto-sizing* (o plano dimensionar as próprias tarefas por heurística executável, em vez do teto de 30min-4h como calibragem mental), a **camada de lições** (acumular aprendizados de execução entre tarefas) e a **reconciliação com git** (o estado declarado no plano ser conferido contra o histórico do repositório, não só contra o que o agente escreveu). Os três resolvem problemas reais que este pipeline ainda tem.
+**Lacuna que permanece.** Três mecanismos do TLC foram avaliados e **não adotados**, e seguem fora do escopo: *auto-sizing* (o plano dimensionar as próprias tarefas por heurística executável, em vez de sinais de comportamento lidos por quem planeja), a **camada de lições** (acumular aprendizados de execução entre tarefas) e a **reconciliação com git** (o estado declarado no plano ser conferido contra o histórico do repositório, não só contra o que o agente escreveu). Os três resolvem problemas reais que este pipeline ainda tem.
 
 ### Ferramentas e formatos citados
 
@@ -351,7 +351,7 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 - **Feature flags** — Pete Hodgson (2017).
 - **Parallel Change / Expand-Contract** — **[Fowler](https://martinfowler.com/bliki/ParallelChange.html)**. **Reprodução** das três fases (expandir, migrar, contrair) para sequenciar refactors de alto *blast radius* dentro do plano, mantendo CI verde tarefa a tarefa.
 
-**Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (30min-4h por tarefa, 3 critérios de aceite, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
+**Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (5 critérios de aceite por fatia, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
 
 ---
 
@@ -402,13 +402,18 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 
 Pontos em que o pipeline se afasta do cânone. Todos são escolhas, não descuidos — mas quem adota o plugin precisa saber que está adotando o desvio junto.
 
-### Fatiamento horizontal por camada
+### Fatiamento vertical por `CA-XX` — reversão do padrão horizontal (v2.0.0)
 
-O `plan-template.md` organiza fases por camada técnica (domínio → persistência → API → UI). Isso contraria o **vertical slice** e o **walking skeleton** de **[Alistair Cockburn](https://alistair.cockburn.us/walking-skeleton/)**, e o **story mapping** de **[Jeff Patton](https://www.jpattonassociates.com/story-mapping/)**, que defendem entregar valor fim-a-fim desde a primeira fatia.
+Até a 1.10.0, o `plan-template.md` organizava fases por camada técnica (domínio → persistência → API → UI), contrariando o **vertical slice** e o **walking skeleton** de **[Alistair Cockburn](https://alistair.cockburn.us/walking-skeleton/)** e o **story mapping** de **[Jeff Patton](https://www.jpattonassociates.com/story-mapping/)**. A justificativa era que, com PRD e arquitetura fechados antes do plano, o risco de descoberta tardia ficava menor. O contra-argumento já estava registrado: o risco de integração continuava real, e a fatia horizontal o empurrava para o fim. A v1.8.0 abriu uma exceção seletiva — vertical só quando a entrevista sinalizasse entrega incremental real ou risco de integração concreto —, mantendo o horizontal como padrão.
 
-**Justificativa do pipeline:** com um PRD e uma arquitetura já fechados antes do plano, o risco de descoberta tardia — o principal argumento a favor do vertical slice — é menor. **Contra-argumento honesto:** o risco de integração continua real, e fatia horizontal o empurra para o fim.
+**A 2.0.0 inverte o padrão.** A fatia vertical por `CA-XX` passa a ser o default, e a horizontal vira exceção para três casos: fundação, migrations e expandir → migrar → contrair. O teto de 30min-4h por tarefa, calibrado para dev humano, sai; a medida passa a ser fechar comportamento e caber num ciclo de execução + review com a suíte verde. Dois motivos:
 
-**Exceção seletiva (v1.8.0):** quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical volta a valer — não para o plano inteiro, só para a parte afetada. `planner-leanwork/SKILL.md`, seção "Orientação da fatia", e `task-examples.md`, Exemplo 6. O horizontal continua sendo o default; a exceção é condicionada a sinal explícito da entrevista, não a preferência.
+- **Granularidade compra ordem, não correção.** Cada tarefa custa um ciclo inteiro de instrução (execute + review). Tarefa de camada não tem `CA-XX` a verificar, e o sensor de discriminação do eixo 4 não tem comportamento para atacar — o ciclo é pago sem o retorno da verificação.
+- **Integração cedo.** Erro de contrato entre camadas aparece na primeira fatia, não na última tarefa do plano.
+
+Com a inversão, o fatiamento deixa de ser divergência da literatura; a seção fica aqui como registro da reversão.
+
+**Adaptação** de `tlc-spec-lean` v1.1.0 (Tech Leads Club, CC-BY-4.0), que formula "granularidade não é qualidade" e trabalha por fatia de comportamento. O que é Leanwork: o recorte por `CA-XX` do PRD, as três exceções horizontais e o critério de tamanho pelo ciclo execute + review. Decisão aprovada no ponto de validação humana do PLAN-002, antes da T-07.
 
 ### Numeração sequencial global de tarefas
 
@@ -460,7 +465,7 @@ Contribuições para as quais não identificamos antecedente publicado. Reivindi
 8. **O mecanismo "Pula quando"** na entrevista — o agente suprime perguntas já respondidas por artefatos anteriores.
 9. **Os cinco arquétipos de interface** e a regra de nunca fazer pergunta aberta sobre estética.
 10. **A divisão de conteúdo raiz × módulo** no CLAUDE.md, e os critérios para *não* criar um arquivo de módulo.
-11. **Todos os limiares de calibragem** — 7-12 ADRs, 60-120 linhas, 30min-4h por tarefa, < 15 devs para microsserviços, ~15 linhas úteis mínimas por módulo. São opinião de praticante, sem fonte externa, e devem ser lidos assim.
+11. **Todos os limiares de calibragem** — 7-12 ADRs, 60-120 linhas, 5 critérios de aceite por fatia, < 15 devs para microsserviços, ~15 linhas úteis mínimas por módulo. São opinião de praticante, sem fonte externa, e devem ser lidos assim.
 
 ---
 

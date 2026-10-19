@@ -22,13 +22,10 @@ leanwork-sdd/
 ├── README.md
 ├── REFERENCES.md                   # fontes de engenharia por trás de cada fase
 ├── commands/
-│   ├── leanwork-start.md           # /leanwork-start
-│   ├── leanwork-next.md            # /leanwork-next
-│   ├── leanwork-trace.md           # /leanwork-trace
+│   ├── leanwork-pipeline.md        # /leanwork-pipeline
 │   ├── leanwork-execute.md         # /leanwork-execute
 │   ├── leanwork-review.md          # /leanwork-review
-│   ├── leanwork-context.md         # /leanwork-context
-│   └── leanwork-prototype.md       # /leanwork-prototype
+│   └── leanwork-trace.md           # /leanwork-trace
 ├── skills/
 │   ├── architect-leanwork/
 │   │   ├── SKILL.md
@@ -74,7 +71,10 @@ leanwork-sdd/
 │   ├── validate_plan.py             # gate do planner
 │   ├── validate_ids.py              # gate do /leanwork-execute
 │   ├── validate_review.py           # gate do /leanwork-review
-│   └── selftest.py                  # suíte dos três validadores
+│   ├── check_commit.py              # trailer Refs: do commit (também hook commit-msg)
+│   ├── status.py                    # estado do pipeline (relatório, não gate)
+│   ├── trace.py                     # matriz de rastreabilidade e lacunas (relatório)
+│   └── selftest.py                  # suíte dos validadores
 ├── templates/                       # convenções compartilhadas, stack-agnósticas
 │   ├── id-conventions.md
 │   └── folder-conventions.md
@@ -114,13 +114,10 @@ Todas as skills são **stack-agnósticas**. A stack vem da decisão arquitetural
 
 | Comando | O que faz |
 |---------|-----------|
-| `/leanwork-start` | Inicia o pipeline e identifica em que fase começar |
-| `/leanwork-next` | Inspeciona artefatos existentes e sugere a próxima ação (incluindo reviews pendentes) |
-| `/leanwork-prototype` | Invoca `prototype-leanwork`: indexa protótipo existente ou gera um, e produz a SPEC-UI |
+| `/leanwork-pipeline` | Ponto de entrada. Sem artefatos, conduz a entrada (fluxo completo, trilha rápida, ponto de partida); com artefatos, lê o estado via `status.py` e sugere uma próxima ação |
 | `/leanwork-execute` | Executa uma tarefa do plano carregando o contexto declarado (RN/CA/ADR/UI) e atualiza o `Status` ao final. **Gate:** `validate_ids.py` barra ID referenciado que não existe no artefato de origem |
 | `/leanwork-review` | Invoca `reviewer-leanwork` num sub-agente de contexto limpo — autor e verificador não são o mesmo contexto. **Gate:** `validate_review.py` barra relatório sem evidência. Finding bloqueante volta como `Status: Bloqueado` no plano |
 | `/leanwork-trace` | Gera a matriz de rastreabilidade `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e aponta gaps |
-| `/leanwork-context` | Gera ou atualiza `CLAUDE.md` (raiz e módulos) e `.claude/settings.json`. Nunca automático, nunca destrutivo |
 
 ### Templates de referência (skill-specific)
 
@@ -171,7 +168,8 @@ Três regras do pipeline deixaram de depender de o agente lembrar delas. São sc
 - `validate_plan.py` — plano com tarefa sem `Testes a escrever:`, sem `Critério de aceite`, com status fora do vocabulário ou com dependência circular não é apresentado
 - `validate_ids.py` — `RN-XX`, `CA-XX`, `ADR-XX` ou `UI-XX` citado pela tarefa e inexistente no artefato de origem barra a execução, em vez de virar código contra um requisito imaginário
 - `validate_review.py` — relatório sem `arquivo:linha` no finding, cobertura marcada como coberta sem a asserção reproduzida, ou `Bloqueante` no corpo com recomendação diferente de `Bloqueado` não é entregue
-- `selftest.py` — a suíte dos três, que roda antes de qualquer mudança neles ser commitada
+- `check_commit.py` — mensagem de commit sem o trailer `Refs: T-XX, CA-XX`, com ID malformado ou com tarefa inexistente no plano é reprovada; o elo código → requisito passa a vir do `git log`
+- `selftest.py` — a suíte dos validadores, que roda antes de qualquer mudança neles ser commitada
 
 O gate é chamado pela skill ou comando que produz o artefato, antes de apresentá-lo. Sem ferramenta de execução no ambiente, a regra é conferir à mão **e dizer no chat que o gate automático não rodou** — degradação silenciosa é pior que gate nenhum, porque parece gate.
 
@@ -232,7 +230,7 @@ Os eixos 1 a 5 aplicam sempre. O eixo 6 só entra quando o projeto tem SPEC-UI e
 2. **Rastreabilidade** — commits, testes e código preservam os IDs?
 3. **Aderência ao spec** — cada RN listada em `Implementa:` foi concretizada? Cada CA em `Valida:` tem teste? ADR em `Decisões base:` foi respeitada?
 4. **Cobertura de teste** — testes prometidos foram criados? Casos de borda cobertos?
-5. **Qualidade do código** — princípios universais + padrões específicos lidos do `CLAUDE.md` do projeto.
+5. **Qualidade do código** — o que o `CLAUDE.md` do projeto declara, mais um piso de segurança (PII em log, segredo hardcoded).
 6. **Conformidade de interface** *(condicional)* — todos os estados listados em `Telas:` existem no código? Componentes reutilizáveis foram consumidos ou reimplementados? **Estrutura, estados e comportamento — nunca estética.** Estado ausente é Bloqueante; detalhe visual não vira finding.
 
 ### O reviewer não faz
@@ -282,8 +280,8 @@ Nenhuma skill gera `CLAUDE.md` automaticamente. O arquivo é território do dev 
 | Proposta arquitetural concluída | `architect-leanwork` |
 | Review rodou degradado por falta de `CLAUDE.md` | `reviewer-leanwork` |
 | Review detectou padrão emergente não documentado | `reviewer-leanwork` |
-| Projeto tem artefatos do pipeline mas nenhum `CLAUDE.md` | `/leanwork-next` |
-| Módulo novo apareceu no repositório | `/leanwork-next` |
+| Projeto tem artefatos do pipeline mas nenhum `CLAUDE.md` | `/leanwork-pipeline` |
+| Módulo novo apareceu no repositório | `/leanwork-pipeline` |
 
 ### Nunca destrutiva
 
@@ -295,7 +293,7 @@ A seção **Comandos** é a única sem fonte nos artefatos do pipeline. A skill 
 
 ### Permissões também saem daqui
 
-`/leanwork-context permissoes` gera um `.claude/settings.json` calibrado pela stack detectada — os comandos reais de build e teste já entram no `allow`. A classificação em `allow` / `ask` / `deny` segue reversibilidade e blast radius: leitura ou operação local reversível libera; altera estado externo mas recuperável pergunta; irreversível, destrutivo ou que expõe segredo bloqueia.
+`/leanwork-sdd:context-leanwork permissoes` gera um `.claude/settings.json` calibrado pela stack detectada — os comandos reais de build e teste já entram no `allow`. A classificação em `allow` / `ask` / `deny` segue reversibilidade e blast radius: leitura ou operação local reversível libera; altera estado externo mas recuperável pergunta; irreversível, destrutivo ou que expõe segredo bloqueia.
 
 Lista `ask` grande demais é contraproducente — treina o dev a aprovar no automático e anula a proteção. Sempre em `.claude/settings.json` versionado: é política do time, não preferência pessoal.
 
@@ -312,20 +310,20 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 ### Projeto novo (greenfield)
 
 ```
-/leanwork-start "Sistema de gestão de tickets multi-tenant"
+/leanwork-pipeline "Sistema de gestão de tickets multi-tenant"
   → architect → ADR-001..ADR-005
   → prd → RN-01..RN-08, CA-01..CA-15
-  → /leanwork-prototype → UI-01..UI-06 + estados   (opcional — tem interface)
+  → prototype-leanwork → UI-01..UI-06 + estados   (opcional — tem interface)
   → planner → T-01..T-12
 
 /leanwork-execute T-04
   → carrega RN-03, RN-05, CA-01, CA-03, ADR-002, UI-02 (default, esgotado)
   → implementa, escreve CA_01_* e CA_03_*, roda os testes
-  → T-04: Status Concluído + linha no Histórico
+  → T-04: Status Concluído
 
   → /leanwork-review T-04
   → reviewer → REVIEW-T-04-2026-06-15.md (R-01..R-03, 1 Bloqueante)
-  → T-04 volta para Status: Bloqueado no plano
+  → T-04 volta para Status: Bloqueado, com Bloqueio: R-01 (REVIEW-...)
 
 [após correções]
   → /leanwork-review T-04
@@ -335,7 +333,7 @@ Módulo nunca repete stack nem comandos globais — só responsabilidade, domín
 ### Retomar trabalho
 
 ```
-/leanwork-next
+/leanwork-pipeline
   → identifica que T-04 está Concluído mas sem review
   → sugere: "rodar /leanwork-review T-04 antes de avançar"
 ```
@@ -390,7 +388,7 @@ claude --plugin-dir /caminho/para/leanwork-sdd
 
 Depois de instalar, abrir o Claude Code e rodar `/plugin` para confirmar que as skills foram carregadas. Skill de plugin vive no namespace do plugin, então as 6 também podem ser chamadas direto pela barra — `/leanwork-sdd:prd-leanwork`, `/leanwork-sdd:prototype-leanwork` e assim por diante.
 
-Nenhuma delas usa `disable-model-invocation`: o modelo pode carregá-las quando o pedido do usuário casa com a `description`. É isso que permite a `/leanwork-context` e `/leanwork-prototype` delegarem para a skill correspondente. O opt-in do pipeline é uma promessa de **não rodar sem que o usuário peça ou aceite** — não uma trava de invocação.
+Nenhuma delas usa `disable-model-invocation`: o modelo pode carregá-las quando o pedido do usuário casa com a `description`. É isso que permite ao `/leanwork-pipeline` encadear as fases e às skills sugerirem umas às outras. `prototype-leanwork` e `context-leanwork` não têm comando próprio desde a 2.0.0: chamam-se por `/leanwork-sdd:prototype-leanwork` e `/leanwork-sdd:context-leanwork`. O opt-in do pipeline é uma promessa de **não rodar sem que o usuário peça ou aceite** — não uma trava de invocação.
 
 ## Versionamento
 
@@ -422,4 +420,4 @@ Pipeline desenhado por Mick Banagouro (Leanwork). Princípios SDD inspirados em 
 
 Nenhuma fase deste pipeline foi inventada do zero. **[REFERENCES.md](REFERENCES.md)** documenta a base de engenharia de software por trás de cada uma — C4 e ADR na arquitetura, BDD/Gherkin e rastreabilidade ISO 29148 nos requisitos, a UI Stack de Scott Hurff no catálogo de estados de tela, Google Engineering Practices no review, Saltzer & Schroeder no catálogo de permissões — marcando o que é reprodução, o que é adaptação e o que é contribuição própria.
 
-O mesmo documento registra, de propósito, onde o pipeline **diverge** da literatura (fatiamento horizontal contra vertical slice, ID no nome do cenário em vez de tag do Cucumber) e onde ele ainda tem **lacunas** (fitness functions, deployment view, método de threat modeling). Discordar é mais fácil quando a fonte está na mesa.
+O mesmo documento registra, de propósito, onde o pipeline **diverge** da literatura (ID no nome do cenário em vez de tag do Cucumber) e onde ele ainda tem **lacunas** (fitness functions, deployment view, método de threat modeling). Discordar é mais fácil quando a fonte está na mesa.

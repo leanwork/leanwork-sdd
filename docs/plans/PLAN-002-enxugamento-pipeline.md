@@ -5,7 +5,7 @@
 **Stack:** Markdown (skills e comandos do Claude Code) + Python 3.8+ stdlib (scripts de validação)
 **Autor:** Mick Banagouro
 **Data:** 2026-10-16
-**Status:** Rascunho
+**Status:** Em execução
 
 ---
 
@@ -37,7 +37,13 @@ Seis fases em ordem de retorno sobre esforço: estado em fonte única → trilha
 
 > ⚠️ **Premissa:** não há PRD, ADR nem SPEC-UI na origem — os campos `Implementa:`, `Valida:`, `Decisões base:` e `Telas:` estão **ausentes**, como no PLAN-001. A verificação de cada tarefa é inspeção objetiva dos critérios de aceite ou o `selftest.py`.
 
-> ⚠️ **Premissa:** plugins do Claude Code conseguem distribuir hooks (`hooks/hooks.json`) que disparam após edição de arquivo. **Não verificado** — T-15 confirma na documentação oficial antes de qualquer código, e a Fase 5 inteira depende do resultado.
+> ✅ **Fato verificado (T-13, 2026-10-19):** plugins do Claude Code distribuem hooks em `hooks/hooks.json`, que se somam aos hooks do usuário e do projeto quando o plugin é habilitado. Fonte: [code.claude.com/docs/en/hooks](https://code.claude.com/docs/en/hooks), conferida também no repositório `anthropics/claude-code` (`plugins/plugin-dev/skills/hook-development`). O que a documentação garante para a Fase 5:
+> - **Evento:** `PostToolUse` com `matcher: "Write|Edit"` dispara depois da edição; o hook recebe por stdin o JSON com `tool_input.file_path`
+> - **Filtro por caminho:** o campo `if` do handler aceita sintaxe de regra de permissão (ex.: `"Edit(*.ts)"`) e só é avaliado em eventos de ferramenta, `PostToolUse` incluído
+> - **Falha devolvida ao modelo:** em `PostToolUse`, exit 2 não desfaz a edição (a ferramenta já rodou), mas mostra o stderr ao Claude, que reage a ele. Alternativa: JSON com `decision: "block"` e `reason`
+> - **Caminho do plugin:** `${CLAUDE_PLUGIN_ROOT}` é substituído em `command` e em `args`; a forma exec (com `args`) é a recomendada para caminhos com placeholder
+>
+> Pontos que a documentação não fecha e T-14 precisa testar: a base do caminho relativo no `if` (`Edit(docs/plans/**)`) quando o hook vem de plugin, e o nome do executável Python no Windows (`python` × `python3`). Na dúvida, o próprio script filtra por `tool_input.file_path`.
 
 > ⚠️ **Premissa:** linha de base medida em 2026-10-16, para comparar ao final:
 > - Ciclo execute + review: `commands/leanwork-execute.md` + `commands/leanwork-review.md` + `skills/reviewer-leanwork/SKILL.md` + `references/*` do reviewer = **1.258 linhas**
@@ -50,7 +56,7 @@ Decisões já tomadas (não reabrir durante a execução sem passar pelo ponto d
 - **Decisão:** o campo `**Status:**` da tarefa é a única fonte de estado; o git é a trilha de auditoria. A tabela de Histórico de execução sai. Commit referencia a tarefa por trailer `Refs: T-XX, CA-XX`.
 - **Decisão:** a unidade de trabalho passa a ser a **fatia por `CA-XX`** (um ou mais cenários fechados ponta a ponta). Fatia horizontal por camada vira exceção para fundação, migrations e refactor expandir-migrar-contrair. Reverte o padrão da v1.8.0 — a reversão é registrada em `REFERENCES.md`, não feita em silêncio.
 - **Decisão:** trilha rápida reaproveita o formato de plano — um plano de uma tarefa, sem PRD, com os `CA-XX` definidos na própria tarefa — para que `/leanwork-execute`, `/leanwork-review` e os gates funcionem sem fluxo paralelo.
-- **Decisão:** `/leanwork-start` e `/leanwork-next` fundem num comando `/leanwork`; `/leanwork-prototype` e `/leanwork-context` saem, porque as skills já são invocáveis por `/leanwork-sdd:<skill>`.
+- **Decisão:** `/leanwork-start` e `/leanwork-next` fundem num comando `/leanwork-pipeline` (nome decidido no ponto de validação antes de T-11, sem alias); `/leanwork-prototype` e `/leanwork-context` saem, porque as skills já são invocáveis por `/leanwork-sdd:<skill>`.
 - **Decisão:** a verificação não é tocada: gates, sub-agente verificador, sensor de discriminação, evidência ou zero e catálogo de permissões ficam como estão, salvo ajuste mecânico decorrente das mudanças de formato.
 
 ## 4. Mapa de dependências *(obrigatória se houver mais de 5 tarefas)*
@@ -95,7 +101,7 @@ graph TD
 
 #### T-01 — Remover a tabela de Histórico de execução dos textos
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** nenhuma
 - **Camadas/arquivos afetados:**
@@ -124,7 +130,7 @@ O Histórico duplica o campo `**Status:**` e o git; o pipeline tem hoje regra s�
 
 #### T-02 — Ajustar `validate_plan.py` e o selftest ao plano sem Histórico
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Baixa
 - **Depende de:** T-01
 - **Camadas/arquivos afetados:**
@@ -146,7 +152,7 @@ Remover a regra de divergência entre `**Status:**` e a tabela de Histórico e o
 
 #### T-03 — Trailer `Refs:` no commit e `check_commit.py`
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-02
 - **Camadas/arquivos afetados:**
@@ -170,7 +176,7 @@ A rastreabilidade código → requisito passa a vir do `git log`. Convenção: t
 
 #### T-04 — Checklist de prontidão sai do plano e vira Definition of Done
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Baixa
 - **Depende de:** T-02
 - **Camadas/arquivos afetados:**
@@ -201,7 +207,7 @@ O checklist é genérico e se repete igual em todo plano. Passa a ser declarado 
 
 #### T-05 — Especificar a trilha rápida
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-04
 - **Camadas/arquivos afetados:**
@@ -225,7 +231,7 @@ Critério de entrada único, sem matriz de dimensionamento: **menos de ~3 arquiv
 
 #### T-06 — Gates aceitam o plano de trilha rápida
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-05
 - **Camadas/arquivos afetados:**
@@ -254,7 +260,7 @@ Critério de entrada único, sem matriz de dimensionamento: **menos de ~3 arquiv
 
 #### T-07 — Inverter o padrão de fatiamento
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Alta
 - **Depende de:** T-06
 - **Camadas/arquivos afetados:**
@@ -283,7 +289,7 @@ A fatia vertical por `CA-XX` passa a ser o padrão; horizontal fica para fundaç
 
 #### T-08 — `Camadas/arquivos afetados` restrito a portas de mão única
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-07
 - **Camadas/arquivos afetados:**
@@ -315,7 +321,7 @@ Onde o código mora é decisão reversível, respondida pelas convenções do re
 
 #### T-09 — `status.py`: estado do pipeline
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-03, T-08
 - **Camadas/arquivos afetados:**
@@ -338,7 +344,7 @@ Lê `docs/` e emite o que hoje o `/leanwork-next` reconstrói lendo tudo: artefa
 
 #### T-10 — `trace.py`: matriz de rastreabilidade
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-09
 - **Camadas/arquivos afetados:**
@@ -360,7 +366,7 @@ Gera a matriz `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e a lista de lacunas que ho
 
 #### T-11 — Comando `/leanwork` substitui `start` e `next`; wrappers finos saem
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-09
 - **Camadas/arquivos afetados:**
@@ -386,7 +392,7 @@ Gera a matriz `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e a lista de lacunas que ho
 
 #### T-12 — `/leanwork-trace` e os eixos mecânicos do reviewer consomem scripts
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-10, T-11
 - **Camadas/arquivos afetados:**
@@ -417,7 +423,7 @@ Gera a matriz `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e a lista de lacunas que ho
 
 #### T-13 — Verificar suporte a hooks em plugin na documentação oficial
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Baixa
 - **Depende de:** T-12
 - **Camadas/arquivos afetados:**
@@ -631,12 +637,12 @@ A 2.0.0 é quebra de contrato para projetos que usam o plugin. Rollback é reins
 
 ## 9. Pontos de validação humana *(obrigatória)*
 
-- [ ] Antes de **T-07** — confirmar a reversão do padrão de fatiamento da v1.8.0
-- [ ] Antes de **T-11** — confirmar a remoção de `/leanwork-start`, `/leanwork-next`, `/leanwork-prototype` e `/leanwork-context`
+- [x] Antes de **T-07** — confirmar a reversão do padrão de fatiamento da v1.8.0 — *aprovado por Mick em 2026-10-19: vertical por `CA-XX` vira padrão; horizontal só para fundação, migrations e expandir-migrar-contrair*
+- [x] Antes de **T-11** — confirmar a remoção de `/leanwork-start`, `/leanwork-next`, `/leanwork-prototype` e `/leanwork-context` — *aprovado por Mick em 2026-10-19, com o comando novo chamado `/leanwork-pipeline` em vez de `/leanwork`*
 - [ ] Após **T-13** — decidir se a Fase 5 segue, com base no que a documentação confirmou
 - [ ] Antes de **T-21** — revisar as métricas antes/depois e aprovar a publicação da 2.0.0
 
 ## 10. Questões em aberto *(opcional)*
 
-- [ ] O limiar de 3 critérios de aceite do WARN do `validate_plan.py` continua fazendo sentido com fatias por `CA`? — *responsável: Mick* — *bloqueia: T-07*
-- [ ] Vale manter `/leanwork-start` como alias de `/leanwork` por uma versão, para suavizar a transição? — *responsável: Mick* — *bloqueia: T-11*
+- [x] O limiar de 3 critérios de aceite do WARN do `validate_plan.py` continua fazendo sentido com fatias por `CA`? — *responsável: Mick* — *decidido em 2026-10-19: WARN mantido, limiar sobe para 5*
+- [x] Vale manter `/leanwork-start` como alias de `/leanwork` por uma versão, para suavizar a transição? — *responsável: Mick* — *decidido em 2026-10-19: sem alias; a entrada única é `/leanwork-pipeline`*

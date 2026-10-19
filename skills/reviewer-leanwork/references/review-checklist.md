@@ -14,7 +14,8 @@ A implementação faz **o que T-XX prometeu**?
 
 | Pergunta | Default se "não" |
 |----------|------------------|
-| Os arquivos modificados batem com `Camadas/arquivos afetados` da tarefa? | Importante (escopo expandido) ou Bloqueante (escopo trocado) |
+| Toda porta de mão única que o diff abre (migration, contrato público, schema, configuração de permissão) está em `Portas de mão única:` da tarefa? Arquivo extra fora disso não conta | Bloqueante (porta não declarada) |
+| O comportamento entregue é o da tarefa, e não o de outra? | Bloqueante (escopo trocado) |
 | Todos os itens de `Critério de aceite (testável)` da tarefa estão atendidos? | Bloqueante |
 | A tarefa foi marcada como `Status: Concluído` no plano? Se sim, está coerente com o estado real do código? | Importante |
 | A descrição em "Descrição:" da tarefa está coerente com o que foi feito? | Sugestão (ou Importante se houver divergência grande) |
@@ -42,7 +43,7 @@ A implementação preserva os elos da matriz SDD?
 
 | Pergunta | Default se "não" |
 |----------|------------------|
-| Mensagem(ns) de commit referencia(m) `T-XX`? | Sugestão |
+| Os commits da tarefa passam no `check_commit.py` (trailer `Refs:` com a `T-XX`, IDs bem formados, tarefa existente no plano)? Saída no payload do verificador | Importante |
 | Nome da branch contém `T-XX`? (se a convenção do projeto exige) | Sugestão |
 | Nomes de teste seguem o padrão `CA_XX_descricao`? | Importante |
 | Há teste para cada `CA-XX` listado em `Valida:` da tarefa? | Bloqueante (se CA-XX é parte da tarefa) |
@@ -144,26 +145,14 @@ Os testes existem, cobrem o que importa, e passam?
 
 ## Eixo 5 — Qualidade do código
 
-Calibrado pela stack descoberta na Fase 2 + padrões do `CLAUDE.md` do projeto. Princípios universais sempre aplicam; padrões específicos só quando declarados.
+Cobra o que o `CLAUDE.md` do projeto declara, mais um piso de segurança. Não há lista universal de boas práticas: critério que o projeto não declarou é preferência do reviewer, e preferência não é finding.
 
-### Princípios universais
+### Piso de segurança
 
 | Pergunta | Default se "não" |
 |----------|------------------|
-| Nomes (variáveis, métodos, classes) seguem convenção do projeto? | Importante (se sistemático) ou Sugestão (pontual) |
-| Tratamento de erro é coerente com padrão do projeto? | Importante |
 | Há PII (CPF, e-mail, telefone, nome completo) em logs? | Bloqueante |
 | Há segredos hardcoded (senhas, tokens, conexão)? | Bloqueante |
-| Há dead code dentro do diff? (variáveis não usadas, métodos não chamados, comentários // TODO sem dono) | Sugestão a Importante |
-| Há código duplicado óbvio? | Importante (se substancial) |
-| Async/concurrent está correto? (sem deadlock, sem `.Result`/`.Wait()`, sem fire-and-forget acidental) | Importante a Bloqueante |
-| Há `console.log`, `printf`, `Console.WriteLine` de debug esquecidos? | Importante |
-| Há `magic numbers` ou strings sem constante? | Sugestão |
-| Inputs externos são validados antes de uso? | Importante a Bloqueante |
-| Operações de escrita são idempotentes onde apropriado? | Importante |
-| Logging estruturado nos pontos críticos? | Importante |
-| Há acoplamento desnecessário entre camadas? | Importante |
-| Documentação inline existe onde a lógica é não-óbvia? | Sugestão |
 
 ### Critérios específicos da stack
 
@@ -182,7 +171,7 @@ Lidos do `CLAUDE.md` do projeto. Exemplos do que pode estar declarado e virar cr
 - **Não impor preferência pessoal** que não está no `CLAUDE.md`. Se o projeto não declara que prefere `for` a `forEach`, não criticar.
 - **Não rabiscar refactorings amplos** — abrir tarefa nova, não embutir no review.
 - **Não otimizar prematuramente**: performance só vira issue se foi atributo prioritário no PRD/arquitetura.
-- **Não inventar regras de segurança** que não fazem parte do contexto. Aplicar princípios universais (PII, segredos), não OWASP completo a menos que o projeto exija.
+- **Não inventar regras de segurança** que não fazem parte do contexto. Aplicar o piso de segurança (PII, segredos), não OWASP completo a menos que o projeto exija.
 
 ### Quando subir severidade
 

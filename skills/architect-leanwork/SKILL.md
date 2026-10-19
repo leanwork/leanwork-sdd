@@ -230,7 +230,7 @@ Antes de devolver a proposta para o usuário, verifique:
 
 Depois de entregar o documento, **sugerir** (não executar) a geração do contexto para agentes de IA:
 
-> A proposta define stack, restrições e convenções que o agente de IA precisa saber em toda sessão — mas ele não vai ler 300 linhas a cada vez. Se quiser, a skill `context-leanwork` gera um `CLAUDE.md` na raiz com o essencial (Resumo, Stack, Convenções, Restrições e índice dos docs), referenciando esta proposta para o detalhe. Rode com `/leanwork-context raiz` quando achar melhor.
+> A proposta define stack, restrições e convenções que o agente de IA precisa saber em toda sessão — mas ele não vai ler 300 linhas a cada vez. Se quiser, a skill `context-leanwork` gera um `CLAUDE.md` na raiz com o essencial (Resumo, Stack, Convenções, Restrições e índice dos docs), referenciando esta proposta para o detalhe. Rode com `/leanwork-sdd:context-leanwork raiz` quando achar melhor.
 
 Mencionar que a seção **Comandos** do `CLAUDE.md` só fica completa depois do primeiro scaffolding — antes disso não há comando de build ou teste para detectar.
 

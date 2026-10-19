@@ -78,6 +78,19 @@ Origem entre parênteses quando vier de ADR.]
 - **Planos:** `docs/plans/` — tarefas de execução (T-XX)
 - **Reviews:** `docs/reviews/` — relatórios de review (R-XX)
 
+## Definition of Done
+
+[Vale para toda tarefa, e por isso não se repete em cada plano. Ajustar ao que o time de fato cobra; remover o que não se aplica.]
+
+- Critérios de aceite da tarefa verificados e testes passando
+- Cobertura de testes conforme padrão do projeto
+- Review aprovado (`/leanwork-review T-XX` ou par humano)
+- Migrations testadas em ambiente espelhado, quando houver
+- Logging estruturado nos pontos críticos
+- Documentação interna atualizada (README, CLAUDE.md, ADR se houver decisão nova)
+- Validação em staging com PO/QA, quando o modelo de entrega pedir
+- Rollback documentado quando houver migration destrutiva
+
 ## Como trabalhar neste projeto
 
 Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
@@ -91,7 +104,7 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
    - Decisões arquiteturais (`ADR-XX`) → `docs/architecture/`
 5. Respeite os pontos de validação humana marcados no plano
 6. Nomeie os testes conforme a convenção `CA_XX_*` para preservar rastreabilidade
-7. Atualize o estado ao terminar: campo `Status:` da tarefa (`Pendente` → `Em andamento` → `Concluído`) e uma linha na tabela de Histórico de execução. O plano é a fonte de verdade do estado — tarefa concluída que continua `Pendente` fica invisível para quem retomar o trabalho
+7. Atualize o estado ao terminar: campo `Status:` da tarefa (`Pendente` → `Em andamento` → `Concluído`, ou `Bloqueado` com o motivo em `Bloqueio:`). O plano é a fonte de verdade do estado — tarefa concluída que continua `Pendente` fica invisível para quem retomar o trabalho
 8. Execute **uma tarefa por vez** e peça review antes de seguir para a próxima
 
 > Com o plugin Leanwork SDD instalado, `/leanwork-execute` faz os passos 1 a 8 e `/leanwork-review T-XX` faz a revisão. Sem o plugin, seguir os passos manualmente — eles não dependem de ferramenta.
@@ -138,6 +151,10 @@ Diferença entre convenção e restrição: convenção é escolha do time (pode
 ### Documentação
 
 Apenas caminhos. **Não** descrever o conteúdo de cada PRD — isso muda toda semana e vira link morto. Se o projeto tem muitos PRDs, apontar para a pasta, não listar um a um.
+
+### Definition of Done
+
+Substitui o checklist de prontidão que os planos repetiam igual a cada feature. Item próprio de uma feature (migration destrutiva, flag) vai em `Estratégia de entrega` do plano, não aqui. Preencher a partir do que o time já cobra em review — lista aspiracional que ninguém confere é pior que lista curta.
 
 ### Seção "Como trabalhar neste projeto"
 

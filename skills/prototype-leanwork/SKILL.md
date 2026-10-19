@@ -169,7 +169,7 @@ Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário 
 
 | Momento | Quem sugere |
 |---|---|
-| PRD com interface aprovado, sem SPEC-UI | `prd-leanwork` ao concluir; `/leanwork-next` |
+| PRD com interface aprovado, sem SPEC-UI | `prd-leanwork` ao concluir; `/leanwork-pipeline` |
 | Plano prestes a ser gerado para PRD com UI | `planner-leanwork` |
 | Review encontrou tela sem especificação | `reviewer-leanwork` |
 

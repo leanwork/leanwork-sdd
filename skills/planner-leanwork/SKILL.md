@@ -58,25 +58,24 @@ Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com 
 
 ## Fase 2 — Geração do plano
 
-Use o template completo em `references/plan-template.md`. Leia o arquivo antes de gerar o plano; ele contém a estrutura exata com todas as seções obrigatórias (resumo executivo, estratégia de entrega, fases com tarefas T-XX, checklist de prontidão, pontos de validação humana) e opcionais (premissas, mapa de dependências em Mermaid, testes transversais, rollback, questões em aberto, histórico de execução).
+Use o template completo em `references/plan-template.md`. Leia o arquivo antes de gerar o plano; ele contém a estrutura exata com todas as seções obrigatórias (resumo executivo, estratégia de entrega, fases com tarefas T-XX, pontos de validação humana) e opcionais (premissas, mapa de dependências em Mermaid, testes transversais, rollback, questões em aberto).
 
-### Orientação da fatia: horizontal (padrão) ou vertical (seletiva)
+### Orientação da fatia: vertical por `CA-XX` (padrão) ou horizontal (exceção)
 
-O padrão do pipeline é fatiar por camada técnica (Fundação → Lógica de negócio → Exposição → Interface → Qualidade). A justificativa e o trade-off assumido nessa escolha estão registrados em `REFERENCES.md`, seção "Fatiamento horizontal por camada" — vale ler antes de desviar dela.
+O padrão é a **fatia vertical**: cada `T-XX` fecha um ou mais `CA-XX` ponta a ponta, atravessando as camadas que aquele comportamento precisa, e termina com algo demonstrável — o cenário verde. Começar pelo caminho feliz e deixar erro e caso de borda para as fatias seguintes. Ver `references/task-examples.md`, Exemplo 6, para o formato.
 
-Desviar quando a entrevista já sinalizou um dos dois:
+Fatia **horizontal** (uma camada técnica por tarefa) fica para três casos, em que não existe comportamento a fechar ou fechá-lo de uma vez quebraria o sistema:
 
-- **Bloco 2** respondeu que partes da feature **precisam** ir a produção isoladamente, ou que a entrega é incremental de verdade (não "podemos, mas não vamos").
-- **Bloco 4** apontou risco de integração concreto (dependência externa instável, contrato entre times ainda não validado na prática).
+- **Fundação** — estrutura inicial que toda fatia vai usar (projeto, pipeline de handlers, autenticação base)
+- **Migrations** — mudança de schema isolada, revisável e reversível por conta própria
+- **Expandir → migrar → contrair** — refactor de alto impacto sequenciado em lotes (ver "Padrões de comportamento")
 
-Quando um desses sinais aparece, fatiar **a parte afetada do plano** — não necessariamente o plano inteiro — em fatias verticais: cada `T-XX` atravessa as camadas necessárias para fechar um `CA-XX` específico ponta a ponta, começando pelo caminho feliz e deixando erro/edge case para fatias seguintes. Ver `references/task-examples.md`, Exemplo 6, para o formato.
+O motivo da inversão está em `REFERENCES.md`, seção "Fatiamento vertical por `CA-XX`": granularidade compra ordem, não correção, e cada tarefa custa um ciclo inteiro de execução e review. Uma tarefa de camada passa pelo review sem cenário para verificar — o sensor de discriminação não tem comportamento para atacar.
 
-Duas ressalvas a comunicar ao usuário ao propor:
+Duas ressalvas a comunicar ao usuário:
 
-1. Fatia vertical tende a gerar **mais tarefas**, não menos — o teto de 4h força cortar por comportamento (caminho feliz → erro → edge case) em vez de cortar por camada inteira de uma vez. O ganho é demonstrabilidade cedo e menos risco de integração tardia, não redução de tarefas.
-2. Na stack de referência do pipeline (Clean Architecture com projetos separados — Domain/Application/Infrastructure/Api), cada fatia vertical carrega contexto de múltiplos projetos numa única execução de `/leanwork-execute`. O sinal de "grande demais" de `task-examples.md` ("mexe em mais de 3 camadas → separar por camada") não se aplica a essas tarefas — a exceção está registrada lá, junto do exemplo.
-
-Fora desses gatilhos, seguir o padrão horizontal: é a orientação default do pipeline, não uma opção equivalente que se escolhe por preferência.
+1. A primeira fatia é a mais cara: leva junto o mínimo de cada camada. Se ela não couber num ciclo, separar a fundação numa tarefa horizontal antes dela.
+2. Em arquitetura com projetos separados por camada (Domain/Application/Infrastructure/Api), cada fatia carrega contexto de vários projetos numa execução de `/leanwork-execute`. O sinal de "mexe em muitas camadas" de `task-examples.md` não se aplica a ela — atravessar camadas é o objetivo.
 
 Recursos auxiliares:
 
@@ -96,23 +95,32 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome
 
 **Exit diferente de zero é PARE.** Cada linha `ERROR` aponta uma regra desta skill que o plano violou — campo obrigatório ausente, `Status` fora do vocabulário, buraco na sequência de `T-XX`, dependência para frente. Corrigir o plano e rodar de novo até sair 0. Não apresentar plano reprovado, nem com ressalva, nem "para o usuário decidir": o gate existe justamente porque a regra em prosa é fácil de não aplicar numa execução.
 
-Linha `WARN` **não** reprova e não obriga correção — é sinal para ler e decidir. `mais de 3 critérios de aceite` indica tarefa provavelmente grande demais; quebrar é julgamento de quem planeja.
+Linha `WARN` **não** reprova e não obriga correção — é sinal para ler e decidir. `mais de 5 critérios de aceite` indica fatia provavelmente grande demais; quebrar é julgamento de quem planeja.
 
 **Fallback — modo degradado.** Se não houver ferramenta de execução de código disponível, conferir o plano à mão contra as regras acima e **dizer no chat, com todas as letras, que o plano não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
 
 Se o `Bash` pedir confirmação mesmo com `Bash(python:*)` no `allowed-tools` desta skill, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade. Ver `${CLAUDE_PLUGIN_ROOT}/skills/context-leanwork/references/permission-catalog.md`, seção "Sombra de prefixo entre baldes". Não é falha do gate, e a resposta é confirmar ou ajustar as settings, nunca pular a validação.
 
+## Trilha rápida
+
+Mudança pequena e reversível não precisa de PRD nem de plano completo. A trilha rápida reaproveita o formato de plano — **um plano de uma tarefa**, sem PRD, com os cenários `CA-XX` escritos em Gherkin dentro da própria tarefa — para que `/leanwork-execute`, `/leanwork-review` e os gates funcionem sem fluxo paralelo. Template em `references/plan-template-quick.md`.
+
+**Critério de entrada (os dois, sem matriz de dimensionamento):**
+
+- Menos de ~3 arquivos tocados
+- Nenhuma **porta de mão única** — migration, contrato público, schema, configuração de permissão. O que é caro de reverter vai pelo fluxo completo, por menor que seja o diff
+
+**Formato:** cabeçalho com `**PRD de referência:** nenhum — trilha rápida`, uma seção curta de motivo e uma única tarefa `T-01`, com `**Valida:**` citando os `CA-XX` definidos no bloco `**Cenários:**` da própria tarefa. Sem fases, mapa, rollback ou pontos de validação humana além do que a mudança pedir. O review continua obrigatório: a trilha encurta o planejamento, não a verificação.
+
+**Regra de saída:** se durante a execução a mudança crescer além do critério — mais arquivos, uma porta de mão única que não estava prevista, um segundo comportamento —, a tarefa vira `Bloqueado` com o motivo em `**Bloqueio:**` e o fluxo completo assume (PRD → plano). Não acrescentar uma `T-02` ao plano de trilha rápida: o gate reprova, e a reprovação é o sinal de que a mudança não cabe nela.
+
 ## Convenções Leanwork
 
 - **Idioma:** todo o plano em português (Brasil). Termos técnicos consagrados (handler, migration, endpoint, command, query) podem ficar em inglês.
 - **Numeração de tarefas:** `T-01`, `T-02`, ..., `T-NN`. Sequencial e global ao plano inteiro — não reinicia por fase. Facilita referência cruzada.
-- **Status da tarefa:** o campo `**Status:**` de cada `T-XX` é a fonte de verdade do estado e aceita exatamente quatro valores, por extenso e sem emoji: `Pendente` | `Em andamento` | `Concluído` | `Bloqueado`. Toda tarefa nasce `Pendente`. `/leanwork-next` e `/leanwork-trace` leem esse campo literalmente — outra grafia torna a tarefa invisível para eles. Ver `templates/id-conventions.md`.
-- **Checkbox markdown:** usar `- [ ]` / `- [x]` nos itens de *critério de aceite*, testes transversais, checklist de prontidão e questões em aberto. **Não** usar checkbox no campo `**Status:**` — o estado da tarefa tem uma representação só, e duas se contradizem na primeira vez que alguém atualizar apenas uma delas.
-- **Granularidade mista:** a skill decide caso a caso, dentro do teto único de **4 horas por tarefa** declarado em `templates/id-conventions.md` (regra de `T-XX`). Heurísticas:
-  - Tarefa pequena (1 commit, ~30min-2h): quando a mudança é isolada e tem teste óbvio. Ex.: "Criar entity Foo com propriedades X, Y, Z".
-  - Tarefa média (1 PR pequeno, 2h-4h): quando há acoplamento natural que separar atrapalha. Ex.: "Implementar handler + validator + testes unitários do CriarFoo".
-  - **Acima de 4h, quebrar** — sem exceção. Tarefa de mais de um dia não existe no plano.
-  - A faixa é calibragem mental para dimensionar a quebra, não estimativa: ela não vai escrita na tarefa. Ver "O que NÃO incluir".
+- **Status da tarefa:** o campo `**Status:**` de cada `T-XX` é a fonte de verdade do estado e aceita exatamente quatro valores, por extenso e sem emoji: `Pendente` | `Em andamento` | `Concluído` | `Bloqueado`. Toda tarefa nasce `Pendente`. `/leanwork-pipeline` e `/leanwork-trace` leem esse campo literalmente — outra grafia torna a tarefa invisível para eles. Ver `templates/id-conventions.md`.
+- **Checkbox markdown:** usar `- [ ]` / `- [x]` em testes transversais, pontos de validação humana e questões em aberto. Critério de aceite é lista simples — o estado da tarefa vive em `**Status:**`, e checkbox marcado por critério é um segundo estado que diverge. Itens de prontidão genéricos não vão no plano: são a Definition of Done do `CLAUDE.md` do projeto. **Não** usar checkbox no campo `**Status:**` — o estado da tarefa tem uma representação só, e duas se contradizem na primeira vez que alguém atualizar apenas uma delas.
+- **Tamanho da fatia:** uma fatia fecha um ou mais `CA-XX` ponta a ponta e cabe num ciclo de `/leanwork-execute` + `/leanwork-review` com a suíte verde ao final. Não há teto em horas — a medida é o ciclo, não o relógio. Sinais de "grande demais" são de comportamento: mais de um caminho feliz, `CA-XX` de features distintas, descrição que precisa de "e também". Sinal de "pequena demais": tarefa sem nenhum `CA-XX` que não seja uma das três exceções horizontais — provavelmente é parte da fatia vizinha. Ver `references/task-examples.md`.
 - **Complexidade:** classificar como `Baixa`, `Média` ou `Alta` baseado em risco técnico e desconhecido, não em tamanho. Uma tarefa pequena pode ser Alta se mexe com legado frágil; uma tarefa média pode ser Baixa se é CRUD trivial. Não é estimativa de tempo.
 - **Mermaid:** usar no mapa de dependências sempre que houver mais de 5 tarefas. Para planos pequenos, lista textual basta.
 - **Referência à SPEC-UI (quando existir):** tarefas de interface preenchem o campo `Telas:` com os `UI-XX` e os estados que implementam (ex.: `UI-02 (default, limite, esgotado)`). Antes de decompor a fase de Interface, ler `docs/prototype/SPEC-UI-XXX-*.md`: o inventário de telas dimensiona as tarefas, e a seção de componentes reutilizáveis evita criar tarefas duplicadas para o mesmo componente. Se o projeto não tem SPEC-UI, omitir o campo e decompor a fase de Interface a partir dos fluxos do PRD.
@@ -122,7 +130,7 @@ Se o `Bash` pedir confirmação mesmo com `Bash(python:*)` no `allowed-tools` de
 
 - **Cronograma, datas, prazos.** O plano é sobre ordem e dependências, não sobre quando. Datas pertencem ao Azure DevOps / gestão de projeto.
 - **Alocação de pessoas.** "T-03: João" não vai no plano. Quem pega a tarefa é decisão de planning/daily.
-- **Estimativa em horas.** Complexidade qualitativa é suficiente — horas mentem. A faixa de 30min-4h existe só para dimensionar a quebra enquanto o plano é escrito; ela é heurística de quem planeja, não campo do artefato nem compromisso com ninguém.
+- **Estimativa em horas.** Complexidade qualitativa é suficiente — horas mentem. O tamanho da fatia se mede por comportamento fechado e por caber num ciclo, não por tempo.
 - **Código pronto.** O plano direciona, não implementa. Nomes de classes/arquivos sugeridos sim, código não.
 - **Decisões arquiteturais novas.** Se durante o planejamento aparecer necessidade de decidir algo arquitetural relevante, pausar e sugerir a skill `architect-leanwork` — ela cobre os dois casos: revisitar a proposta inteira, ou registrar um ADR avulso em `docs/architecture/adrs/` quando a decisão for isolada. O plano consome decisões; não cria. Registrar a pendência na seção "Questões em aberto" do plano, com o `bloqueia: T-XX` correspondente, em vez de escolher por conta própria e seguir.
 - **Redundância com o PRD.** Não repetir regras de negócio detalhadas — referenciar por código (RN-XX).
@@ -131,18 +139,18 @@ Se o `Bash` pedir confirmação mesmo com `Bash(python:*)` no `allowed-tools` de
 
 **Quando o usuário cola um PRD como entrada:** ler o PRD inteiro antes de perguntar. Identificar lacunas técnicas (stack, estrutura, padrão de testes) e fazer apenas perguntas que o PRD não responde. Não pedir informação que já está no PRD.
 
-**Quando o usuário não tem PRD ainda:** sugerir rodar a skill `prd-leanwork` primeiro. Planejar sem PRD leva a tarefas que descobrem requisitos durante a execução — caro e arriscado. Se o usuário insistir, deixar registrado em premissas que o plano foi gerado sem PRD formal.
+**Quando o usuário não tem PRD ainda:** se a mudança atende ao critério da trilha rápida, oferecê-la. Fora dele, sugerir rodar a skill `prd-leanwork` primeiro. Planejar sem PRD leva a tarefas que descobrem requisitos durante a execução — caro e arriscado. Se o usuário insistir, deixar registrado em premissas que o plano foi gerado sem PRD formal.
 
 **Quando o usuário pede plano para feature pequena (1-3 tarefas):** ainda assim manter o template, mas comprimir. Fases viram opcional, mapa de dependências pode ser textual, mas critérios de aceite e testes por tarefa permanecem obrigatórios.
 
-**Quando o usuário pede para revisar/atualizar um plano existente:** ler o plano atual, identificar tarefas concluídas (checkbox marcado), e propor diff explícito antes de reescrever. Nunca apagar histórico de execução sem confirmar.
+**Quando o usuário pede para revisar/atualizar um plano existente:** ler o plano atual, identificar tarefas concluídas (campo `**Status:**`), e propor diff explícito antes de reescrever. Nunca reverter o status de tarefa já concluída sem confirmar.
 
-**Quando aparece tarefa parecendo grande durante a quebra:** quebrar antes de gerar. Sinal de "está grande demais": mais de 3 critérios de aceite na mesma tarefa, ou critério de aceite que precisa de mais de 2 testes para validar, ou descrição que precisa de "e também" / "além disso" para descrever, ou mais de 4 horas estimadas mentalmente. A lista completa está em `references/task-examples.md`.
+**Quando aparece tarefa parecendo grande durante a quebra:** quebrar antes de gerar, por comportamento — caminho feliz numa fatia, erro e borda nas seguintes. Sinais: mais de um caminho feliz, `CA-XX` de features distintas, mais de 5 critérios de aceite, descrição que precisa de "e também" / "além disso". A lista completa está em `references/task-examples.md`.
 
 **Quando a feature toca código legado sem teste:** sugerir tarefa preliminar de caracterização (escrever testes que documentam o comportamento atual) antes das tarefas de modificação. Isso previne regressões silenciosas.
 
-**Quando a quebra encontra um refactor de alto impacto** (renomear coluna usada por várias queries, retipar um símbolo compartilhado, mudar contrato consumido por múltiplos chamadores): não force uma tarefa monolítica — ela quebra tudo de uma vez e não cabe em 4h. Sequencie como **expandir → migrar → contrair**: uma tarefa expande (forma nova ao lado da antiga, nada quebra ainda), uma ou mais tarefas migram os chamadores em lotes (por módulo/pasta, cada lote sua própria tarefa com `Depende de:` a tarefa de expansão), e uma tarefa final contrai (remove a forma antiga, `Depende de:` todos os lotes de migração). Cada tarefa fica com CI verde standalone, ao custo de mais tarefas no plano do que uma mudança mecânica única exigiria.
+**Quando a quebra encontra um refactor de alto impacto** (renomear coluna usada por várias queries, retipar um símbolo compartilhado, mudar contrato consumido por múltiplos chamadores): não force uma tarefa monolítica — ela quebra tudo de uma vez e não cabe num ciclo com a suíte verde. Sequencie como **expandir → migrar → contrair**: uma tarefa expande (forma nova ao lado da antiga, nada quebra ainda), uma ou mais tarefas migram os chamadores em lotes (por módulo/pasta, cada lote sua própria tarefa com `Depende de:` a tarefa de expansão), e uma tarefa final contrai (remove a forma antiga, `Depende de:` todos os lotes de migração). Cada tarefa fica com CI verde standalone, ao custo de mais tarefas no plano do que uma mudança mecânica única exigiria.
 
 **Quando o plano será consumido por agente de IA (Claude Code, Codex, etc.):** ser ainda mais explícito nos critérios de aceite e nos pontos de validação humana. Agentes não têm o instinto de "isso parece estranho, melhor confirmar" — precisam de gates explícitos no plano.
 
-**Atualização durante a execução:** se o usuário pedir para "marcar T-XX como concluída" ou "atualizar status", aplicar a mudança preservando todo o resto do plano. Adicionar entrada na tabela de Histórico de execução com commit hash quando disponível.
+**Atualização durante a execução:** se o usuário pedir para "marcar T-XX como concluída" ou "atualizar status", aplicar a mudança no campo `**Status:**` preservando todo o resto do plano. Ao marcar `Bloqueado`, preencher `**Bloqueio:**` com o motivo. O plano não registra datas nem hashes — isso é trilha do git.

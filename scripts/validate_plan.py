@@ -11,10 +11,19 @@ Uso:
 `alvo` aceita arquivo, diretorio, ou nada - neste caso o plano e auto-detectado
 em `docs/plans/` a partir de `--root` (padrao: diretorio corrente).
 
-Decisao de calibragem: "tarefa com mais de 3 criterios de aceite" e WARN, nunca
-ERROR. A heuristica vale como sinal de tarefa grande demais
+Decisao de calibragem: "tarefa com mais de 5 criterios de aceite" e WARN, nunca
+ERROR. O limiar subiu de 3 para 5 com a fatia vertical por CA-XX (PLAN-002,
+T-07). A heuristica vale como sinal de tarefa grande demais
 (`templates/id-conventions.md`, T-XX), mas quebrar a tarefa e julgamento de quem
 planeja - o gate aponta, nao decide.
+
+O campo `**Status:**` da tarefa e a unica fonte de estado. Plano antigo com
+tabela de Historico de execucao continua passando: a tabela e ignorada, nem
+comparada nem proibida.
+
+Plano de trilha rapida (cabecalho `**PRD de referencia:** nenhum - trilha
+rapida`) dispensa as secoes do plano completo e mantem o rigor da tarefa. Mais
+de uma tarefa e ERROR: e o sinal de que a mudanca nao cabe na trilha.
 
 Exit: 0 aprovado, 1 erro de conteudo, 2 erro de uso.
 """
@@ -24,28 +33,26 @@ import re
 import sys
 
 from _common import (
+    HEADING,
+    STATUS_VOCAB,
     Diagnostics,
     UsageError,
     enable_utf8_output,
     fail_usage,
-    fence_mask,
     find_placeholders,
     finish,
-    parse_field,
-    read_lines,
+    is_quick_track,
+    load_document,
+    parse_tasks,
     resolve_target,
-    unwrap_envelope,
 )
 
 SCRIPT = "validate_plan"
-
-STATUS_VOCAB = ("Pendente", "Em andamento", "Concluído", "Bloqueado")
 
 REQUIRED_SECTIONS = (
     "Resumo executivo",
     "Estratégia de entrega",
     "Fases",
-    "Checklist de prontidão",
     "Pontos de validação humana",
 )
 
@@ -53,122 +60,20 @@ REQUIRED_FIELDS = (
     "Status",
     "Complexidade",
     "Depende de",
-    "Camadas/arquivos afetados",
+    "Portas de mão única",
 )
 
 CA_MARKER = "Critério de aceite"
 TESTS_MARKER = "Testes a escrever"
 
-MAX_ACCEPTANCE_CRITERIA = 3
+MAX_ACCEPTANCE_CRITERIA = 5
 
-HEADING = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.*?)\s*$")
-TASK_HEADING = re.compile(r"^####\s+(?P<id>\S+)\s*(?:[—–-]\s*(?P<title>.*))?$")
-BLOCK_MARKER = re.compile(r"^\*\*(?P<name>[^*]+?):\*\*\s*$")
-THEMATIC_BREAK = re.compile(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$")
-CHECKBOX = re.compile(r"^\s*[-*]\s*\[[ xX]\]")
+LIST_ITEM = re.compile(r"^\s*(?:[-*]|\d+\.)\s+\S")
 STATUS_AS_CHECKBOX = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*\*\*Status")
-TASK_ID = re.compile(r"^T-\d{2,}$")
-TASK_REFERENCE = re.compile(r"T-\d+")
-HISTORY_ROW = re.compile(r"^\|\s*(?P<id>T-\d+)\s*\|\s*(?P<status>[^|]*?)\s*\|")
+BLOCK_FIELD = "Bloqueio"
+DOORS_FIELD = "Portas de mão única"
+LEGACY_SCOPE_FIELD = "Camadas/arquivos afetados"
 
-
-class Task:
-    def __init__(self, task_id, line_number, title):
-        self.id = task_id
-        self.line = line_number
-        self.title = title or ""
-        self.fields = {}
-        self.markers = {}
-        self.body = []
-
-    @property
-    def number(self):
-        return int(self.id.split("-")[1])
-
-    def field(self, name):
-        return self.fields.get(name)
-
-    def marker_lines(self, prefix):
-        for name, content in self.markers.items():
-            if name.startswith(prefix):
-                return content
-        return None
-
-    def has_marker(self, prefix):
-        return self.marker_lines(prefix) is not None
-
-
-def load_document(path):
-    """Le o artefato, descasca o envelope de template e marca as cercas."""
-    lines = unwrap_envelope(read_lines(path))
-    return lines, fence_mask(lines)
-
-
-def parse_tasks(lines, mask, diagnostics=None):
-    """Extrai as tarefas do plano.
-
-    So um cabecalho `#### T-XX` fora de cerca abre tarefa. Mencao a `T-XX` numa
-    linha `Depende de:` ou num no de diagrama Mermaid nao abre - confundir os
-    dois produz falso positivo de tarefa duplicada.
-    """
-    tasks = []
-    current = None
-    current_marker = None
-
-    for index, line in enumerate(lines):
-        if mask[index]:
-            if current is not None:
-                current.body.append((index + 1, line))
-                if current_marker is not None:
-                    current.markers[current_marker].append(line)
-            continue
-
-        heading = HEADING.match(line)
-        if heading:
-            task_match = TASK_HEADING.match(line)
-            if task_match and task_match.group("id").startswith("T-"):
-                raw_id = task_match.group("id")
-                if not TASK_ID.match(raw_id):
-                    if diagnostics is not None:
-                        diagnostics.error(
-                            "linha {}: ID de tarefa malformado '{}' - o padrao e "
-                            "T-NN com no minimo dois digitos".format(index + 1, raw_id)
-                        )
-                    current = None
-                    current_marker = None
-                    continue
-                current = Task(raw_id, index + 1, task_match.group("title"))
-                tasks.append(current)
-                current_marker = None
-                continue
-            current = None
-            current_marker = None
-            continue
-
-        if current is None:
-            continue
-
-        current.body.append((index + 1, line))
-
-        if THEMATIC_BREAK.match(line):
-            current_marker = None
-            continue
-
-        marker = BLOCK_MARKER.match(line)
-        if marker:
-            current_marker = marker.group("name").strip()
-            current.markers.setdefault(current_marker, [])
-            continue
-
-        field = parse_field(line)
-        if field and current_marker is None:
-            current.fields[field[0]] = field[1]
-            continue
-
-        if current_marker is not None:
-            current.markers[current_marker].append(line)
-
-    return tasks
 
 
 def collect_sections(lines, mask):
@@ -184,6 +89,22 @@ def collect_sections(lines, mask):
     return sections
 
 
+def check_quick_track_size(tasks, diagnostics):
+    if len(tasks) > 1:
+        diagnostics.error(
+            "plano de trilha rapida com {} tarefas - a trilha rapida tem uma tarefa "
+            "so; mudanca maior vai pelo fluxo completo (PRD -> plano)".format(len(tasks))
+        )
+    for task in tasks:
+        doors = task.field(DOORS_FIELD)
+        if doors is not None and not doors.strip().lower().startswith("nenhuma"):
+            diagnostics.error(
+                "{} (linha {}): trilha rapida com porta de mao unica declarada - "
+                "migration, contrato publico, schema ou permissao vai pelo fluxo "
+                "completo".format(task.id, task.line)
+            )
+
+
 def check_sections(sections, diagnostics):
     titles = [title.lower() for _, title in sections]
     for required in REQUIRED_SECTIONS:
@@ -193,6 +114,14 @@ def check_sections(sections, diagnostics):
 
 def check_task_fields(task, diagnostics):
     for required in REQUIRED_FIELDS:
+        if required == DOORS_FIELD and task.field(required) is None:
+            if task.field(LEGACY_SCOPE_FIELD) is not None:
+                diagnostics.warn(
+                    "{} (linha {}): campo '**{}:**' e do formato anterior a 2.0.0 - "
+                    "substituir por '**{}:**' (nenhuma, ou o que e caro de "
+                    "reverter)".format(task.id, task.line, LEGACY_SCOPE_FIELD, DOORS_FIELD)
+                )
+                continue
         if task.field(required) is None:
             diagnostics.error(
                 "{} (linha {}): campo obrigatorio ausente: '**{}:**'".format(
@@ -240,10 +169,10 @@ def check_acceptance_criteria(task, diagnostics):
     content = task.marker_lines(CA_MARKER)
     if content is None:
         return
-    items = [line for line in content if CHECKBOX.match(line)]
+    items = [line for line in content if LIST_ITEM.match(line)]
     if not items:
         diagnostics.error(
-            "{} (linha {}): '{}' sem nenhum item '- [ ]'".format(
+            "{} (linha {}): '{}' sem nenhum item de lista".format(
                 task.id, task.line, CA_MARKER
             )
         )
@@ -290,12 +219,7 @@ def check_ids_and_dependencies(tasks, diagnostics):
 
     known = set(seen)
     for task in tasks:
-        raw = task.field("Depende de")
-        if raw is None:
-            continue
-        if raw.strip().lower().startswith("nenhuma"):
-            continue
-        for reference in TASK_REFERENCE.findall(raw):
+        for reference in task.dependencies():
             if reference not in known:
                 diagnostics.error(
                     "{} (linha {}): depende de {}, que nao existe no plano".format(
@@ -310,26 +234,15 @@ def check_ids_and_dependencies(tasks, diagnostics):
                 )
 
 
-def check_history(lines, mask, tasks, diagnostics):
-    statuses = {task.id: task.field("Status") for task in tasks}
-    for index, line in enumerate(lines):
-        if mask[index]:
-            continue
-        row = HISTORY_ROW.match(line)
-        if not row:
-            continue
-        task_id = row.group("id")
-        declared = row.group("status").replace("*", "").strip()
-        expected = statuses.get(task_id)
-        if expected is None or not declared:
-            continue
-        if declared != expected:
-            diagnostics.error(
-                "Histórico de execução (linha {}): {} consta como '{}' na tabela e "
-                "'{}' no campo '**Status:**'".format(
-                    index + 1, task_id, declared, expected
-                )
+def check_block_reason(task, diagnostics):
+    if task.field("Status") != "Bloqueado":
+        return
+    if not task.block_reason():
+        diagnostics.error(
+            "{} (linha {}): Status 'Bloqueado' sem campo '**{}:**' com o motivo".format(
+                task.id, task.line, BLOCK_FIELD
             )
+        )
 
 
 def check_dependency_map(sections, tasks, diagnostics):
@@ -354,8 +267,10 @@ def check_placeholders(lines, mask, diagnostics):
 def validate(path, diagnostics):
     lines, mask = load_document(path)
     sections = collect_sections(lines, mask)
+    quick = is_quick_track(lines, mask)
 
-    check_sections(sections, diagnostics)
+    if not quick:
+        check_sections(sections, diagnostics)
     tasks = parse_tasks(lines, mask, diagnostics)
 
     if not tasks:
@@ -367,10 +282,13 @@ def validate(path, diagnostics):
         check_status(task, diagnostics)
         check_acceptance_criteria(task, diagnostics)
         check_tests_section(task, diagnostics)
+        check_block_reason(task, diagnostics)
 
     check_ids_and_dependencies(tasks, diagnostics)
-    check_history(lines, mask, tasks, diagnostics)
-    check_dependency_map(sections, tasks, diagnostics)
+    if quick:
+        check_quick_track_size(tasks, diagnostics)
+    else:
+        check_dependency_map(sections, tasks, diagnostics)
     check_placeholders(lines, mask, diagnostics)
 
 

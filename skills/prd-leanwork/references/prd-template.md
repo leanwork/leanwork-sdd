@@ -68,7 +68,7 @@ Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
 
 > Esta é uma sugestão de quebra. O Product Owner pode reorganizar conforme prioridade e capacidade do time.
 >
-> **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução tem teto de 4 horas (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
+> **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução é uma fatia que fecha um ou mais `CA-XX` num ciclo de execução + review (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
 
 ## 7. Fluxos *(obrigatória se houver interação)*
 

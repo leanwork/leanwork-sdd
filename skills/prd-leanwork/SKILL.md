@@ -76,7 +76,7 @@ Manter a hierarquia de headings e a ordem das seções. Seções que não se apl
 
 Se o PRD descreve interface de usuário (tem personas, fluxos de interação, cenários com ator em tela), **sugerir** — sem executar — a fase de especificação de interface:
 
-> Este PRD tem interface. Antes do plano de execução, a skill `prototype-leanwork` pode indexar o protótipo (se você já tiver) ou gerar um, mapeando cada tela contra as regras e cenários daqui. Isso faz o plano dimensionar melhor as tarefas de UI e permite ao review verificar se todos os estados de tela foram implementados. Rode com `/leanwork-prototype` se fizer sentido.
+> Este PRD tem interface. Antes do plano de execução, a skill `prototype-leanwork` pode indexar o protótipo (se você já tiver) ou gerar um, mapeando cada tela contra as regras e cenários daqui. Isso faz o plano dimensionar melhor as tarefas de UI e permite ao review verificar se todos os estados de tela foram implementados. Rode com `/leanwork-sdd:prototype-leanwork` se fizer sentido.
 
 Se o PRD **não** tem interface (integração, job, processamento, API pura), não sugerir nada — seguir direto para o plano.
 

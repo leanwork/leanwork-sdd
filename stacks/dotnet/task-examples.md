@@ -19,10 +19,7 @@ Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** po
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-001 *(estrutura modular monolith)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Domain/Entities/FlashSale.cs` *(novo)*
-  - `src/Contoso.Domain/Entities/FlashSaleItem.cs` *(novo)*
-  - `src/Contoso.Infrastructure/Persistence/Configurations/FlashSaleConfiguration.cs` *(novo)*
+- **Portas de mão única:** schema — tabela `FlashSale` com índice composto e constraint; a migration sai deste mapeamento
 
 **Descrição:**
 Criar a entidade `FlashSale` com propriedades: `Id`, `ProductId`, `Price`, `Stock`,
@@ -56,11 +53,7 @@ Tarefas de lógica de negócio **sempre preenchem `Implementa:`** (regras do PRD
 - **Implementa:** RN-03, RN-05
 - **Valida:** CA-04, CA-06
 - **Decisões base:** ADR-002 *(lock pessimista para evitar overselling)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaCommand.cs` *(novo)*
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaResult.cs` *(novo)*
-  - `src/Contoso.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs` *(editado)*
+- **Portas de mão única:** nenhuma
 
 **Descrição:**
 Handler MediatR que: (1) abre transação `IsolationLevel.Serializable`,
@@ -108,9 +101,7 @@ Tarefas de controller/endpoint **preenchem `Valida:`** porque sua conclusão é 
 - **Implementa:** —
 - **Valida:** CA-04, CA-05, CA-06, CA-07 *(todos os cenários do funcional principal)*
 - **Decisões base:** ADR-003 *(REST + MediatR como padrão de entrada)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Api/Controllers/FlashSalesController.cs` *(editado)*
-  - `src/Contoso.Api/DTOs/ComprarOfertaRequest.cs` *(novo)*
+- **Portas de mão única:** contrato público — rota `POST /api/flash-sales/{id}/comprar` e o DTO de request
 
 **Descrição:**
 Endpoint REST que recebe `ComprarOfertaRequest`, monta `ComprarOfertaCommand`
@@ -152,9 +143,7 @@ Tarefas de observabilidade, métricas, logging tipicamente **não preenchem `Imp
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-008 *(observabilidade via Application Insights)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(editado)*
-  - `src/Contoso.Infrastructure/Telemetry/FlashSaleMetrics.cs` *(novo)*
+- **Portas de mão única:** nenhuma
 
 **Descrição:**
 Adicionar: (1) log estruturado com Serilog no handler com propriedades
@@ -192,10 +181,7 @@ Quando uma tarefa **existe especificamente para implementar uma decisão arquite
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-006 *(roll-out controlado via feature flag)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Api/Controllers/FlashSalesController.cs` *(editado)*
-  - `src/Contoso.Web/Pages/Home.razor` *(editado)*
-  - `appsettings.json` *(editado)*
+- **Portas de mão única:** nenhuma — a própria flag é o mecanismo de reversão
 
 **Descrição:**
 Adicionar gate `FeatureFlag.FlashSales` no endpoint POST e no componente de UI.
@@ -219,11 +205,11 @@ projeto como ativar/desativar.
 
 ---
 
-## Exemplo 6 — Fatia vertical deliberada (entrega incremental ou risco de integração)
+## Exemplo 6 — Fatia vertical por `CA-XX` (padrão)
 
-Exceção ao padrão horizontal dos Exemplos 1-4. Só se aplica quando a entrevista (Bloco 2 ou Bloco 4 de `SKILL.md`) sinalizou entrega incremental real ou risco de integração concreto — ver `SKILL.md`, seção "Orientação da fatia". Fora desses gatilhos, a quebra continua por camada.
+É o formato padrão de tarefa do plano — ver `SKILL.md`, seção "Orientação da fatia". Os Exemplos 1-5 mostram como preencher os campos por tipo de trabalho; numa fatia vertical, esse trabalho aparece junto, dentro da mesma tarefa. Como tarefa isolada por camada, só nas três exceções horizontais: fundação, migrations e expandir → migrar → contrair.
 
-A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito o bastante (só o caminho feliz de um `CA-XX`) para caber no mesmo teto de 4h que os Exemplos 1-4 — o corte estreito aqui é por cenário, não por camada.
+A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito (só o caminho feliz de um `CA-XX`) para caber num ciclo de execução + review com a suíte verde — o corte é por cenário, não por camada.
 
 ```markdown
 #### T-01 — Fatia: comprar oferta relâmpago, caminho feliz
@@ -234,11 +220,7 @@ A fatia atravessa as camadas de propósito, mas o comportamento coberto fica est
 - **Implementa:** RN-03
 - **Valida:** CA-04
 - **Decisões base:** ADR-002 *(lock pessimista — adiado para a próxima fatia)*, ADR-003 *(REST + MediatR)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Domain/Entities/FlashSale.cs` *(novo)*
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
-  - `src/Contoso.Infrastructure/Persistence/Configurations/FlashSaleConfiguration.cs` *(novo)*
-  - `src/Contoso.Api/Controllers/FlashSalesController.cs` *(novo)*
+- **Portas de mão única:** schema (tabela `FlashSale`) e contrato público (rota de compra)
 
 **Descrição:**
 Fatia mínima que atravessa as quatro camadas só para o caminho feliz: entity
@@ -258,9 +240,9 @@ não cobrir a funcionalidade inteira nesta tarefa.
 **Riscos / pontos de atenção:**
 - Concorrência (CA-06) e limite por cliente (RN-05) ficam para a fatia
   seguinte — não implementar lock pessimista aqui, é escopo de outra tarefa
-- Fatia estreita gera **mais tarefas no total** que a quebra horizontal
-  equivalente (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a
-  mesma feature): o ganho é demonstrabilidade cedo, não menos tarefas
+- Cada fatia fecha um cenário verificável: o review tem comportamento para
+  atacar desde a primeira tarefa, em vez de tarefas de camada sem `CA-XX`
+  (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a mesma feature)
 ```
 
 ---

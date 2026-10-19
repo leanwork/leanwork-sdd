@@ -2,6 +2,8 @@
 
 Template completo a ser preenchido. Manter hierarquia de headings e ordem das seções. Seções não aplicáveis podem ser omitidas, exceto as marcadas como obrigatórias.
 
+Para mudança pequena e reversível, a variante curta está em `plan-template-quick.md` — critério de entrada em `SKILL.md`, seção "Trilha rápida".
+
 As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste arquivo — não fazem parte do documento gerado. As cercas de três crases dentro dele fazem.
 
 ---
@@ -28,7 +30,9 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 
 **Modelo de entrega:** [única release / incremental por fase / atrás de feature flag]
 
-**Critério geral de "pronto":** [o que precisa estar verdadeiro para considerar a feature inteira concluída — geralmente: todos os critérios do PRD verificáveis, testes passando, code review aprovado, deploy em staging validado]
+**Critério geral de "pronto":** [o que precisa estar verdadeiro para considerar a feature inteira concluída. O genérico — testes passando, review aprovado, documentação atualizada — já está na Definition of Done do `CLAUDE.md` do projeto e não se repete aqui]
+
+**Prontidão específica:** [só o que é próprio desta feature — migration destrutiva testada em ambiente espelhado, feature flag desligada por padrão, janela de deploy. Omitir se não houver]
 
 ## 3. Premissas e decisões *(obrigatória se houver)*
 
@@ -58,17 +62,18 @@ graph TD
 
 ## 5. Fases *(obrigatória)*
 
-Agrupar tarefas em fases lógicas. Uma fase é um conjunto de tarefas que entrega valor coerente e pode (em tese) ser interrompida sem deixar o sistema quebrado. Exemplo de fases típicas:
+Agrupar tarefas em fases lógicas. Uma fase é um conjunto de tarefas que entrega valor coerente e pode (em tese) ser interrompida sem deixar o sistema quebrado.
 
-- **Fase 1 — Fundação:** migrations, entidades, contratos
-- **Fase 2 — Lógica de negócio:** handlers, validators, regras
-- **Fase 3 — Exposição:** controllers, endpoints, autenticação
-- **Fase 4 — Interface:** UI, integrações com frontend. Quando existir SPEC-UI, cada tarefa desta fase declara `Telas:` com os `UI-XX` e estados que implementa. Componentes marcados como reutilizáveis na SPEC-UI viram tarefa própria, consumida pelas tarefas de composição — não replicar a implementação em cada tela
-- **Fase 5 — Qualidade e observabilidade:** testes de integração, logging, métricas, feature flag
+O padrão é a **fatia vertical**: cada tarefa fecha um ou mais `CA-XX` ponta a ponta, atravessando as camadas necessárias. Fases agrupam fatias por incremento de comportamento, não por camada. Exemplo de fases típicas:
 
-Adaptar conforme a natureza da feature. Greenfield pequeno pode ter 2 fases; feature grande pode ter 6.
+- **Fase 1 — Fundação** *(horizontal, quando houver)*: estrutura que toda fatia usa e migrations iniciais
+- **Fase 2 — Caminho feliz:** uma fatia por cenário principal (`CA-XX`), cada uma demonstrável ao final. Quando existir SPEC-UI, a fatia declara `Telas:` com os `UI-XX` e estados que implementa; componentes reutilizáveis da SPEC-UI viram tarefa própria, consumida pelas fatias
+- **Fase 3 — Erros e bordas:** fatias pelos cenários de erro, limite e concorrência
+- **Fase 4 — Liberação:** feature flag, observabilidade e o que a estratégia de entrega pedir
 
-Quando a entrevista sinalizar entrega incremental real ou risco de integração concreto, parte das fases pode virar fatia vertical — uma por `CA-XX`, atravessando as camadas necessárias, em vez de fatia por camada. Ver `SKILL.md`, seção "Orientação da fatia", e Exemplo 6 de `task-examples.md`. É exceção, não substituição do padrão acima.
+Fatia horizontal (uma camada por tarefa) só em três casos: fundação, migrations e refactor sequenciado como expandir → migrar → contrair. Ver `SKILL.md`, seção "Orientação da fatia", e Exemplo 6 de `task-examples.md`.
+
+Adaptar conforme a natureza da feature. Mudança pequena e reversível tem a trilha rápida (`plan-template-quick.md`).
 
 ### Fase 1 — [nome da fase]
 
@@ -81,23 +86,21 @@ Quando a entrevista sinalizar entrega incremental real ou risco de integração 
 #### T-01 — [Título curto e imperativo da tarefa]
 
 - **Status:** Pendente
+- **Bloqueio:** [motivo — só quando `Status: Bloqueado`; se vier de review, citar `R-XX (REVIEW-T-XX-data)`. Omitir nos demais status]
 - **Complexidade:** [Baixa / Média / Alta]
 - **Depende de:** [nenhuma | T-XX, T-YY]
 - **Implementa:** [RN-XX, RN-YY] *(regras de negócio do PRD que esta tarefa concretiza — vazio se for tarefa puramente estrutural)*
 - **Valida:** [CA-XX, CA-YY] *(cenários Gherkin do PRD que ficarão verdes ao concluir — vazio se for tarefa preparatória)*
 - **Decisões base:** [ADR-XX] *(decisões arquiteturais que esta tarefa materializa — opcional)*
 - **Telas:** [UI-XX (estados)] *(telas e estados da SPEC-UI que esta tarefa implementa — apenas em tarefas de interface; omitir quando o projeto não tem SPEC-UI)*
-- **Camadas/arquivos afetados:**
-  - `dominio/entidades/foo` *(novo)*
-  - `aplicacao/foo/comandos/criar-foo/handler` *(novo)*
-  - `infraestrutura/persistencia/mapeamento-foo` *(novo)*
+- **Portas de mão única:** [nenhuma | o que é caro de reverter: migration, contrato público, schema, configuração de permissão — com o item concreto, ex.: `contrato público — rota POST /api/foo`] *(onde o código mora é decisão reversível, respondida pelas convenções do repositório e visível no diff — não listar arquivos)*
 
 **Descrição:**
 [O que essa tarefa faz, em 2-4 linhas. Explicar o "como" em alto nível — não código, mas direção. As regras de negócio implementadas já estão em **Implementa:**; aqui você pode aprofundar nuances de implementação.]
 
 **Critério de aceite (testável):**
-- [ ] [Critério 1 — verificável por teste ou inspeção objetiva]
-- [ ] [Critério 2]
+- [Critério 1 — verificável por teste ou inspeção objetiva]
+- [Critério 2]
 
 **Testes a escrever:**
 - *Unit:* [descrever cenários — ex.: "Handler retorna sucesso quando comando válido", "Validator rejeita nome vazio"]
@@ -109,9 +112,10 @@ Quando a entrevista sinalizar entrega incremental real ou risco de integração 
 - [ex.: "Nome do campo conflita com palavra reservada em SQL Server — usar `[Order]` com escape"]
 
 > **Vocabulário de status (fixo — os comandos dependem dele):** `Pendente` | `Em andamento` | `Concluído` | `Bloqueado`.
-> Escrever exatamente essas palavras no campo `**Status:**` da tarefa, por extenso e sem emoji. `/leanwork-next` e
+> Escrever exatamente essas palavras no campo `**Status:**` da tarefa, por extenso e sem emoji. `/leanwork-pipeline` e
 > `/leanwork-trace` leem esse campo literalmente: qualquer outra grafia torna a tarefa invisível para eles.
-> A mesma palavra vale na coluna Status da tabela de Histórico de execução (seção 11).
+> `Bloqueado` exige o campo `**Bloqueio:**` com o motivo. O plano não guarda histórico: quando e em que commit
+> cada tarefa mudou é trilha do git.
 > Referência canônica: `templates/id-conventions.md`.
 
 ---
@@ -134,28 +138,14 @@ Testes que não pertencem a uma tarefa específica mas precisam existir antes do
 - [ ] **Teste de carga:** [se aplicável, com cenário e limite esperado]
 - [ ] **Teste de regressão:** [áreas adjacentes que precisam ser revalidadas]
 
-## 7. Checklist de prontidão para produção *(obrigatória)*
-
-Antes de marcar a feature como concluída, todos esses itens precisam estar verdadeiros:
-
-- [ ] Todos os critérios de aceite do PRD verificados
-- [ ] Cobertura de testes conforme padrão do projeto
-- [ ] Code review aprovado por pelo menos 1 par
-- [ ] Migrations testadas em ambiente espelhado (se houver)
-- [ ] Logging estruturado nos pontos críticos
-- [ ] Feature flag configurada (se modelo de entrega exigir)
-- [ ] Documentação interna atualizada (README, CLAUDE.md, ADR se houver decisão nova)
-- [ ] Validação em staging com PO/QA
-- [ ] Rollback plan documentado (especialmente se houver migration destrutiva)
-
-## 8. Rollback e contingência *(obrigatória se houver migration ou breaking change)*
+## 7. Rollback e contingência *(obrigatória se houver migration ou breaking change)*
 
 [Plano de rollback caso a feature precise ser revertida em produção. Detalhar:
 - Como reverter migrations (ou se são forward-only)
 - Como desativar via feature flag
 - Quais dados ficarão inconsistentes e como reconciliar]
 
-## 9. Pontos de validação humana *(obrigatória)*
+## 8. Pontos de validação humana *(obrigatória)*
 
 Tarefas onde o executor (especialmente se for agente de IA) DEVE parar e pedir confirmação antes de seguir:
 
@@ -163,22 +153,11 @@ Tarefas onde o executor (especialmente se for agente de IA) DEVE parar e pedir c
 - [ ] Após **Fase N** (lógica de negócio pronta) — revisar regras implementadas com PO antes de expor via API
 - [ ] Antes de **T-YY** (deploy em staging) — confirmar que feature flag está desligada por padrão
 
-## 10. Questões em aberto *(opcional)*
+## 9. Questões em aberto *(opcional)*
 
 Pontos que apareceram durante o planejamento e precisam ser resolvidos antes ou durante a execução.
 
 - [ ] [pergunta] — *responsável: [nome]* — *bloqueia: T-XX*
 - [ ] [pergunta] — *responsável: [nome]*
 
-## 11. Histórico de execução *(preenchido durante a execução)*
-
-Tabela atualizada à medida que tarefas são concluídas. Útil para retomar trabalho em outra sessão/ferramenta.
-
-A coluna Status usa o mesmo vocabulário do campo `**Status:**` da tarefa e precisa concordar com ele — divergência entre os dois é inconsistência que o `/leanwork-trace` reporta.
-
-| Tarefa | Status | Concluída em | Commit | Observação |
-|--------|--------|--------------|--------|------------|
-| T-01   | Concluído | 2026-05-16 | `abc1234` | — |
-| T-02   | Em andamento | —       | —      | Aguardando review |
-| T-03   | Bloqueado | —          | —      | Depende de decisão sobre RN-05 (R-02 de REVIEW-T-03-2026-05-18) |
 ````
