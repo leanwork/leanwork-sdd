@@ -1,0 +1,17 @@
+{
+  "description": "Gates do pipeline SDD Leanwork: valida plano e relatório de review a cada edição",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_gate.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

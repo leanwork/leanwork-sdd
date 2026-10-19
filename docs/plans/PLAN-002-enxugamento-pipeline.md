@@ -43,7 +43,7 @@ Seis fases em ordem de retorno sobre esforço: estado em fonte única → trilha
 > - **Falha devolvida ao modelo:** em `PostToolUse`, exit 2 não desfaz a edição (a ferramenta já rodou), mas mostra o stderr ao Claude, que reage a ele. Alternativa: JSON com `decision: "block"` e `reason`
 > - **Caminho do plugin:** `${CLAUDE_PLUGIN_ROOT}` é substituído em `command` e em `args`; a forma exec (com `args`) é a recomendada para caminhos com placeholder
 >
-> Pontos que a documentação não fecha e T-14 precisa testar: a base do caminho relativo no `if` (`Edit(docs/plans/**)`) quando o hook vem de plugin, e o nome do executável Python no Windows (`python` × `python3`). Na dúvida, o próprio script filtra por `tool_input.file_path`.
+> Pontos que a documentação não fecha, resolvidos em T-14 (2026-10-19): o hook não usa o campo `if` — o filtro por caminho fica em `scripts/hook_gate.py`, sobre `tool_input.file_path` e `cwd`, o que elimina a dúvida sobre a base do caminho relativo; o executável é `python`, o mesmo que todas as instruções do plugin já usam (no Windows de teste, `python` e `python3` resolvem para o mesmo 3.11).
 
 > ⚠️ **Premissa:** linha de base medida em 2026-10-16, para comparar ao final:
 > - Ciclo execute + review: `commands/leanwork-execute.md` + `commands/leanwork-review.md` + `skills/reviewer-leanwork/SKILL.md` + `references/*` do reviewer = **1.258 linhas**
@@ -443,11 +443,12 @@ Confirmar, na documentação oficial do Claude Code, se um plugin distribui hook
 
 #### T-14 — Hooks que rodam os gates
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-13
 - **Camadas/arquivos afetados:**
   - `hooks/hooks.json` *(novo)*
+  - `scripts/hook_gate.py` *(novo — filtra o caminho e escolhe o validador)*, `scripts/selftest.py` *(casos do hook)*
   - `.claude-plugin/plugin.json` *(se a declaração for necessária)*
   - `skills/planner-leanwork/SKILL.md`, `commands/leanwork-execute.md`, `commands/leanwork-review.md` *(instrução de gate reduzida)*
 
@@ -639,7 +640,7 @@ A 2.0.0 é quebra de contrato para projetos que usam o plugin. Rollback é reins
 
 - [x] Antes de **T-07** — confirmar a reversão do padrão de fatiamento da v1.8.0 — *aprovado por Mick em 2026-10-19: vertical por `CA-XX` vira padrão; horizontal só para fundação, migrations e expandir-migrar-contrair*
 - [x] Antes de **T-11** — confirmar a remoção de `/leanwork-start`, `/leanwork-next`, `/leanwork-prototype` e `/leanwork-context` — *aprovado por Mick em 2026-10-19, com o comando novo chamado `/leanwork-pipeline` em vez de `/leanwork`*
-- [ ] Após **T-13** — decidir se a Fase 5 segue, com base no que a documentação confirmou
+- [x] Após **T-13** — decidir se a Fase 5 segue, com base no que a documentação confirmou — *aprovado por Mick em 2026-10-19, ao pedir a execução das tarefas restantes*
 - [ ] Antes de **T-21** — revisar as métricas antes/depois e aprovar a publicação da 2.0.0
 
 ## 10. Questões em aberto *(opcional)*

@@ -649,6 +649,34 @@ def commit_case(name, rule, message, exit_code, expect, as_file=False,
     }
 
 
+def hook_case(name, rule, setup, file_path, exit_code, expect, raw=None):
+    """Caso do hook_gate. O evento do harness chega por stdin; `file_path` e
+    relativo ao workspace, que faz o papel do `cwd` da sessao."""
+
+    def stdin(workspace):
+        if raw is not None:
+            return raw
+        return json.dumps(
+            {
+                "hook_event_name": "PostToolUse",
+                "tool_name": "Edit",
+                "cwd": str(workspace),
+                "tool_input": {"file_path": file_path},
+            }
+        )
+
+    return {
+        "name": name,
+        "rule": rule,
+        "script": "hook_gate.py",
+        "setup": setup,
+        "argv": lambda w: [],
+        "stdin": stdin,
+        "exit": exit_code,
+        "expect": expect,
+    }
+
+
 def drop(needle):
     return lambda text: "\n".join(
         line for line in text.split("\n") if needle not in line
@@ -1508,6 +1536,63 @@ def build_cases():
         )
     )
 
+    # -- hook_gate: gate disparado pelo harness ------------------------------
+    plan_path = "docs/plans/PLAN-001-fixture.md"
+    cases.append(
+        hook_case(
+            "hook_plano_valido",
+            "—",
+            plan_setup(build_plan()),
+            plan_path,
+            0,
+            "",
+        )
+    )
+    cases.append(
+        hook_case(
+            "hook_plano_invalido_bloqueia",
+            "Status fora do vocabulario fixo",
+            plan_setup(marker("vocabulario de Status") + swap("Pendente", "Feito")(build_plan())),
+            plan_path,
+            2,
+            "hook_gate: validate_plan.py reprovou PLAN-001-fixture.md",
+        )
+    )
+    cases.append(
+        hook_case(
+            "hook_review_invalido_bloqueia",
+            "Recomendacao fora do vocabulario",
+            review_setup(
+                marker("vocabulario de recomendacao")
+                + REVIEW.replace("Aprovado com ressalvas", "Talvez", 1)
+            ),
+            "docs/reviews/REVIEW-T-01-2026-09-22.md",
+            2,
+            "hook_gate: validate_review.py reprovou",
+        )
+    )
+    cases.append(
+        hook_case(
+            "hook_fora_do_escopo",
+            "—",
+            plan_setup(marker("vocabulario de Status") + swap("Pendente", "Feito")(build_plan())),
+            "README.md",
+            0,
+            "",
+        )
+    )
+    cases.append(
+        hook_case(
+            "hook_entrada_ilegivel",
+            "—",
+            lambda w: None,
+            plan_path,
+            0,
+            "",
+            raw="isto nao e json",
+        )
+    )
+
     # -- status: relatorio, nao gate -----------------------------------------
     cases.append(
         {
@@ -1723,9 +1808,11 @@ def run_case(case, root, verbose):
     if "env" in case:
         env = dict(os.environ)
         env.update(case["env"](workspace))
+    stdin = case["stdin"](workspace) if "stdin" in case else None
     completed = subprocess.run(
         command,
         env=env,
+        input=stdin,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,

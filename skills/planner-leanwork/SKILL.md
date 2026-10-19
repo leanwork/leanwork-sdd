@@ -87,19 +87,9 @@ Manter hierarquia de headings e ordem das seções. Seções não aplicáveis po
 
 ### Gate — validar o plano antes de apresentar
 
-Depois de escrever o arquivo e **antes** de mostrar o plano ao usuário, rodar na raiz do projeto:
-
-```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md
-```
-
-**Exit diferente de zero é PARE.** Cada linha `ERROR` aponta uma regra desta skill que o plano violou — campo obrigatório ausente, `Status` fora do vocabulário, buraco na sequência de `T-XX`, dependência para frente. Corrigir o plano e rodar de novo até sair 0. Não apresentar plano reprovado, nem com ressalva, nem "para o usuário decidir": o gate existe justamente porque a regra em prosa é fácil de não aplicar numa execução.
-
-Linha `WARN` **não** reprova e não obriga correção — é sinal para ler e decidir. `mais de 5 critérios de aceite` indica fatia provavelmente grande demais; quebrar é julgamento de quem planeja.
-
-**Fallback — modo degradado.** Se não houver ferramenta de execução de código disponível, conferir o plano à mão contra as regras acima e **dizer no chat, com todas as letras, que o plano não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
-
-Se o `Bash` pedir confirmação mesmo com `Bash(python:*)` no `allowed-tools` desta skill, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade. Ver `${CLAUDE_PLUGIN_ROOT}/skills/context-leanwork/references/permission-catalog.md`, seção "Sombra de prefixo entre baldes". Não é falha do gate, e a resposta é confirmar ou ajustar as settings, nunca pular a validação.
+O hook do plugin roda `validate_plan.py` a cada gravação em `docs/plans/` e devolve os `ERROR`: corrigir até passar, nunca apresentar plano reprovado; `WARN` é sinal para decidir, não reprovação.
+Sem o hook (plugin sem hooks, outra ferramenta), rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_plan.py" docs/plans/PLAN-XXX-nome.md` — exit diferente de zero é PARE.
+Sem execução de código, conferir à mão e dizer no chat que o plano não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 ## Trilha rápida
 
