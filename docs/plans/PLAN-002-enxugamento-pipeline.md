@@ -550,7 +550,7 @@ No architect, saem a explicação de Cynefin, a lista genérica de trade-offs, a
 
 **Critério de aceite (testável):**
 - [ ] `skills/architect-leanwork/SKILL.md` com no máximo 150 linhas (hoje 248), mantendo o checklist final — *revisto em 2026-10-19 após teste A/B contra a 1.10.0: as listas de trade-offs e de isomorfismo e a regra do jargão voltaram; o arquivo fica com 165 linhas*
-- [ ] A hierarquia Epic→Feature→PBI está marcada como opcional no template e na SKILL do PRD
+- [ ] A hierarquia Epic→Feature→PBI está marcada como opcional no template e na SKILL do PRD — *teste A/B em 2026-10-19: a seção 7 do template voltou a "Fluxos" (principal, outros fluxos, mapa de desvios) depois que o corte para "Fluxo principal" eliminou os diagramas dos fluxos secundários*
 - [ ] As seções obrigatórias do PRD continuam incluindo regras `RN-XX` e cenários `CA-XX`
 
 **Testes a escrever:**

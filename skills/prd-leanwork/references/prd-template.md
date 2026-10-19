@@ -70,7 +70,9 @@ Sugestão de quebra em Epic → Feature → PBI. Sem Azure DevOps, omitir a seç
 >
 > **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução é uma fatia que fecha um ou mais `CA-XX` num ciclo de execução + review (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
 
-## 7. Fluxo principal *(obrigatória se houver interação)*
+## 7. Fluxos *(obrigatória se houver interação)*
+
+### 7.1. Fluxo principal
 
 ```mermaid
 flowchart TD
@@ -81,7 +83,15 @@ flowchart TD
     D --> E
 ```
 
-Fluxos alternativos e de erro são os cenários `CA-XX` da seção 9 — não redescrever aqui. Diagrama extra só quando um desvio tiver ramificação que o Gherkin não mostra bem.
+[Descrição textual do fluxo, passo a passo.]
+
+### 7.2. Outros fluxos *(quando houver)*
+
+Processos distintos do principal — ex.: confirmação assíncrona, importação noturna, aprovação. Um diagrama Mermaid por fluxo, com o mesmo formato do 7.1.
+
+### 7.3. Desvios e erros
+
+Um item por desvio, em uma linha, citando a regra e o cenário que o especificam: `- **[desvio]:** [o que acontece] (RN-XX, CA-XX)`. O comportamento detalhado está no Gherkin da seção 9 — aqui é o mapa. Desvio operacional sem cenário (integração fora do ar, arquivo que não chegou) entra também, e a falta de `CA-XX` fica visível.
 
 ## 8. Regras de negócio *(obrigatória)*
 
