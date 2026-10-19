@@ -40,66 +40,51 @@ Cada fase tem regras específicas — leia as próximas seções antes de gerar 
 
 ## Fase 1 — Entrevista estruturada
 
-Antes de propor qualquer arquitetura, garanta que os blocos abaixo estão claros. Faça as perguntas em blocos lógicos, nunca todas de uma vez. Comece pelo "porquê" (negócio) e desça para o "como" (técnico). Se o usuário já trouxe um briefing rico, pule para os blocos onde ainda há lacuna.
+**Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. Decisão se pergunta: no máximo duas por vez, cada uma com opções concretas e a recomendação marcada.
 
-**Princípio que guia a entrevista**: você está reduzindo dimensionalidade. Quanto menos variáveis em aberto, mais delimitadas as alternativas, mais assertiva a decisão. Cada resposta do usuário deve fechar uma porta.
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Comece pelo "porquê" (negócio) e desça para o "como": você está reduzindo dimensionalidade, e cada resposta fecha uma porta.
 
-### Bloco 1 — Negócio e objetivos
+### Dimensões a cobrir
 
-- Qual problema o sistema resolve? Para quem? Que dor o usuário sente hoje?
-- Qual o resultado de negócio esperado? (mais receita, redução de custo, novo mercado, compliance, time-to-market)
-- Quem são os usuários e quantos são? (ordem de grandeza basta: dezenas, milhares, milhões)
-- É produto, projeto interno, white-label, integração? É novo ou substitui algo?
-- Qual o horizonte? (PoC, MVP em 3 meses, plataforma para 5 anos)
+**Negócio e objetivos**
+- Problema, para quem, dor atual
+- Resultado de negócio esperado (receita, custo, mercado, compliance, time-to-market)
+- Usuários e ordem de grandeza (dezenas, milhares, milhões)
+- Natureza: produto, interno, white-label, integração; novo ou substituto
+- Horizonte: PoC, MVP, plataforma de longo prazo
 
-### Bloco 2 — Atributos de qualidade prioritários
+**Atributos de qualidade prioritários** — só é prioritário com dor concreta; perguntar pelo sintoma, não pelo nome técnico. Ficar com os 2–4 que dirigem as decisões; os demais entram como "atendido pelo padrão da plataforma".
+- Performance: latência, throughput, picos
+- Escalabilidade: crescimento em usuários, dados ou ambos
+- Disponibilidade: custo de uma hora fora, SLA, janela de manutenção
+- Resiliência: degradação parcial, dependências externas críticas
+- Segurança: dados sensíveis, exigência regulatória
+- Manutenibilidade: rotatividade do time, número de contribuidores, frequência de mudança
+- Observabilidade: operação dedicada, visibilidade esperada
 
-Atributo de qualidade só é "prioritário" se houver dor concreta atrelada. Pergunte por sintomas, não por nomes técnicos.
+**Restrições** — dados de entrada, não variáveis a otimizar
+- Stack ou tecnologia imposta, e por quê
+- Regulatórias (LGPD, ANVISA, BACEN, ISO, SOC2, dados em solo nacional)
+- Financeiras (budget, teto de cloud, licenças)
+- Organizacionais (tamanho, senioridade, distribuição, domínio da stack)
+- Prazo (mercado, contrato, regulação)
+- Integração com legados específicos
+- Infraestrutura (cloud específica, on-premise, híbrido)
 
-- **Performance**: existe expectativa concreta de latência ou throughput? Há picos? (ex.: Black Friday, processamento em lote)
-- **Escalabilidade**: a carga vai crescer previsivelmente, exponencialmente, ou é estável? Cresce em usuários, dados ou ambos?
-- **Disponibilidade**: qual o custo de 1 hora fora do ar? Há SLA contratual? Tem janela de manutenção tolerável?
-- **Resiliência**: o sistema pode degradar parcialmente sem cair? Há dependências externas críticas?
-- **Segurança**: lida com dados sensíveis (financeiros, saúde, PII)? Tem requisitos regulatórios (LGPD, ANVISA, PCI)?
-- **Manutenibilidade**: time vai trocar? Vai ter muitos contribuidores? Frequência de mudança esperada?
-- **Observabilidade**: há SRE/operação dedicada? Que tipo de visibilidade é esperada?
+**Contexto técnico atual**
+- Estado do que existe: legado a substituir, base a evoluir, greenfield
+- Sistemas vizinhos, volume e natureza dos dados trocados
+- Gestão de dados hoje; dados quentes que viram gargalo
+- Incidentes e dores recorrentes que a arquitetura precisa resolver
 
-Não tente cobrir todos. Foque nos 2–4 que vão **dirigir** as decisões. Os demais entram como "atendido por padrão da plataforma escolhida".
+**Não-objetivos** — evitam decisão tomada para requisito que ninguém pediu
+- O que o sistema não é (ex.: não multi-tenant, não offline)
+- Carga que não precisa suportar
+- Extensibilidade que não se persegue agora
 
-### Bloco 3 — Restrições
+### Quando parar
 
-Restrições não são negociáveis. Trate-as como dados de entrada, não como variáveis a otimizar.
-
-- **Restrições de stack/tecnologia**: o cliente impôs alguma linguagem, framework, cloud, banco? Se sim: qual e por quê?
-- **Restrições regulatórias**: LGPD, ANVISA, BACEN, ISO, SOC2, dados em solo nacional?
-- **Restrições financeiras**: budget conhecido? Cap de custo mensal de cloud? Sem licenças pagas?
-- **Restrições organizacionais**: tamanho do time, senioridade, distribuição geográfica, conhecimento atual da stack
-- **Restrições de prazo**: deadline de mercado, contratual, regulatório?
-- **Restrições de integração**: precisa conversar com sistemas legados específicos? Quais?
-- **Restrições de infraestrutura**: cloud específica (Azure/AWS/GCP), on-premise, híbrido?
-
-### Bloco 4 — Contexto técnico atual
-
-- Existe código/sistema hoje? Em que estado? (legacy a substituir, base a evoluir, greenfield)
-- Quais sistemas conversam (ou vão conversar) com a solução? Volume e natureza dos dados trocados?
-- Como os dados são gerenciados hoje? Centralizado ou distribuído? Há "dados quentes" para decisão tática que viram gargalo?
-- Há histórico de incidentes ou pontos de dor recorrentes que a nova arquitetura precisa resolver?
-
-### Bloco 5 — Não-objetivos
-
-Tão importante quanto o que entra é o que **não** entra. Pergunte explicitamente:
-
-- O que **não** é objetivo deste sistema? (ex.: "não vai ser multi-tenant", "não precisa funcionar offline")
-- Que tipo de carga ele **não** precisa suportar?
-- Que tipo de extensibilidade **não** vamos perseguir agora?
-
-Isso evita que decisões sejam tomadas para satisfazer requisitos que ninguém pediu.
-
-### Quando parar de perguntar
-
-Critério: você consegue justificar **cada decisão arquitetural** que vai propor sem inventar nada. Se ainda há dimensão crítica em aberto (ex.: você não sabe se é 100 ou 100.000 usuários, e isso muda tudo), pergunte. Se a lacuna não muda a decisão (ex.: cor do botão), siga.
-
-Não preencha com `[A DEFINIR]`. Pergunte.
+Você consegue justificar cada decisão sem inventar. Lacuna que muda a decisão (100 ou 100.000 usuários) vira pergunta; lacuna que não muda (cor do botão) segue.
 
 ---
 

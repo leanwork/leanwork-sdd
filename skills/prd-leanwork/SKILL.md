@@ -28,47 +28,44 @@ A skill opera em duas fases:
 
 ## Fase 1 — Entrevista estruturada
 
-Antes de escrever uma linha do PRD, garantir que as informações abaixo estão claras. Se faltar algo, perguntar antes de gerar. As perguntas devem ser feitas em blocos lógicos, não todas de uma vez — começar pelo "porquê" e ir descendo para o "como".
+**Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. Decisão se pergunta: no máximo duas por vez, cada uma com opções concretas e a recomendação marcada.
 
-### Bloco 1 — Contexto e problema
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Começar pelo "porquê" e descer para o "como".
 
-- Qual problema essa demanda resolve? Quem está sentindo essa dor hoje?
-- Qual cliente / produto / módulo é afetado? (Contoso, LeanOps, Projeto X, outro?)
-- Existe algum processo ou sistema atual que faz isso de outro jeito? Como funciona hoje?
-- Qual o impacto de **não** fazer essa demanda?
+### Dimensões a cobrir
 
-### Bloco 2 — Objetivo e escopo
+**Contexto e problema**
+- Problema e quem sente a dor hoje
+- Cliente, produto ou módulo afetado
+- Processo ou sistema atual que faz isso de outro jeito
+- Impacto de não fazer
 
-- Qual o resultado esperado quando essa demanda estiver pronta? (uma frase)
-- Quais usuários serão impactados? (perfis, papéis, personas)
-- O que está **dentro** do escopo desta entrega?
-- O que está **fora** do escopo? (tão importante quanto o que está dentro — evita scope creep)
-- Existe alguma demanda relacionada que não faz parte desta, mas pode confundir? Listar para excluir explicitamente.
+**Objetivo e escopo**
+- Resultado esperado, em uma frase
+- Usuários impactados (perfis, papéis, personas)
+- Dentro do escopo
+- Fora do escopo — tão importante quanto o que entra
+- Demandas relacionadas que não fazem parte desta e podem confundir
 
-### Bloco 3 — Comportamento e regras
+**Comportamento e regras**
+- Regras de negócio: validações, limites, condições, exceções
+- Fluxos principais, alternativos e de erro
+- Permissionamento: quem vê e faz o quê
+- Restrições legais, regulatórias ou de compliance
 
-- Quais são as regras de negócio que regem essa funcionalidade? (validações, limites, condições, exceções)
-- Quais são os fluxos principais? E os fluxos alternativos / de erro?
-- Há regras de permissionamento? (quem pode ver/fazer o quê)
-- Há restrições legais, regulatórias ou de compliance? (LGPD, ANVISA, etc.)
+**Integrações e dados**
+- Sistemas externos ou módulos internos envolvidos
+- Dados consumidos e dados produzidos ou persistidos
+- Eventos disparados ou consumidos
 
-### Bloco 4 — Integrações e dados
+**Aceitação e riscos**
+- Como saberemos que está pronto (alto nível — vira Gherkin depois)
+- Riscos técnicos, de negócio, de prazo, de dependência
+- Dependências de outros times, fornecedores ou decisões pendentes
 
-- A demanda envolve integração com sistemas externos ou outros módulos internos?
-- Quais dados são consumidos? Quais são produzidos/persistidos?
-- Há eventos a serem disparados ou consumidos?
+### Quando parar
 
-### Bloco 5 — Aceitação e riscos
-
-- Como saberemos que está pronto? (critérios de aceite, em alto nível — depois transformamos em Gherkin)
-- Há riscos conhecidos? (técnicos, de negócio, de prazo, de dependência)
-- Existem dependências de outros times, fornecedores, decisões pendentes?
-
-### Quando parar de perguntar
-
-Material suficiente significa: dá para escrever cada seção do template sem inventar. Não é necessário ter resposta para 100% das perguntas — algumas (ex.: integrações) podem legitimamente não se aplicar. O sinal de "pode gerar" é: **não há nenhuma seção do template que ficaria vazia ou genérica por falta de insumo**.
-
-Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com o que tem e marcar explicitamente as seções que ficaram com premissa, no formato `> ⚠️ **Premissa:** [descrição]`.
+Dá para escrever cada seção do template sem inventar: nenhuma seção ficaria vazia ou genérica por falta de insumo. Dimensão que não se aplica (ex.: integrações) fica `n/a — motivo`, não pergunta.
 
 ## Fase 2 — Geração do PRD
 
@@ -111,7 +108,7 @@ A sugestão é convite, não etapa obrigatória. Ignorá-la não bloqueia o pipe
 
 ## Padrões de comportamento
 
-**Quando o usuário cola uma conversa/transcrição como entrada:** extrair o que dá da conversa, identificar lacunas e fazer apenas as perguntas necessárias para completar. Não repetir perguntas cuja resposta já está na conversa.
+**Quando o usuário cola uma conversa/transcrição como entrada:** extrair o que dá da conversa, identificar lacunas e fazer apenas as perguntas necessárias para completar. A conversa é fonte da busca: o que está nela não vira pergunta.
 
 **Quando o usuário pede um PRD curto / leve:** ainda assim manter as seções obrigatórias, mas reduzir os opcionais. Nunca pular regras de negócio ou critérios de aceite — esses são o coração do PRD.
 

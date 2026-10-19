@@ -517,7 +517,7 @@ Cada `description` fica com gatilhos e exclusões, em torno de 300 caracteres �
 
 #### T-17 — Entrevistas com busca primeiro e recomendação
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-16
 - **Camadas/arquivos afetados:**

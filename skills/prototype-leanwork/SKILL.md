@@ -46,9 +46,9 @@ Quando o PRD tem interface **parcial** (algumas features com tela, outras não),
 
 ## Fase 1 — Determinar o modo
 
-Perguntar uma vez, com opções claras:
+Antes de perguntar, buscar protótipo no repositório e nos anexos (HTML/React exportado, imagens, link de Figma, export de Lovable/v0). A pergunta vem uma vez, com a recomendação tirada do que a busca achou:
 
-> Como vamos trabalhar a interface?
+> Como vamos trabalhar a interface? *(recomendo **A**: achei `prototype/` com 6 telas)*
 >
 > **A.** Já tenho protótipo — quero indexar e mapear contra o PRD *(modo ingestão)*
 > **B.** Não tenho protótipo — quero gerar um *(modo geração)*
@@ -101,22 +101,24 @@ Se não houver skill de frontend disponível, gerar HTML simples e funcional, fo
 
 ### Entrevista
 
-Seis blocos, **pulando o que já foi respondido** pelas fontes anteriores. Com PRD e arquitetura bem-feitos, normalmente sobram 2-3 perguntas.
+**Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. Decisão se pergunta: no máximo duas por vez, cada uma com opções concretas e a recomendação marcada.
 
-| Bloco | Pergunta | Pula quando |
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Com PRD e arquitetura bem-feitos, normalmente sobram 2-3 dimensões para perguntar.
+
+| Dimensão | O que cobrir | Fonte que dispensa a pergunta |
 |---|---|---|
-| Arquétipo | Admin/dashboard, site institucional, app de operação, e-commerce, portal, ferramenta interna? | PRD deixa óbvio |
-| Dispositivo | Desktop-first, mobile-first, mobile-only, responsivo pleno? | Arquitetura declara |
-| Fidelidade | Wireframe (estrutura e estados) ou alta fidelidade? | — sempre perguntar |
-| Identidade | Existe marca ou design system? | Repositório tem tokens, ou arquitetura declara biblioteca |
-| Densidade e tom | Denso tipo ERP ou espaçoso tipo consumer? Formal ou descontraído? | Arquétipo já implica fortemente |
-| Restrições | Acessibilidade, tema escuro, i18n, biblioteca obrigatória? | Arquitetura já lista |
+| Arquétipo | Admin/dashboard, site institucional, app de operação, e-commerce, portal, ferramenta interna | PRD deixa óbvio |
+| Dispositivo | Desktop-first, mobile-first, mobile-only, responsivo pleno | Arquitetura declara |
+| Fidelidade | Wireframe (estrutura e estados) ou alta fidelidade | Nenhuma — sempre é decisão do usuário |
+| Identidade | Marca ou design system existente | Repositório tem tokens, ou arquitetura declara biblioteca |
+| Densidade e tom | Denso tipo ERP ou espaçoso tipo consumer; formal ou descontraído | Arquétipo já implica fortemente |
+| Restrições | Acessibilidade, tema escuro, i18n, biblioteca obrigatória | Arquitetura já lista |
 
-**Sobre identidade visual:** nunca fazer pergunta aberta do tipo "que cores você quer". Pergunta aberta gera resposta ruim e protótipo genérico. Em vez disso:
+**Identidade visual** não vira pergunta aberta ("que cores você quer") — gera resposta ruim e protótipo genérico:
 
 - **Cliente tem marca** → pedir referência (site, manual, assets) e extrair
 - **Repositório tem design system** → detectar e seguir, sem perguntar
-- **Greenfield sem identidade** → propor 2-3 direções concretas e nomeadas para o usuário escolher
+- **Greenfield sem identidade** → propor 2-3 direções concretas e nomeadas, com a recomendada marcada
 
 ## Fase 4 — Mapear contra o PRD
 

@@ -29,42 +29,40 @@ A skill opera em duas fases:
 
 ## Fase 1 — Entrevista estruturada
 
-O PRD já respondeu "o quê" e "por quê". A entrevista do planner foca em "como vamos quebrar isso de forma segura e executável". Se o PRD veio completo (no padrão `prd-leanwork`), a maioria das informações já está lá — não repetir perguntas cuja resposta está no PRD.
+O PRD já respondeu "o quê" e "por quê"; a entrevista do planner foca em "como quebrar isso de forma segura e executável". **Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. Decisão se pergunta: no máximo duas por vez, cada uma com opções concretas e a recomendação marcada.
 
-Perguntar em blocos lógicos, somente o que estiver faltando:
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Com PRD no padrão `prd-leanwork`, `CLAUDE.md` e código existente, a maior parte das dimensões sai da busca.
 
-### Bloco 1 — Contexto técnico
+### Dimensões a cobrir
 
-- Qual é a stack do projeto? (versões de .NET, EF Core, banco, frontend, etc. — se já tem `CLAUDE.md` ou `README`, consultar antes de perguntar)
-- Qual a estrutura de solution/projetos? (Clean Architecture? Modular monolith? Microsserviço? Pasta única?)
-- Há código legado ou base existente onde a feature vai entrar? (greenfield muda bastante a quebra)
-- Existem convenções específicas do projeto que afetam a quebra? (ex.: toda feature começa pela migration, ou pelo handler, ou pelo contrato da API)
+**Contexto técnico**
+- Stack e versões (consultar `CLAUDE.md`, README e arquivos de build antes de perguntar)
+- Estrutura de solution/projetos: camadas, modular monolith, microsserviço, pasta única
+- Código legado ou base existente onde a feature entra (greenfield muda a quebra)
+- Convenções que afetam a quebra (ex.: toda feature começa pela migration, pelo handler ou pelo contrato)
 
-### Bloco 2 — Estratégia de entrega
+**Estratégia de entrega**
+- Release única ou incremental (feature flag, dark launch)
+- Partes que vão para produção isoladamente
+- Dependência externa que pode atrasar parte da entrega (API de terceiro, design, decisão de negócio)
 
-- A feature vai ser entregue em uma única release ou incrementalmente? (afeta se precisamos de feature flag, dark launch, etc.)
-- Há partes da feature que podem ir para produção isoladamente, ou tudo precisa ir junto?
-- Existe alguma dependência externa que pode atrasar parte da entrega? (API de terceiros não pronta, design não entregue, decisão de negócio pendente)
+**Testes e validação**
+- Padrão de testes do projeto: framework, biblioteca de mock, padrão de integração
+- Cobertura mínima exigida; áreas que dispensam teste
+- Ambiente de homologação
+- Quem valida o critério de aceite final (PO, QA, cliente, dev)
+- Costura (seam) de teste: a mais alta possível e a já existente, em vez de uma nova — menos costuras no plano, mais teste sobrevivendo a refactor interno
 
-### Bloco 3 — Testes e validação
+**Riscos e bloqueios**
+- Código frágil que pode quebrar (legado sem teste, integração crítica)
+- Decisão arquitetural ainda aberta que muda a quebra — resolver antes com a `architect-leanwork` (proposta completa ou ADR avulso em `docs/architecture/adrs/`)
+- Dados em produção que pedem migração ou backfill
 
-- Qual é o padrão de testes do projeto? (xUnit/NUnit/MSTest, com qual mock library, qual padrão de integration test)
-- Há cobertura mínima exigida? Há áreas que dispensam teste (ex.: DTOs puros)?
-- Existe ambiente de homologação/staging onde a feature será validada antes de produção?
-- Quem valida o critério de aceite final? (PO, QA, cliente, próprio dev)
-- Em que costura (seam) a feature deve ser testada — comportamento externo (API, handler, use case) ou existe ponto já usado em features parecidas? Preferir a costura mais alta possível e a existente à nova; quanto menos costuras diferentes no plano, mais fácil o teste sobreviver a refactors internos.
+### Quando parar
 
-### Bloco 4 — Riscos e bloqueios conhecidos
+Dá para definir ordem, critério de aceite por tarefa e estratégia de teste sem inventar: nenhuma tarefa dependeria de decisão não tomada. Dimensão que não se aplica (greenfield não tem código frágil) fica `n/a — motivo`.
 
-- Há partes do código existente que são frágeis e podem quebrar com essa mudança? (legado sem teste, integração crítica, etc.)
-- Existe alguma decisão arquitetural ainda em aberto que pode mudar a quebra? (se sim, sugerir resolver antes via skill `architect-leanwork` — que cobre tanto a proposta completa quanto o ADR avulso em `docs/architecture/adrs/`)
-- A feature toca dados em produção que precisam de migração/backfill?
-
-### Quando parar de perguntar
-
-Material suficiente significa: dá para definir ordem das tarefas, critério de aceite por tarefa e estratégia de teste sem inventar. Algumas perguntas podem legitimamente não se aplicar (ex.: greenfield não tem código frágil pré-existente). O sinal de "pode gerar" é: **nenhuma tarefa do plano dependeria de uma decisão ainda não tomada**.
-
-Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com o que tem e marcar premissas explicitamente no formato `> ⚠️ **Premissa:** [descrição]` na seção de Premissas, e referenciar nas tarefas afetadas.
+Se o usuário disser "gera assim mesmo, depois ajusto", gerar com o que tem e marcar `> ⚠️ **Premissa:** [descrição]` na seção de Premissas, referenciada nas tarefas afetadas.
 
 ## Fase 2 — Geração do plano
 

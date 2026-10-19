@@ -25,3 +25,9 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 
 - A `description` de cada skill fica só com gatilhos e exclusões. A soma das seis caiu de 6.437 para 2.006 caracteres; a linha de base de 2026-10-16 era 6.683.
 - Cada SKILL ganha uma seção **Regras pinadas**, com 4 ou 5 itens: o que não se negocia na skill. O restante do texto perde caixa alta e negrito de alarme: `NUNCA`/`PARE`/`NÃO` em caixa alta caem de 18 ocorrências para 0 fora das regras pinadas.
+
+### Entrevistas: busca antes de pergunta (T-17)
+
+- Architect, PRD, planner e prototype declaram a mesma regra. Fato se busca no repositório, no `CLAUDE.md`, nos artefatos e na conversa. Decisão se pergunta, no máximo duas por vez, com opções concretas e a recomendação marcada.
+- Os blocos de perguntas viraram **dimensões a cobrir**. Cada dimensão termina respondida ou marcada `n/a — motivo`; sem isso, é lacuna e impede a geração. Todas as dimensões anteriores foram mantidas.
+- Na prototype, a pergunta de modo (ingestão, geração, híbrido) vem com a recomendação tirada do que a busca encontrou.
