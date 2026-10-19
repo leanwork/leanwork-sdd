@@ -5,7 +5,7 @@
 **Stack:** Markdown (skills e comandos do Claude Code) + Python 3.8+ stdlib (scripts de validação)
 **Autor:** Mick Banagouro
 **Data:** 2026-10-16
-**Status:** Em execução
+**Status:** Concluído
 
 ---
 
@@ -602,7 +602,7 @@ O fragmento de plano passa a usar fatia por `CA`, `**Portas de mão única:**`, 
 
 #### T-21 — Consolidação e versão 2.0.0
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Baixa
 - **Depende de:** T-20
 - **Camadas/arquivos afetados:**
@@ -627,11 +627,11 @@ Versão 2.0.0. `CHANGELOG.md` registra as quebras de contrato (comandos removido
 
 Mantido porque o `validate_plan.py` atual ainda o exige; T-04 retira essa obrigação.
 
-- [ ] `selftest.py` verde
-- [ ] `claude plugin validate .` verde
-- [ ] Instalação limpa via marketplace local testada (`claude plugin marketplace update leanwork`)
-- [ ] Métricas antes/depois registradas no `CHANGELOG.md`
-- [ ] `REFERENCES.md` com crédito da fonte
+- [x] `selftest.py` verde
+- [x] `claude plugin validate .` verde
+- [x] Instalação limpa via marketplace local testada (`claude plugin marketplace update leanwork`) — *2026-10-19, com `CLAUDE_CONFIG_DIR` isolado: `marketplace add` + `install` → 2.0.0 habilitada*
+- [x] Métricas antes/depois registradas no `CHANGELOG.md`
+- [x] `REFERENCES.md` com crédito da fonte
 
 ## 8. Rollback e contingência *(obrigatória se houver migration ou breaking change)*
 
@@ -642,7 +642,7 @@ A 2.0.0 é quebra de contrato para projetos que usam o plugin. Rollback é reins
 - [x] Antes de **T-07** — confirmar a reversão do padrão de fatiamento da v1.8.0 — *aprovado por Mick em 2026-10-19: vertical por `CA-XX` vira padrão; horizontal só para fundação, migrations e expandir-migrar-contrair*
 - [x] Antes de **T-11** — confirmar a remoção de `/leanwork-start`, `/leanwork-next`, `/leanwork-prototype` e `/leanwork-context` — *aprovado por Mick em 2026-10-19, com o comando novo chamado `/leanwork-pipeline` em vez de `/leanwork`*
 - [x] Após **T-13** — decidir se a Fase 5 segue, com base no que a documentação confirmou — *aprovado por Mick em 2026-10-19, ao pedir a execução das tarefas restantes*
-- [ ] Antes de **T-21** — revisar as métricas antes/depois e aprovar a publicação da 2.0.0
+- [x] Antes de **T-21** — revisar as métricas antes/depois e aprovar a publicação da 2.0.0 — *aprovado por Mick em 2026-10-19, depois dos testes A/B de architect, planner, PRD e prototype contra a 1.10.0*
 
 ## 10. Questões em aberto *(opcional)*
 

@@ -39,7 +39,7 @@
 
   <section class="hero">
     <div class="wrap">
-      <span class="rotulo">Leanwork SDD · v1.10.0</span>
+      <span class="rotulo">Leanwork SDD · v2.0.0</span>
       <h1 class="hero__titulo">Do briefing ao review, sem perder o fio.</h1>
       <p class="hero__texto">
         Um pipeline <strong>Spec-Driven Development</strong> em seis skills coordenadas: arquitetura,
@@ -52,7 +52,7 @@
           <span class="numero__rotulo">skills coordenadas</span>
         </div>
         <div class="numero">
-          <span class="numero__valor">7</span>
+          <span class="numero__valor">4</span>
           <span class="numero__rotulo">comandos de orquestração</span>
         </div>
         <div class="numero">
@@ -209,11 +209,11 @@
         </div>
         <div class="status">
           <p class="status__nome">Concluído</p>
-          <p class="status__texto">Critérios de aceite marcados, typecheck limpo e suíte verde. Nunca com teste vermelho.</p>
+          <p class="status__texto">Critérios de aceite atendidos, typecheck limpo e suíte verde. Nunca com teste vermelho.</p>
         </div>
         <div class="status status--bloqueado">
           <p class="status__nome">Bloqueado</p>
-          <p class="status__texto">Motivo no histórico. É também para onde um finding bloqueante do review devolve a tarefa.</p>
+          <p class="status__texto">Motivo no campo <span class="mono">Bloqueio:</span>. É também para onde um finding bloqueante do review devolve a tarefa.</p>
         </div>
       </div>
 
@@ -377,11 +377,11 @@
       <div class="cabecalho">
         <div>
           <span class="rotulo">Os comandos</span>
-          <h2 class="titulo-secao">Sete pontos<br>de entrada.</h2>
+          <h2 class="titulo-secao">Quatro pontos<br>de entrada.</h2>
         </div>
         <p class="apoio">
           Cada comando pré-aprova leitura mais a pasta do artefato que ele mesmo produz.
-          <span class="destaque">Bash não é pré-autorizado em lugar nenhum.</span>
+          <span class="destaque">Bash só é pré-autorizado para rodar os gates em Python.</span>
         </p>
       </div>
 
@@ -391,13 +391,11 @@
             <tr><th>Comando</th><th>O que faz</th></tr>
           </thead>
           <tbody>
-            <tr><td class="mono">/leanwork-start</td><td>Inicia o pipeline e identifica em que fase começar</td></tr>
-            <tr><td class="mono">/leanwork-next</td><td>Inspeciona os artefatos existentes e sugere a próxima ação, incluindo reviews pendentes</td></tr>
-            <tr><td class="mono">/leanwork-prototype</td><td>Indexa um protótipo existente ou gera um, e produz a SPEC-UI</td></tr>
+            <tr><td class="mono">/leanwork-pipeline</td><td>Ponto de entrada: conduz o início (fluxo completo ou trilha rápida) ou lê o estado e sugere a próxima ação</td></tr>
             <tr><td class="mono">/leanwork-execute</td><td>Executa uma tarefa carregando o contexto declarado e atualiza o <span class="mono">Status</span> ao final</td></tr>
-            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa específica. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
+            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa num sub-agente de contexto limpo. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
             <tr><td class="mono">/leanwork-trace</td><td>Gera a matriz <span class="mono">ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R</span> e aponta os gaps</td></tr>
-            <tr><td class="mono">/leanwork-context</td><td>Gera ou atualiza <code>CLAUDE.md</code> e <code>.claude/settings.json</code></td></tr>
+            <tr><td class="mono">/leanwork-sdd:&lt;skill&gt;</td><td>Chama uma skill direto — ex.: <span class="mono">prototype-leanwork</span>, <span class="mono">context-leanwork</span></td></tr>
           </tbody>
         </table>
       </div>

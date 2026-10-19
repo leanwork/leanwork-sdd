@@ -2,9 +2,59 @@
 
 Histórico de versões do plugin `leanwork-sdd`. Formato: versão, data quando registrada, e o que mudou com o motivo.
 
-## [Não publicado] — rumo à 2.0.0
+## 2.0.0 — 2026-10-19
 
-Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
+Enxugamento do pipeline, executado pelo `docs/plans/PLAN-002-enxugamento-pipeline.md`. A premissa: os modelos atuais seguem instrução concisa e inferem contexto do repositório, mas continuam declarando conclusão sem prova e escrevendo teste raso. Por isso o corte é assimétrico — **sai a coreografia, fica a verificação**. Gates, sub-agente verificador, sensor de discriminação e "evidência ou zero" não mudaram.
+
+### Quebras de contrato
+
+| O que mudou | Antes (1.10.0) | Agora (2.0.0) | O que fazer com artefato antigo |
+|---|---|---|---|
+| Comandos de entrada | `/leanwork-start` e `/leanwork-next` | `/leanwork-pipeline`, sem alias | Nada — só trocar o comando |
+| Comandos de skill | `/leanwork-prototype` e `/leanwork-context` | Removidos; as skills são chamadas por `/leanwork-sdd:prototype-leanwork` e `/leanwork-sdd:context-leanwork` | Nada |
+| Estado da tarefa | `Status:` + tabela de Histórico de execução | Só `Status:`; a trilha vem do git pelo trailer `Refs: T-XX, CA-XX` | A tabela de Histórico é ignorada pelos scripts, sem erro |
+| Escopo da tarefa | Campo `Camadas/arquivos afetados:` | Campo `Portas de mão única:` (migration, contrato público, schema, permissão) | O campo antigo continua aceito, com WARN; o review lê como escopo |
+| Unidade de trabalho | Fatia horizontal por camada, teto de 4h | Fatia vertical por `CA-XX`, medida por caber num ciclo de execute + review | Plano antigo continua válido |
+| Critério de aceite | Checkbox, mais checklist de prontidão obrigatório | Lista simples; prontidão genérica é a Definition of Done do `CLAUDE.md` | Plano antigo continua válido |
+
+Rollback: reinstalar a 1.10.0 a partir do commit `c5c3f63`. Planos no formato antigo passam nos gates da 2.0.0, então a ida não exige migrar artefatos.
+
+### Métricas antes e depois
+
+Linha de base medida em 2026-10-16 (seção 3 do PLAN-002).
+
+| Métrica | Como se mede | 1.10.0 | 2.0.0 | Variação |
+|---|---|---|---|---|
+| Ciclo execute + review | Linhas de `leanwork-execute.md` + `leanwork-review.md` + `reviewer-leanwork/SKILL.md` + `reviewer-leanwork/references/*` | 1.258 | 1.234 | −2% |
+| Descriptions das skills | Soma dos caracteres do campo `description` das seis skills | 6.683 | 2.006 | −70% |
+| README | Linhas do `README.md` | 425 | 197 | −54% |
+| Passagens repetidas | Arquivos com cada passagem por extenso: "Degradação silenciosa" / "Sombra de prefixo" / tabela "Quem sugere" | 4 / 4 / 3 | 1 / 1 / 1 | uma cópia de cada |
+
+**O ciclo quase não encolheu, e isso foi escolha.** Das 1.234 linhas, 758 são as `references/` do reviewer (checklist, template, detecção de stack, sensor), que o plano decidiu não tocar. O ganho de custo vem de haver **menos ciclos**: no teste A/B do planner, o mesmo PRD virou 21 tarefas em vez de 35.
+
+### Testes A/B contra a 1.10.0 (2026-10-19)
+
+Cada skill rodou nas duas versões, com a mesma entrada, por `claude -p --plugin-dir`, numa rodada. É evidência de um caso por skill, não estatística.
+
+| Skill | Resultado | Ajuste feito |
+|---|---|---|
+| architect | Proposta equivalente (12 seções, 7 ADRs, mesmas decisões). Entrevista ficou rasa: 2 perguntas contra 7 na primeira rodada | Listas de trade-offs e isomorfismo e regra do jargão devolvidas; entrevista volta a um bloco inteiro por rodada nas quatro skills |
+| planner | 21 tarefas contra 35, mesma cobertura (9/9 `CA`, 8/8 `RN`), mesmo detalhe por tarefa. Tela entra junto do cenário; a 1.10.0 deixava as tarefas de tela sem `CA` e decidiu sozinha uma questão arquitetural aberta que a 2.0.0 marcou como pendente | Nenhum |
+| prd | Entrevista melhor (leu a arquitetura e pulou o já respondido). Regras e cenários equivalentes. Perdeu os diagramas dos fluxos secundários | Seção 7 do template recuperada: outros fluxos e mapa de desvios |
+| prototype | Entrevista melhor (recomendou o modo pela busca). SPEC-UI equivalente: 4 telas, 28 estados contra 27, 20 lacunas contra 17 | Nenhum |
+| reviewer, context | Não testados. A verificação do reviewer não mudou; o context mudou só de forma | — |
+
+### Estado em fonte única, trilha rápida e fatia por `CA` (T-01 a T-13)
+
+- A tabela de Histórico de execução sai de plano, template, skills e comandos. O campo `**Status:**` é a única fonte de estado; `validate_plan.py` ignora a tabela em plano antigo.
+- `scripts/check_commit.py`: confere o trailer `Refs:` da mensagem de commit — pelo menos uma `T-XX`, IDs bem formados e, com `--plan`, tarefa existente. Funciona também como hook `commit-msg` do git.
+- O checklist de prontidão deixa de ser seção obrigatória do plano e vira Definition of Done do `CLAUDE.md` do projeto.
+- **Trilha rápida**: mudança com menos de ~3 arquivos e nenhuma porta de mão única vira plano de uma tarefa, com os cenários dentro dela (`plan-template-quick.md`). Uma segunda tarefa reprova no gate.
+- **Fatia vertical por `CA-XX`** como padrão, revertendo o padrão horizontal da 1.8.0 (aprovado antes da T-07). Horizontal fica para fundação, migrations e expandir → migrar → contrair. O WARN de tarefa grande passa de 3 para 5 critérios de aceite.
+- Campo `**Portas de mão única:**` substitui `Camadas/arquivos afetados:`; campo `**Bloqueio:**` obrigatório com `Status: Bloqueado`.
+- `scripts/status.py` (estado do pipeline e próxima tarefa elegível) e `scripts/trace.py` (matriz e lacunas) substituem a leitura feita pelo modelo em `/leanwork-pipeline` e `/leanwork-trace`.
+- `/leanwork-start` e `/leanwork-next` se fundem em `/leanwork-pipeline`; `/leanwork-prototype` e `/leanwork-context` saem.
+- O suporte a hooks em plugin foi verificado na documentação oficial do Claude Code antes da Fase 5 (T-13).
 
 ### Gates disparados por hook (T-14)
 
@@ -50,6 +100,11 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 - O plano de `stacks/dotnet/pipeline-example.md` virou um plano completo e curto: fundação horizontal (`T-01`, migration) e três fatias por `CA-XX`. Usa `**Portas de mão única:**`, `**Bloqueio:**` com `R-01 (REVIEW-T-03-2026-06-15)` e o commit com trailer `Refs:`, sem tabela de Histórico. O review passou a ser da `T-03` e ganhou a seção do sensor de discriminação.
 - A matriz do exemplo é a saída literal do `trace.py` sobre os cinco fragmentos. A selftest ganha quatro casos que extraem os fragmentos e rodam `validate_plan.py`, `validate_ids.py`, `validate_review.py` e `trace.py`. O último falha se a matriz publicada divergir da saída do script; a falha foi conferida alterando a matriz de propósito.
 - Correção no `trace.py`: a regra `RN-XX` que quebra em várias linhas perdia o `(ADR-XX)` da linha de continuação. A `RN-05` do exemplo expôs isso.
+
+### Site e manifesto (T-21)
+
+- `plugin.json` e `marketplace.json` em 2.0.0. O `site/index.html` passa a listar os quatro comandos atuais e deixa de afirmar que o Bash não é pré-autorizado em lugar nenhum, o que já era falso desde a 1.10.0.
+- `REFERENCES.md` credita o `tlc-spec-lean` v1.1.0 (Tech Leads Club, CC-BY-4.0): portas de mão única, trilha curta, "granularidade não é qualidade" e pergunta com recomendação, como adaptação; registra o que não foi adotado e o que é contribuição própria.
 
 ## 1.10.0
 
