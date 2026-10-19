@@ -83,12 +83,30 @@ def scenarios(text):
 
 
 def rules(text):
-    """{RN-XX: [ADR-XX citados na linha da regra]}."""
+    """{RN-XX: [ADR-XX citados na regra]}.
+
+    A regra e o bullet inteiro: linha da definicao mais as linhas de
+    continuacao indentadas, onde o `(ADR-XX)` costuma cair quando o texto quebra.
+    """
     result = {}
+    current = None
     for line in text.split("\n"):
         match = RN_DEFINITION.match(line)
         if match:
-            result.setdefault(match.group(1), set()).update(ADR_TOKEN.findall(line))
+            current = match.group(1)
+            result.setdefault(current, set()).update(ADR_TOKEN.findall(line))
+            continue
+        stripped = line.strip()
+        continuation = (
+            current is not None
+            and stripped
+            and line[:1].isspace()
+            and not stripped.startswith(("-", "*", "#", "|", ">", "```"))
+        )
+        if continuation:
+            result[current].update(ADR_TOKEN.findall(line))
+        else:
+            current = None
     return {rn: sorted(adrs) for rn, adrs in result.items()}
 
 

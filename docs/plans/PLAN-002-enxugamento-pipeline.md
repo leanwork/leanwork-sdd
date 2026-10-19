@@ -581,11 +581,12 @@ A seção Versionamento migra inteira para `CHANGELOG.md`. O README descreve o p
 
 #### T-20 — Exemplo end-to-end no formato novo
 
-- **Status:** Pendente
+- **Status:** Concluído
 - **Complexidade:** Média
 - **Depende de:** T-19
 - **Camadas/arquivos afetados:**
   - `stacks/dotnet/pipeline-example.md`
+  - `scripts/selftest.py` *(casos do exemplo)*, `scripts/trace.py` *(regra quebrada em várias linhas)*
 
 **Descrição:**
 O fragmento de plano passa a usar fatia por `CA`, `**Portas de mão única:**`, `**Bloqueio:**` e commit com trailer `Refs:`, sem tabela de Histórico. A matriz do exemplo é a saída do `trace.py` sobre esses fragmentos.

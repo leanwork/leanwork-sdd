@@ -171,120 +171,154 @@ rejeição, bloqueio ou mensagem de erro corresponde a um estado de tela.
 
 ## Fragmento 4 — Plano de Execução (saída do `planner-leanwork`)
 
+Fatia vertical por `CA-XX`: cada tarefa de comportamento fecha um cenário ponta a ponta, da tela ao banco. A única fatia horizontal é a fundação (`T-01`), porque migration é exceção prevista. O estado de cada tarefa vive só no `**Status:**`; quando e em que commit ele mudou é trilha do git.
+
 ````markdown
 # Plano de Execução: Ofertas Relâmpago
 
-### Fase 2 — Lógica de negócio
+**PRD de referência:** `docs/prds/PRD-001-ofertas-relampago.md`
+**Cliente/Produto:** Contoso — e-commerce
+**Status:** Em execução
 
-#### T-04 — Implementar comando de compra com lock pessimista de estoque
+## 1. Resumo executivo
+
+Uma fundação horizontal (entidade e migration) e três fatias verticais, uma por cenário do PRD. A compra concorrente (`CA-03`) tem fatia própria porque é ela que prova a ADR-002.
+
+## 2. Estratégia de entrega
+
+**Modelo de entrega:** incremental, atrás da feature flag `ofertas-relampago`, desligada até `T-04` fechar.
+
+## 5. Fases
+
+### Fase 1 — Fundação
+
+#### T-01 — Criar a entidade de oferta e a migration
 
 - **Status:** Concluído
-- **Complexidade:** Alta
-- **Depende de:** T-02 (entity FlashSale), T-03 (migration)
-- **Implementa:** RN-05, RN-03
-- **Valida:** CA-01, CA-03
-- **Decisões base:** ADR-002
-- **Telas:** — *(tarefa sem interface)*
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs` *(novo)*
-  - `src/Contoso.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs` *(novo)*
+- **Complexidade:** Baixa
+- **Depende de:** nenhuma
+- **Portas de mão única:** migration — tabela `OfertaRelampago` com `EstoqueRestante`
 
 **Descrição:**
-Handler MediatR que orquestra: (1) abre transação `Serializable`, (2) carrega oferta com
-`SELECT ... WITH (UPDLOCK, ROWLOCK)`, (3) verifica estoque > 0 e limite por cliente,
-(4) decrementa estoque, (5) cria pedido, (6) commit. Lança `BusinessException` em
-violações de regra, deixando exceções técnicas subirem.
+Fatia horizontal por exceção: migration isolada, revisável e reversível por conta própria. Entidade `OfertaRelampago` com janela (`InicioEm`, `FimEm`, UTC) e estoque.
 
 **Critério de aceite (testável):**
-- [ ] Compra concorrente em estoque=1 resulta em exatamente 1 sucesso e 1 falha (CA-03)
-- [ ] Segunda compra do mesmo cliente é rejeitada antes de tocar o estoque (CA-02 — nota: este CA-02 está em T-05)
-- [ ] Decremento atômico verificável por teste de stress
+- A migration aplica e reverte num banco vazio
+- Oferta fora da janela não aparece na consulta de ofertas ativas
 
 **Testes a escrever:**
-- *Unit:* `CA_01_Compra_com_sucesso_decrementa_estoque`,
-  `CA_03_Compra_concorrente_respeita_estoque_atomico`
-- *Integration:* `Compra_em_oferta_ativa_persiste_pedido_e_decrementa_estoque_no_banco`
-- *Stress (xUnit + threads):* 100 compras concorrentes em estoque=10 → exatamente 10
-  sucessos e 90 falhas; estoque final = 0
+- *Integration:* `Migration_aplica_e_reverte`, `Oferta_fora_da_janela_nao_aparece_como_ativa`
+
+### Fase 2 — Fatias por cenário
+
+#### T-02 — Comprar produto em oferta com sucesso
+
+- **Status:** Concluído
+- **Complexidade:** Média
+- **Depende de:** T-01
+- **Implementa:** RN-01, RN-05
+- **Valida:** CA-01
+- **Telas:** UI-01, UI-02 (default, carregando)
+- **Portas de mão única:** contrato público — rota `POST /api/ofertas/{id}/compras`
+
+**Descrição:**
+Caminho feliz ponta a ponta: listagem, checkout, handler MediatR de compra, decremento de estoque e pedido com preço promocional. A disputa por estoque fica para `T-03`.
+
+**Critério de aceite (testável):**
+- Compra de 1 unidade numa oferta com 10 deixa o estoque persistido em 9 e registra o pedido com preço promocional (CA-01)
+- `UI-02.carregando` trava o formulário enquanto a confirmação processa
+
+**Testes a escrever:**
+- *Integration:* `CA_01_Compra_com_sucesso_decrementa_estoque` — `POST` contra banco real, asserção sobre o estoque persistido
+- *Component:* estados `default` e `carregando` da `UI-02`
+
+#### T-03 — Respeitar o estoque em compras concorrentes
+
+- **Status:** Bloqueado
+- **Bloqueio:** R-01 (REVIEW-T-03-2026-06-15) — o teste de CA-03 não exercita concorrência
+- **Complexidade:** Alta
+- **Depende de:** T-02
+- **Implementa:** RN-05
+- **Valida:** CA-03
+- **Decisões base:** ADR-002
+- **Telas:** UI-02 (esgotado)
+- **Portas de mão única:** nenhuma
+
+**Descrição:**
+Transação `Serializable` com `SELECT ... WITH (UPDLOCK, ROWLOCK)` na leitura da oferta, conforme a ADR-002. Estoque zerado encerra a oferta e leva o checkout para `UI-02.esgotado`.
+
+**Critério de aceite (testável):**
+- Duas compras simultâneas com 1 unidade restante: exatamente 1 sucesso, 1 rejeição "Produto esgotado nesta oferta" e estoque final 0 (CA-03)
+- Sem o `UPDLOCK`, o teste de concorrência falha
+
+**Testes a escrever:**
+- *Stress (xUnit + threads, banco real):* `CA_03_Compra_concorrente_respeita_estoque_atomico` — 100 compras concorrentes com estoque 10 → 10 sucessos, 90 rejeições, estoque final 0
 
 **Riscos / pontos de atenção:**
-- Lock pessimista em produção tem custo de bloqueio — monitorar `sys.dm_tran_locks` na
-  primeira janela de Black Friday
-- Cuidado com timeout de transação em ambientes lentos — definir explicitamente
-  `IsolationLevel.Serializable` e `CommandTimeout=10s`
+- Lock pessimista tem custo de bloqueio — monitorar `sys.dm_tran_locks` na primeira janela de Black Friday
 
----
-
-#### T-05 — Implementar validador de limite por cliente
+#### T-04 — Limitar a uma unidade por cliente
 
 - **Status:** Pendente
 - **Complexidade:** Baixa
-- **Depende de:** T-04
+- **Depende de:** T-02
 - **Implementa:** RN-03
 - **Valida:** CA-02
-- **Decisões base:** —
-- **Telas:** —
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Application/Features/FlashSale/Validators/ComprarOfertaValidator.cs` *(novo)*
+- **Telas:** UI-02 (limiteExcedido)
+- **Portas de mão única:** nenhuma
 
-[...]
-
----
-
-### Fase 3 — Interface
-
-#### T-06 — Implementar tela de checkout da oferta
-
-- **Status:** Pendente
-- **Complexidade:** Média
-- **Depende de:** T-04
-- **Implementa:** RN-03, RN-05
-- **Valida:** CA-01, CA-02, CA-03
-- **Decisões base:** —
-- **Telas:** UI-02 (default, limiteExcedido, esgotado, carregando)
-- **Camadas/arquivos afetados:**
-  - `src/Contoso.Web/pages/ofertas/[id]/checkout.tsx` *(novo)*
+**Descrição:**
+Rejeição antes de tocar o estoque, com erro de negócio. O checkout mostra `UI-02.limiteExcedido` sem perder o resumo do item.
 
 **Critério de aceite (testável):**
-- [ ] Os quatro estados de `UI-02` renderizam conforme a SPEC-UI
-- [ ] `.limiteExcedido` mantém o resumo do item visível — o usuário não perde o contexto
+- Segunda compra do mesmo cliente na mesma oferta é rejeitada com "Limite de 1 unidade por cliente nesta oferta" e o estoque não muda (CA-02)
 
-[...]
+**Testes a escrever:**
+- *Integration:* `CA_02_Segunda_compra_do_mesmo_cliente_e_rejeitada`
+- *Component:* o estado `limiteExcedido` da `UI-02` mantém o resumo do item visível
+
+## 9. Pontos de validação humana
+
+- [ ] Antes de **T-03** — validar com design os estados `.limiteExcedido` e `.esgotado`, derivados do PRD e ausentes do protótipo (lacuna 1 da SPEC-UI)
 ````
+
+O elo código → requisito sai do commit. A mensagem que o `/leanwork-execute` sugeriu ao fechar a `T-03`, conferida pelo `check_commit.py`:
+
+```
+Lock pessimista no decremento de estoque da oferta
+
+Refs: T-03, CA-03, ADR-002, UI-02.esgotado
+```
 
 ---
 
 ## Fragmento 5 — Relatório de Review (saída do `reviewer-leanwork`)
 
-O review fecha o ciclo: lê o código contra a tarefa, a tarefa contra o PRD, e devolve
-`R-XX` rastreáveis. Aqui ele pega o defeito que o `/leanwork-trace` **não pega** — o trace
-confirma que o nome do teste menciona `CA-03`, não que o teste prove `CA-03`.
+O review fecha o ciclo: lê o código contra a tarefa, a tarefa contra o PRD, e devolve `R-XX` rastreáveis. Aqui ele pega o defeito que a matriz **não pega** — o `trace.py` confirma que a `T-03` valida `CA-03`, não que o teste prove `CA-03`.
 
 ````markdown
-# Review: T-04 — Implementar comando de compra com lock pessimista de estoque
+# Review: T-03 — Respeitar o estoque em compras concorrentes
 
 > **Plano de referência:** `docs/plans/PLAN-001-ofertas-relampago.md`
 > **PRD de referência:** `docs/prds/PRD-001-ofertas-relampago.md`
-> **Reviewer:** Claude (skill `reviewer-leanwork`)
+> **Reviewer:** Claude (skill `reviewer-leanwork`, sub-agente de contexto limpo)
 > **Data:** 2026-06-15
 > **Round:** 1
 > **Recomendação final:** ⛔ Bloqueado
 
 ## Sumário executivo
 
-O handler está bem estruturado e a ADR-002 foi respeitada literalmente. O bloqueio é de
-cobertura: o teste que carrega o nome de `CA-03` não reproduz concorrência, então o
-cenário que justifica a decisão arquitetural inteira segue sem prova.
+O handler está bem estruturado e a ADR-002 foi respeitada literalmente. O bloqueio é de cobertura: o teste que carrega o nome de `CA-03` não reproduz concorrência, então o cenário que justifica a decisão arquitetural inteira segue sem prova.
 
 **Cobertura da tarefa:**
 
 | Item | Esperado | Entregue | Status |
 |------|----------|----------|--------|
-| Regras implementadas (RN) | RN-03, RN-05 | RN-03, RN-05 | ✅ |
-| Cenários validados (CA) | CA-01, CA-03 | CA-01 | ⛔ CA-03 sem prova real |
-| Decisões base (ADR) | ADR-002 | `UPDLOCK, ROWLOCK` aplicados | ✅ |
-| Telas e estados (UI) | — (tarefa sem interface) | — | — |
-| Testes prometidos | 4 | 3 | ⚠️ falta o de stress |
+| Regras implementadas (RN) | RN-05 | RN-05 — `ComprarOfertaHandler.cs:41` | ✅ |
+| Cenários validados (CA) | CA-03 | teste existe pelo nome, não pelo comportamento | ⛔ Ver R-01 |
+| Decisões base (ADR) | ADR-002 | `UPDLOCK, ROWLOCK` em `FlashSaleRepository.cs:27` | ✅ |
+| Telas e estados (UI) | UI-02 (esgotado) | `checkout.tsx:63` | ✅ |
+| Testes prometidos | 1 (stress) | 1, sem concorrência | ⛔ Ver R-01 |
 
 ## Findings detalhados
 
@@ -294,94 +328,66 @@ cenário que justifica a decisão arquitetural inteira segue sem prova.
 
 - **Eixo:** 4. Cobertura de teste
 - **Referência cruzada:** CA-03, RN-05, ADR-002
-- **Evidência:** `tests/Contoso.Application.Tests/FlashSale/ComprarOfertaHandlerTests.cs:88-104`
-- **Descrição:** `CA_03_Compra_concorrente_respeita_estoque_atomico` dispara as duas
-  compras em sequência, contra repositório em memória. Não há duas transações vivas ao
-  mesmo tempo, então o `UPDLOCK` nunca é disputado e o teste passaria mesmo se o lock
-  fosse removido do código.
-- **Por quê é Bloqueante:** CA-03 é o único cenário que prova a ADR-002, e overselling
-  tem custo regulatório declarado no contexto da decisão. Um teste que passa com o lock
-  removido dá falsa segurança exatamente no ponto de maior risco.
-- **Sugestão de correção:** promover para teste de integração com banco real e N threads,
-  como já previsto em "Testes a escrever" da T-04 (*Stress*). Verificar que a versão sem
-  `UPDLOCK` falha — teste de concorrência que não falha sem o lock não está testando o lock.
+- **Evidência:** `tests/Contoso.Application.Tests/FlashSale/ComprarOfertaHandlerTests.cs:88`
+- **Descrição:** `CA_03_Compra_concorrente_respeita_estoque_atomico` dispara as compras em sequência, contra repositório em memória. Não há duas transações vivas ao mesmo tempo, então o `UPDLOCK` nunca é disputado. O sensor de discriminação confirmou: com o `UPDLOCK` removido, a suíte continua verde — mutante sobrevivente.
+- **Por quê é Bloqueante:** CA-03 é o único cenário que prova a ADR-002, e overselling tem custo regulatório declarado no contexto da decisão. Um teste que passa com o lock removido dá falsa segurança exatamente no ponto de maior risco.
+- **Sugestão de correção:** promover para teste de integração com banco real e N threads, como prevê "Testes a escrever" da T-03 (*Stress*), e verificar que a versão sem `UPDLOCK` falha.
+
+## Sensor de discriminação
+
+**Profundidade:** completo (risco: integridade de dados — overselling)
+**Isolamento:** git worktree
+**Resultado:** 1/2 mortos
+
+| # | Arquivo:linha | Mutação aplicada | Morto? |
+|---|---|---|---|
+| 1 | `src/Contoso.Infrastructure/Persistence/Repositories/FlashSaleRepository.cs:27` | `WITH (UPDLOCK, ROWLOCK)` removido da leitura da oferta | ❌ Sobreviveu → R-01 |
+| 2 | `src/Contoso.Application/Features/FlashSale/Commands/ComprarOferta/ComprarOfertaHandler.cs:41` | Decremento `EstoqueRestante -= 1` removido | ✅ Morto |
 
 ## Cobertura por CA (Valida)
 
-### CA-01 — Cliente compra produto em oferta relâmpago com sucesso
-
-- **Teste correspondente:** `ComprarOfertaHandlerTests.cs::CA_01_Compra_com_sucesso_decrementa_estoque`
-- **Cobre o cenário Gherkin completo?** Sim — Dado/Quando/Então mapeados
-- **Status:** ✅
-
 ### CA-03 — Estoque da oferta esgota durante compras concorrentes
 
-- **Teste correspondente:** existe pelo nome, não pelo comportamento
-- **Status:** ⛔ Ver R-01
+- **Teste correspondente:** `ComprarOfertaHandlerTests.cs:88` — existe pelo nome, não pelo comportamento
+- **Status:** ⛔ Não coberto — ver R-01
 
 ## Notas ao processo (não-findings)
 
-- **Plano precisa de atualização:** T-04 volta a `Status: Bloqueado` até R-01 ser
-  resolvido. O round 2 vira `REVIEW-T-04-2026-06-17-round2.md`, com numeração de `R-XX`
-  reiniciada e referência cruzada na seção "Round anterior".
+- **Plano precisa de atualização:** T-03 volta a `Status: Bloqueado`, com `Bloqueio: R-01 (REVIEW-T-03-2026-06-15)`. O round 2 vira `REVIEW-T-03-2026-06-17-round2.md`, com numeração de `R-XX` reiniciada e referência cruzada na seção "Round anterior".
 ````
 
 ---
 
 ## A matriz de rastreabilidade dessa demanda
 
-Saída esperada do `/leanwork-trace`:
+Saída do `trace.py` com os cinco fragmentos acima gravados nas pastas de `templates/folder-conventions.md` — é o que o `/leanwork-trace` apresenta, antes da leitura do modelo. O `selftest.py` regenera esta matriz a partir dos fragmentos e falha se ela divergir do texto abaixo.
 
-### Tabela 1 — Rastreabilidade direta
+<!-- trace:start -->
+| CA | RN | ADR | UI | T | Review |
+|---|---|---|---|---|---|
+| CA-01 | RN-01, RN-05 | ADR-002 | UI-01, UI-02 | T-02 | — |
+| CA-02 | RN-03 | — | UI-02 | T-04 | — |
+| CA-03 | RN-05 | ADR-002 | UI-02 | T-03 | REVIEW-T-03-2026-06-15.md (Bloqueado) |
 
-| RN | Descrição (truncada) | Validado por (CA) | Manifesta em (UI) | Implementado em (T) | Review (R) | Decisão base (ADR) |
-|----|---------------------|-------------------|-------------------|---------------------|------------|---------------------|
-| RN-01 | Janela de validade da oferta | CA-01 | UI-01 | T-02 (entity), T-04 | — | — |
-| RN-03 | Limite 1 unidade por cliente | CA-02 | UI-02.limiteExcedido | T-04, T-05, T-06 | — | — |
-| RN-05 | Decremento atômico de estoque | CA-01, CA-03 | UI-02.esgotado | T-04, T-06 | ⛔ R-01 (REVIEW-T-04-2026-06-15) | ADR-002 |
-| RN-07 | Cancelamento só pelo SAC | (sem CA) | (sem UI — backend) | (sem T) | — | — |
+## Lacunas
 
-> `R-XX` é numerado por relatório, não globalmente. Fora do arquivo de origem, citar
-> qualificado — `R-01 (REVIEW-T-04-2026-06-15)` — porque `R-01` sozinho é ambíguo assim
-> que existe mais de um relatório.
+- **RN sem cenário:** RN-07
+- **Tarefa sem Implementa nem Valida (legítimo se estrutural):** T-01
+- **Concluído sem review:** T-01, T-02
+- **Review bloqueado sem round seguinte:** T-03 (REVIEW-T-03-2026-06-15.md)
 
-### Diagrama Mermaid
+> Aviso: sem git no projeto: coluna de commits omitida
+<!-- trace:end -->
 
-```mermaid
-graph LR
-    ADR002[ADR-002<br/>Lock pessimista] --> RN05[RN-05<br/>Decremento atômico]
-    RN05 --> CA01[CA-01]
-    RN05 --> CA03[CA-03]
-    RN03[RN-03<br/>Limite por cliente] --> CA02[CA-02]
-    CA01 --> UI02[UI-02.default]
-    CA02 --> UI02L[UI-02.limiteExcedido]
-    CA03 --> UI02E[UI-02.esgotado]
-    CA01 --> T04[T-04]
-    CA02 --> T04
-    CA02 --> T05[T-05]
-    CA03 --> T04
-    UI02 --> T06[T-06]
-    UI02L --> T06
-    UI02E --> T06
-    T04 --> R01[R-01<br/>CA-03 sem concorrência real]
-```
+## Leitura da matriz
 
-Repare que as arestas `CA → T` e `CA → UI → T` coexistem. Cenário que se manifesta em tela
-passa pela `UI-XX`; cenário de backend puro vai direto do `CA-XX` para a `T-XX`. A cadeia
-`ADR → RN → CA → UI → T → R` é a ordem completa, não uma exigência de que todo elo exista.
+As lacunas acima são as mecânicas, que o script acha sozinho. O que pede julgamento fica para o modelo:
 
-### Gaps apontados
-
-- **RN-07 sem cenário Gherkin**: regra de "cancelamento só pelo SAC" declarada mas sem
-  CA correspondente → **risco: regra não testada**. Provavelmente porque o cancelamento
-  pelo SAC vai virar feature separada (PRD-002). Decidir: mover RN-07 para o outro PRD,
-  ou adicionar CA-04 aqui.
-- **CA-02 implementado em duas tarefas (T-04 e T-05)**: aceitável, mas redundante.
-  T-04 já bloqueia antes do decremento; T-05 só duplica via FluentValidation. Avaliar
-  se T-05 é necessária ou se vira teste a mais em T-04.
-- **CA-03 com cobertura aparente**: o trace vê o teste `CA_03_*` e marca o elo como
-  fechado. Foi o review que descobriu que o teste não prova o cenário. **O trace verifica
-  menção, não execução** — os dois comandos são complementares, não substitutos.
+- **RN-07 sem cenário:** "cancelamento só pelo SAC" está declarada, mas sem `CA` → regra não testada. Provavelmente o cancelamento vai virar feature separada (PRD-002). Decidir: mover a RN-07 para o outro PRD ou acrescentar um `CA-04` aqui.
+- **T-01 sem `Implementa` nem `Valida`:** legítimo — é a fundação horizontal, sem comportamento a fechar.
+- **T-01 e T-02 concluídas sem review:** gap real. O `/leanwork-pipeline` sugere `/leanwork-review` para as duas antes de abrir a `T-04`.
+- **T-03 com review bloqueado:** a `T-03` *valida* `CA-03` na matriz, e foi o review que descobriu que o teste não prova o cenário. **O trace verifica menção, não execução** — os dois são complementares, não substitutos.
+- **Commits:** num repositório real, a matriz ganha a coluna `Commits` lida do `git log` pelo trailer `Refs:`. Aqui os fragmentos estão fora de um repositório git, e o script avisa que omitiu a coluna em vez de deixá-la vazia.
 
 ---
 
@@ -391,9 +397,11 @@ passa pela `UI-XX`; cenário de backend puro vai direto do `CA-XX` para a `T-XX`
 - **Anotação de ADR no PRD** (`(ADR-002)` ao lado de RN-05)
 - **Anotação de RN no Gherkin** (`Dado que existe oferta ativa (RN-01)`)
 - **Estado de tela derivado de cenário** (`UI-02.esgotado` nasce de CA-03, não do protótipo)
-- **Tarefa que materializa decisão arquitetural** (T-04 cita ADR-002)
-- **Tarefa de interface com estados nomeados** (T-06 declara `Telas: UI-02 (default, limiteExcedido, esgotado, carregando)`)
-- **Finding que reabre a tarefa** (R-01 devolve T-04 para `Bloqueado`)
-- **Lacunas reveladas pela matriz** (RN-07 sem CA, CA-02 com sobreposição)
+- **Fatia vertical por `CA-XX`** (T-02, T-03 e T-04 fecham um cenário cada; T-01 é a fundação horizontal)
+- **Portas de mão única declaradas** (a migration da T-01, a rota pública da T-02)
+- **Tarefa que materializa decisão arquitetural** (T-03 cita ADR-002)
+- **Finding que reabre a tarefa** (R-01 devolve T-03 para `Bloqueado`, com o motivo em `**Bloqueio:**`)
+- **Elo código → requisito pelo trailer** (`Refs: T-03, CA-03, ADR-002, UI-02.esgotado`)
+- **Matriz gerada por script** (a mesma saída que o `trace.py` produz, conferida pelo selftest)
 - **Limite do trace exposto** (CA-03 parecia coberto; só o review viu que não)
 - **Nomes de teste seguindo a convenção** `CA_XX_descricao`

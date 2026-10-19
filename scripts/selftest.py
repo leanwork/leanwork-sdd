@@ -649,6 +649,51 @@ def commit_case(name, rule, message, exit_code, expect, as_file=False,
     }
 
 
+EXAMPLE = SCRIPTS_DIR.parent / "stacks" / "dotnet" / "pipeline-example.md"
+EXAMPLE_TARGETS = {
+    "1": "docs/architecture/proposta-arquitetural.md",
+    "2": "docs/prds/PRD-001-ofertas-relampago.md",
+    "3": "docs/prototype/SPEC-UI-001-ofertas-relampago.md",
+    "4": "docs/plans/PLAN-001-ofertas-relampago.md",
+    "5": "docs/reviews/REVIEW-T-03-2026-06-15.md",
+}
+MATRIX_START = "<!-- trace:start -->"
+MATRIX_END = "<!-- trace:end -->"
+
+
+def example_fragments():
+    """{numero: conteudo} de cada `## Fragmento N`, sem o envelope de quatro crases."""
+    fragments = {}
+    current = None
+    body = None
+    for line in EXAMPLE.read_text(encoding="utf-8").split("\n"):
+        if line.startswith("## Fragmento "):
+            current = line.split()[2]
+            continue
+        if current is not None and body is None and line.startswith("````markdown"):
+            body = []
+            continue
+        if body is not None:
+            if line.startswith("````"):
+                fragments[current] = "\n".join(body) + "\n"
+                current, body = None, None
+            else:
+                body.append(line)
+    return fragments
+
+
+def example_matrix():
+    """A matriz publicada no exemplo, entre os marcadores de trace."""
+    text = EXAMPLE.read_text(encoding="utf-8")
+    start = text.index(MATRIX_START) + len(MATRIX_START)
+    return text[start : text.index(MATRIX_END)].strip("\n") + "\n"
+
+
+def example_setup(workspace):
+    for number, content in example_fragments().items():
+        write(workspace / EXAMPLE_TARGETS[number], content)
+
+
 def hook_case(name, rule, setup, file_path, exit_code, expect, raw=None):
     """Caso do hook_gate. O evento do harness chega por stdin; `file_path` e
     relativo ao workspace, que faz o papel do `cwd` da sessao."""
@@ -1534,6 +1579,54 @@ def build_cases():
             "CA definido(s) no plano que nenhuma tarefa do plano cita: CA-02",
             **no_sources
         )
+    )
+
+    # -- exemplo end-to-end: fragmentos nao podem apodrecer -------------------
+    example_root = lambda w: ["--root", str(w)]
+    cases.append(
+        {
+            "name": "exemplo_plano_passa_no_gate",
+            "rule": "—",
+            "script": "validate_plan.py",
+            "setup": example_setup,
+            "argv": lambda w: [str(w / EXAMPLE_TARGETS["4"])],
+            "exit": 0,
+            "expect": "validate_plan: 0 error(s)",
+        }
+    )
+    cases.append(
+        {
+            "name": "exemplo_ids_existem_na_origem",
+            "rule": "—",
+            "script": "validate_ids.py",
+            "setup": example_setup,
+            "argv": lambda w: [str(w / EXAMPLE_TARGETS["4"])] + example_root(w),
+            "exit": 0,
+            "expect": "validate_ids: 0 error(s)",
+        }
+    )
+    cases.append(
+        {
+            "name": "exemplo_review_passa_no_gate",
+            "rule": "—",
+            "script": "validate_review.py",
+            "setup": example_setup,
+            "argv": lambda w: [str(w / EXAMPLE_TARGETS["5"])],
+            "exit": 0,
+            "expect": "validate_review: 0 error(s)",
+        }
+    )
+    cases.append(
+        {
+            "name": "exemplo_matriz_e_saida_do_trace",
+            "rule": "—",
+            "script": "trace.py",
+            "setup": example_setup,
+            "argv": example_root,
+            "env": lambda w: {"GIT_CEILING_DIRECTORIES": str(w.parent)},
+            "exit": 0,
+            "expect": example_matrix(),
+        }
     )
 
     # -- hook_gate: gate disparado pelo harness ------------------------------
