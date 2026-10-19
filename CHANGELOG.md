@@ -28,7 +28,8 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 
 ### Entrevistas: busca antes de pergunta (T-17)
 
-- Architect, PRD, planner e prototype declaram a mesma regra. Fato se busca no repositório, no `CLAUDE.md`, nos artefatos e na conversa. Decisão se pergunta, no máximo duas por vez, com opções concretas e a recomendação marcada.
+- Architect, PRD, planner e prototype declaram a mesma regra. Fato se busca no repositório, no `CLAUDE.md`, nos artefatos e na conversa. O que a busca não responde se pergunta um bloco de dimensões inteiro por rodada, e toda pergunta de decisão traz opções concretas e a recomendação marcada.
+- **Revisão após teste A/B (2026-10-19).** A primeira versão desta regra limitava a duas decisões por vez. Com um briefing curto, a skill da 1.10.0 abriu com sete perguntas detalhadas e a cortada com duas. A cobertura levaria 3 a 4 vezes mais rodadas e o detalhe por rodada caía. A regra passou a um bloco inteiro por rodada.
 - Os blocos de perguntas viraram **dimensões a cobrir**. Cada dimensão termina respondida ou marcada `n/a — motivo`; sem isso, é lacuna e impede a geração. Todas as dimensões anteriores foram mantidas.
 - Na prototype, a pergunta de modo (ingestão, geração, híbrido) vem com a recomendação tirada do que a busca encontrou.
 

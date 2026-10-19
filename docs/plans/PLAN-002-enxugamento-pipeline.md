@@ -527,7 +527,7 @@ Cada `description` fica com gatilhos e exclusões, em torno de 300 caracteres �
 Regra comum às quatro: fato se busca no repositório e nos artefatos; decisão se pergunta, no máximo duas por vez, com opções concretas e a recomendação. Os blocos de perguntas viram lista de **dimensões a cobrir**, cada uma respondida ou marcada `n/a — motivo`, em vez de roteiro de perguntas.
 
 **Critério de aceite (testável):**
-- [ ] As quatro skills declaram a regra busca-antes-de-perguntar e o limite de duas decisões por vez com recomendação
+- [ ] As quatro skills declaram a regra busca-antes-de-perguntar e o limite de duas decisões por vez com recomendação — *revisto por Mick em 2026-10-19 após teste A/B: o limite de duas por vez deixava a entrevista rasa por rodada; vale um bloco de dimensões inteiro por rodada, com recomendação em toda pergunta de decisão*
 - [ ] Os blocos de entrevista estão em formato de dimensões com `n/a — motivo` obrigatório
 - [ ] Nenhuma dimensão hoje coberta foi removida sem registro
 

@@ -36,7 +36,7 @@ As skills também são invocáveis direto pelo namespace do plugin: `/leanwork-s
 | `reviewer-leanwork` | 6 — Review | Diff + plano + PRD + arquitetura + SPEC-UI | Relatório de review por tarefa | `R-XX` |
 | `context-leanwork` | Transversal | Artefatos do pipeline + repositório | `CLAUDE.md` raiz e módulos, `settings.json` | — |
 
-Todas são **stack-agnósticas**: a stack vem da decisão arquitetural e do `CLAUDE.md` do projeto, nunca da skill. Cada SKILL.md abre com uma seção de **regras pinadas** — o que não se negocia —, e as entrevistas seguem a mesma regra: fato se busca no repositório e nos artefatos; decisão se pergunta, no máximo duas por vez, com a recomendação.
+Todas são **stack-agnósticas**: a stack vem da decisão arquitetural e do `CLAUDE.md` do projeto, nunca da skill. Cada SKILL.md abre com uma seção de **regras pinadas** — o que não se negocia —, e as entrevistas seguem a mesma regra: fato se busca no repositório e nos artefatos; o resto se pergunta um bloco inteiro por rodada, e toda pergunta de decisão vem com a recomendação.
 
 Templates e catálogos ficam em `references/` de cada skill e só carregam quando o agente vai gerar o documento (progressive disclosure). Convenções compartilhadas ficam em `templates/` — `id-conventions.md` e `folder-conventions.md`.
 

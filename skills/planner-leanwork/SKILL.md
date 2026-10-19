@@ -29,7 +29,7 @@ A skill opera em duas fases:
 
 ## Fase 1 — Entrevista estruturada
 
-O PRD já respondeu "o quê" e "por quê"; a entrevista do planner foca em "como quebrar isso de forma segura e executável". **Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. Decisão se pergunta: no máximo duas por vez, cada uma com opções concretas e a recomendação marcada.
+O PRD já respondeu "o quê" e "por quê"; a entrevista do planner foca em "como quebrar isso de forma segura e executável". **Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. O que a busca não respondeu vira pergunta, **um bloco de dimensões por rodada, inteiro** — perguntas concretas, com o detalhe que a resposta precisa trazer, e ao fim da rodada o anúncio dos blocos que vêm depois. Pergunta que pede decisão traz opções concretas e a recomendação marcada.
 
 Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Com PRD no padrão `prd-leanwork`, `CLAUDE.md` e código existente, a maior parte das dimensões sai da busca.
 
