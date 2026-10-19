@@ -87,8 +87,26 @@ Você consegue justificar cada decisão sem inventar. Lacuna que muda a decisão
 Antes de escrever, decidir — em silêncio, sem despejar a análise no documento:
 
 1. **Tom pela incerteza.** Problema em que causa e efeito só aparecem depois da ação (a maioria dos desafios arquiteturais) pede proposta com MVP/PoC, métricas e marcos de revisão, não certeza absoluta. Sistema hoje instável pede "estabilizar antes de evoluir".
-2. **Trade-offs centrais.** Para cada um, qual lado o negócio prioriza segundo a entrevista — é o insumo da escolha de estilo.
-3. **Estilo.** Se o domínio tem isomorfismo claro com um estilo, usá-lo (catálogo em `references/architectural-styles.md`). Senão, decidem os atributos prioritários e as restrições. Monolito em camadas continua sendo a resposta certa em muitos casos.
+2. **Trade-offs centrais.** Percorrer os candidatos e, para cada um que se aplica, registrar qual lado o negócio prioriza segundo a entrevista — é o insumo da escolha de estilo:
+   - Acoplamento × reuso
+   - Consistência × disponibilidade (CAP)
+   - Performance × resiliência
+   - Time-to-market × manutenibilidade
+   - Segurança × disponibilidade
+   - Simplicidade operacional × escalabilidade horizontal
+   - Custo de infra × custo de desenvolvimento
+3. **Estilo.** Procurar isomorfismo entre domínio e estilo — quando há match, a arquitetura quase se autoescolhe:
+   - Sequência de transformações bem definida (ETL, pedido linear) → Pipes & Filters
+   - Customização pesada por cliente ou contexto → Microkernel / plugins
+   - Domínios independentes com times separados evoluindo em paralelo → Microsserviços
+   - CRUD com regras moderadas, time pequeno ou médio, deploy unificado → Monolito em camadas (ainda a resposta certa em muitos casos)
+   - Sistema reativo a eventos do mundo real → Event-Driven Architecture
+   - Muita leitura, pouca escrita, consistência eventual aceitável → CQRS + read models + cache
+   - Integrações múltiplas e diversas com sistemas externos → API Gateway + adapters
+   - Necessidade de auditar tudo o que aconteceu → Event Sourcing
+   - Carga variável e imprevisível com baixa demanda média → Serverless
+
+   Sem isomorfismo claro, decidem os atributos prioritários e as restrições. Forças, fraquezas e quando evitar cada estilo: `references/architectural-styles.md`.
 4. **Tecnologia.** Restrição declarada se respeita e se registra como restrição. Sem restrição, a stack que melhor atende o contexto: maturidade, domínio do time, ecossistema, custo total e aderência aos atributos. A melhor stack que ninguém sabe operar perde para a segunda melhor que todos dominam; a questão é se resolve, não se impressiona.
 5. **Dívidas plantadas.** O que não está sendo feito agora, quando vai precisar ser, e em que cenário (volume, time, regulação) vira problema. Vai para a seção "Dívidas técnicas conscientes" da proposta.
 
@@ -105,7 +123,7 @@ Ler `references/proposal-template.md` antes de gerar: ele traz a estrutura exata
 - Sistema complexo, com vários containers críticos: Context + Container + Component dos containers mais relevantes
 - Code: praticamente nunca — o código é a fonte de verdade
 
-Diagramas em Mermaid: `flowchart` para containers e componentes, `sequenceDiagram` quando um fluxo crítico explica uma decisão. Frases afirmativas ("adotamos X"), números no lugar de adjetivos ("5k RPS sustentado", não "altamente escalável"), e o que ficou de fora registrado no apêndice.
+Diagramas em Mermaid: `flowchart` para containers e componentes, `sequenceDiagram` quando um fluxo crítico explica uma decisão. Frases afirmativas ("adotamos X"), jargão explicado numa frase no contexto local ("CQRS", "Saga" — o sumário executivo é lido por não-técnicos), dívida apresentada como maturidade e não como fraqueza, números no lugar de adjetivos ("5k RPS sustentado", não "altamente escalável"), e o que ficou de fora registrado no apêndice.
 
 Recursos auxiliares, sob demanda:
 

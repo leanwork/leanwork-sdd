@@ -37,6 +37,7 @@ Execução do `docs/plans/PLAN-002-enxugamento-pipeline.md`.
 - `skills/architect-leanwork/SKILL.md`: 248 → 147 linhas. Saíram a explicação de Cynefin (fica a consequência prática), a lista genérica de trade-offs, a lista de isomorfismos (está em `architectural-styles.md`), a explicação dos níveis do C4 e os princípios de escrita genéricos. Ficaram as posições Leanwork: restrição como restrição, sem modismo, sem estimativa, regra de escolha do nível C4 e o checklist final. Os catálogos em `references/` não mudaram.
 - PRD: a hierarquia Epic → Feature → PBI passa a opcional, para quem cadastra no Azure DevOps, na SKILL e no template. O template perde a seção 7.2 (fluxos alternativos e de erro), que redescrevia os cenários `CA-XX`. A numeração das seções foi mantida porque `id-conventions.md` cita as seções 8 e 9.
 - `REFERENCES.md`: a entrada de Cynefin passa de reprodução a adaptação.
+- **Revisão após teste A/B (2026-10-19).** A mesma demanda foi rodada pela skill da 1.10.0 e pela cortada, com briefing completo. As propostas saíram equivalentes: mesma estrutura, 7 ADRs, mesmas decisões, sumário em linguagem de negócio, nenhuma estimativa. Ainda assim, três itens voltaram: a lista de trade-offs candidatos, a lista de isomorfismo domínio → estilo e a regra de explicar jargão no sumário. Elas funcionam como checklist, custam 18 linhas e o risco de cortá-las aparece em domínio menos óbvio que o testado. A SKILL fica com 165 linhas, acima da meta de 150 da T-18.
 
 ### README enxuto e CHANGELOG (T-19)
 

@@ -549,7 +549,7 @@ Regra comum às quatro: fato se busca no repositório e nos artefatos; decisão 
 No architect, saem a explicação de Cynefin, a lista genérica de trade-offs, a explicação dos níveis do C4 e os princípios de escrita genéricos; ficam as opiniões Leanwork (restrição como restrição, sem modismo, sem estimativa, regra de escolha do nível C4). No PRD, a hierarquia Epic→Feature→PBI passa a opcional, para quem cadastra no Azure DevOps, e o template perde seções que repetem o que os cenários Gherkin já dizem. Os catálogos em `references/` ficam, porque só carregam sob demanda e servem de documentação para pessoas.
 
 **Critério de aceite (testável):**
-- [ ] `skills/architect-leanwork/SKILL.md` com no máximo 150 linhas (hoje 248), mantendo o checklist final
+- [ ] `skills/architect-leanwork/SKILL.md` com no máximo 150 linhas (hoje 248), mantendo o checklist final — *revisto em 2026-10-19 após teste A/B contra a 1.10.0: as listas de trade-offs e de isomorfismo e a regra do jargão voltaram; o arquivo fica com 165 linhas*
 - [ ] A hierarquia Epic→Feature→PBI está marcada como opcional no template e na SKILL do PRD
 - [ ] As seções obrigatórias do PRD continuam incluindo regras `RN-XX` e cenários `CA-XX`
 
