@@ -17,6 +17,16 @@ Esta skill realiza review de implementação cruzando o código entregue com os 
 - **Sem invenção.** Se faltar contexto (PRD, plano, CLAUDE.md), declara a lacuna no relatório e segue com review degradado, em vez de inventar critérios.
 - **Não-trivial.** Não comenta o que linter/formatter já cobre. Foca em decisões que exigem julgamento humano (ou de agente bem instruído).
 
+### Evidência ou zero
+
+O princípio "baseada em evidência" acima trata dos **findings**. A regra simétrica trata da **cobertura**, e é ela que impede a aprovação por engano: apontar um problema sem evidência gera ruído, mas declarar coberto sem evidência gera falsa aprovação — o erro caro.
+
+1. **Um `CA-XX` só conta como coberto com citação `arquivo:linha` e a expressão da asserção reproduzida.** Nome de `describe`/`it`/método de teste **não** é evidência. `CA_04_Compra_com_sucesso_decrementa_estoque` declara a intenção de quem escreveu o teste; o que o teste verifica está na asserção, e os dois divergem com frequência — é assim que um teste que só confere `status == 200` passa por cobertura de um cenário sobre decremento de estoque. Sem a asserção reproduzida, o critério conta como **não coberto**.
+
+2. **Asserção que verifica que um método foi chamado não prova o estado resultante.** `verify(repo.save(x))` e `expect(spy).toHaveBeenCalled()` provam que o código chamou a dependência, não que o campo ficou persistido, que o valor ficou correto, ou que a transação fechou. Mock satisfeito é prova sobre a interação, e o `CA-XX` quase sempre fala sobre o resultado. Quando a única asserção disponível é de chamada, o critério conta como **parcialmente coberto** e a lacuna vai escrita no relatório.
+
+3. **Não declarar um critério ausente sem ter buscado.** Evidência-ou-zero vale nas duas direções: assim como "coberto" precisa de citação, "não existe teste para o CA-04" precisa da busca que sustenta a afirmação. Antes de concluir ausência, varrer os arquivos de teste pelo identificador, pelo nome do comportamento e pelo nome do símbolo sob teste — e **mostrar no relatório o que foi buscado**. Falso negativo custa caro de outro jeito: gera finding `Bloqueante` em cima de um teste que existia, e ensina o time a desconfiar do review.
+
 ## Fluxo geral
 
 1. **Identificar a tarefa sob revisão (T-XX)** — pelo input do usuário, branch, commit message, ou pergunta direta
@@ -128,6 +138,18 @@ Os testes existem, cobrem o que importa, e passam?
 - Há teste que valida a decisão arquitetural `ADR-XX` (ex.: stress test para CA com concorrência)?
 - Testes faltando para regras críticas → Bloqueante; faltando para edge cases → Importante
 
+**Litmus da asserção rasa.** "Existe e passa" não é cobertura. A pergunta do eixo 4 é se o teste **pegaria o bug**, e ela se responde com um teste único, independente de stack e de framework:
+
+> Uma asserção é **rasa** se ela ainda passaria sob uma implementação plausivelmente errada.
+
+Aplicar imaginando a implementação errada mais provável para aquele comportamento — não a absurda. Se a asserção sobrevive a ela, a asserção não discrimina, e o critério que ela supostamente cobre segue descoberto. Um teste que confere só `status == 200` sobrevive a um handler que devolve 200 sem persistir nada; um teste que confere `estoque == 9` depois de comprar 1 de 10 não sobrevive. Registrar a asserção rasa como finding e tratar o critério correspondente como **não coberto** na matriz de cobertura, aplicando a regra "evidência ou zero" dos Princípios.
+
+**Sensor de discriminação.** O litmus responde a pergunta por leitura; o sensor responde por execução. Ele injeta um defeito deliberado no código novo da tarefa e observa se a suíte quebra — mutante morto significa que o teste discrimina aquele comportamento, mutante sobrevivente significa que não. O protocolo completo, incluindo o isolamento em scratch que impede a mutação de tocar a worktree do usuário, está em `references/discrimination-sensor.md`; seguir de lá, passo a passo.
+
+**Pré-condição: a suíte precisa estar verde.** Rodar o sensor sobre suíte vermelha não significa nada — os testes já falham sem o defeito, então nada distingue mutante morto de suíte quebrada. Confirmar o verde primeiro; se não der para rodar a suíte, o sensor não roda, e a seção do relatório registra isso e a razão.
+
+**Mutante sobrevivente é `Bloqueante`**: teste que não pega o bug é teste que não existe. O finding aponta a asserção fraca, não a mutação.
+
 ### Eixo 5 — Qualidade do código (calibrada pela stack)
 
 Aqui entra o conhecimento da stack descoberta na Fase 2 e dos padrões lidos do `CLAUDE.md` do projeto.
@@ -163,6 +185,9 @@ Aplicável somente a tarefas com o campo `Telas:` preenchido. Pular inteiramente
 - Code review de formatação (linter/formatter cobre)
 - Otimização de performance se performance não foi atributo prioritário no PRD/arquitetura
 - Reescrever a abordagem para "como eu faria" — review é sobre adequação ao plano e qualidade objetiva, não preferência
+- Rodar o sensor de discriminação com a suíte vermelha — sem baseline verde, mutante morto e suíte quebrada são indistinguíveis
+- Reportar resultado de run cujo isolamento divergiu do baseline — run inválida não diz nada sobre a qualidade dos testes, diz que o procedimento quebrou
+- Usar mutante sobrevivente para justificar um teste que mata exatamente aquela mutação e mais nada — o alvo é a asserção fraca, não a mutação
 
 ## Fase 5 — Geração do relatório
 

@@ -52,6 +52,25 @@ SKILL.md curta + `references/` carregadas sob demanda.
 
 **Reprodução** do formato de produto; **adaptação** do princípio de UI para economia de contexto de agente.
 
+### Verificação determinística — gates, autor ≠ verificador e sensor de discriminação
+
+A camada de verificação introduzida na **v1.10.0** tem uma fonte de design direta: a skill **[`tlc-spec-driven` v3.3.0](https://agent-skills.techleads.club/tlc-spec-driven/)**, de **Felipe Rodrigues** (CC-BY-4.0). Três mecanismos vieram de lá:
+
+1. **Gates determinísticos em Python** — validadores stdlib que a skill invoca antes de apresentar o artefato, com exit code decidindo se ele passa. A alternativa que existia antes era prosa instrutiva: nenhuma regra falhava, tudo dependia de o agente lembrar.
+2. **Separação autor ≠ verificador** — a review roda num sub-agente de contexto limpo, porque quem acabou de implementar tem o raciocínio da implementação em memória e tende a confirmar a própria intenção.
+3. **Sensor de discriminação** — injeção de falha no código novo para responder se o teste pegaria o bug, em vez de se ele existe e passa.
+
+**Adaptação, não reprodução.** Os três são práticas de engenharia conhecidas antes do TLC — gates determinísticos são *quality gates* de CI (Humble & Farley, *Continuous Delivery*, 2010); autor ≠ verificador é a separação de papéis da inspeção formal de Fagan (IBM, 1976) e da IEEE 1028; injeção de falha é **mutation testing**, de **Richard Lipton** (1971) e **DeMillo, Lipton & Sayward**, *Hints on Test Data Selection* (IEEE Computer, 1978), com **Jia & Harman** (2011) como survey canônico. O que o TLC contribui, e que está reproduzido aqui em espírito, é o **design de empacotamento**: gate chamado pela própria skill em vez de por CI, validador em stdlib puro para sobreviver em qualquer máquina, e o sensor formulado como protocolo stack-agnóstico em vez de como ferramenta.
+
+O conteúdo validado é inteiramente do pipeline Leanwork — `T-XX`, `RN-XX`, `CA-XX`, `ADR-XX`, `UI-XX` e a matriz que os costura não existem no TLC —, então nenhuma linha de código ou de regra foi copiada.
+
+**Divergências deliberadas ao adotar:**
+
+- **Gherkin PT-BR em vez de EARS.** O TLC usa EARS para requisitos. Aqui `CA-XX` é a costura de todo o pipeline — nome de teste, campo `Valida:` da tarefa, coluna da matriz de rastreabilidade, seção de cobertura do relatório. Trocar o formato do cenário significaria refazer os seis elos, e o ganho de precisão do EARS não paga isso.
+- **Seis skills em vez de uma.** O TLC concentra o pipeline numa skill só. O Leanwork mantém a segregação por fase, que é o que permite entrar no meio do pipeline (projeto que já tem arquitetura, projeto sem interface) sem carregar contexto das fases que não se aplicam.
+
+**Lacuna que permanece.** Três mecanismos do TLC foram avaliados e **não adotados**, e seguem fora do escopo: *auto-sizing* (o plano dimensionar as próprias tarefas por heurística executável, em vez do teto de 30min-4h como calibragem mental), a **camada de lições** (acumular aprendizados de execução entre tarefas) e a **reconciliação com git** (o estado declarado no plano ser conferido contra o histórico do repositório, não só contra o que o agente escreveu). Os três resolvem problemas reais que este pipeline ainda tem.
+
 ### Ferramentas e formatos citados
 
 | Item | Fonte |
@@ -464,6 +483,7 @@ Conceitos que o pipeline tangencia sem cruzar. Registrados aqui como roadmap hon
 | **eMAG e LBI (Lei 13.146/2015)** | Acessibilidade cita WCAG, mas não a norma brasileira |
 | **Conventional Commits** | O pipeline exige citar `T-XX` no commit, mas não adota convenção de tipo/escopo |
 | **Impact Mapping, Event Storming, Story Mapping** | Técnicas de descoberta que antecederiam bem a fase de arquitetura |
+| **Auto-sizing, camada de lições e reconciliação com git** — `tlc-spec-driven` v3.3.0 | Avaliados na v1.10.0 e não adotados. O tamanho de tarefa segue calibragem mental sem heurística executável; nada acumula aprendizado entre execuções; e o `Status` declarado no plano não é conferido contra o histórico do repositório. Ver [Verificação determinística](#verificação-determinística--gates-autor--verificador-e-sensor-de-discriminação) |
 
 ---
 
@@ -526,6 +546,7 @@ Conceitos que o pipeline tangencia sem cruzar. Registrados aqui como roadmap hon
 - Eric Brewer — *[CAP Twelve Years Later](https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/)* (2012)
 - Melvin Conway — *[How Do Committees Invent?](https://www.melconway.com/Home/Committees_Paper.html)* (1968)
 - Stephen Cleary — *[Async/Await Best Practices](https://learn.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming)* (2013)
+- DeMillo, Lipton & Sayward — *Hints on Test Data Selection: Help for the Practicing Programmer* (IEEE Computer, 1978) — origem publicada do mutation testing
 - Roy Fielding — *[Architectural Styles and the Design of Network-based Software Architectures](https://ics.uci.edu/~fielding/pubs/dissertation/top.htm)* (2000)
 - Martin Fowler — bliki: [CQRS](https://martinfowler.com/bliki/CQRS.html), [Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html), [Circuit Breaker](https://martinfowler.com/bliki/CircuitBreaker.html), [Technical Debt Quadrant](https://martinfowler.com/bliki/TechnicalDebtQuadrant.html), [Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html), [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html), [Strangler Fig](https://martinfowler.com/bliki/StranglerFigApplication.html), [Dependency Injection](https://martinfowler.com/articles/injection.html)
 - Garcia-Molina & Salem — *Sagas* (SIGMOD, 1987)
@@ -537,6 +558,7 @@ Conceitos que o pipeline tangencia sem cruzar. Registrados aqui como roadmap hon
 - Dan McKinley — *[Choose Boring Technology](https://mcfunley.com/choose-boring-technology)* (2015)
 - Jakob Nielsen — *[10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)* (1994)
 - Dan North — *[Introducing BDD](https://dannorth.net/introducing-bdd/)* (2006)
+- Jia & Harman — *An Analysis and Survey of the Development of Mutation Testing* (IEEE TSE, 2011)
 - Michael Nygard — *[Documenting Architecture Decisions](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions)* (2011)
 - Jeffrey Palermo — *[The Onion Architecture](https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/)* (2008)
 - Potvin & Levenberg — *Why Google Stores Billions of Lines of Code in a Single Repository* (CACM, 2016)
@@ -573,6 +595,8 @@ Conceitos que o pipeline tangencia sem cruzar. Registrados aqui como roadmap hon
 - [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html) — HTTP Semantics
 - [LGPD — Lei 13.709/2018](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
 - [GitHub Spec Kit](https://github.com/github/spec-kit) · [AWS Kiro](https://kiro.dev)
+- [`tlc-spec-driven` v3.3.0](https://agent-skills.techleads.club/tlc-spec-driven/) — Felipe Rodrigues, CC-BY-4.0. Fonte de design da camada de verificação da v1.10.0
+- [Stryker](https://stryker-mutator.io) · [PIT](https://pitest.org) · [mutmut](https://github.com/boxed/mutmut) · [cargo-mutants](https://mutants.rs) — ferramentas de mutation testing citadas como opcionais no sensor de discriminação
 - [Anthropic — Claude Code Skills](https://docs.claude.com/en/docs/claude-code/skills) e [Settings](https://docs.claude.com/en/docs/claude-code/settings) · [Model Context Protocol](https://modelcontextprotocol.io)
 - [Mermaid](https://mermaid.js.org) · [xUnit Test Patterns](https://xunitpatterns.com) · [Testcontainers](https://testcontainers.com) · [Prometheus naming practices](https://prometheus.io/docs/practices/naming/) · [OpenTelemetry](https://opentelemetry.io)
 

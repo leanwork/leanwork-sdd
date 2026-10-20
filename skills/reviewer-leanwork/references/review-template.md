@@ -124,11 +124,13 @@ Verificação detalhada das regras de negócio que a tarefa prometeu concretizar
 
 - **Como foi implementada:** [Resumo objetivo de onde no código vive a regra]
 - **Evidência:** `src/Projeto/Foo/FooHandler.cs:60-75`
+- **Asserção:** `Assert.Equal(9, estoque.Quantidade)` — *(a expressão que prova a regra, reproduzida do teste)*
 - **Status:** ✅ Implementada corretamente
 
 ### RN-07 — [Texto da regra]
 
 - **Como foi implementada:** [Não foi! ou Implementação divergente]
+- **Busca realizada:** `grep -r "RN-07\|LimiteCredito" tests/` — nenhum resultado
 - **Status:** ❌ Ver R-01
 
 ---
@@ -139,14 +141,33 @@ Verificação dos cenários Gherkin que a tarefa prometeu validar.
 
 ### CA-04 — [Nome do cenário, copiado do PRD]
 
-- **Teste correspondente:** `tests/FooHandlerTests.cs::CA_04_Compra_com_sucesso_decrementa_estoque`
-- **Cobre o cenário Gherkin completo?** Sim — Dado/Quando/Então mapeados
+- **Teste:** `tests/FooHandlerTests.cs:112`
+- **Asserção:** `Assert.Equal(9, estoque.Quantidade)`
+- **Cobre o cenário Gherkin completo?** Sim — Dado (estoque=10) / Quando (compra de 1) / Então (estoque=9) mapeados
 - **Status:** ✅
 
 ### CA-06 — [Nome do cenário]
 
-- **Teste correspondente:** Não encontrado
+- **Teste:** Não encontrado
+- **Busca realizada:** `grep -ri "CA-06\|cupom.*expirado\|AplicarCupom" tests/` — nenhum resultado
 - **Status:** ❌ Ver R-02
+
+---
+
+## Sensor de discriminação
+
+**Profundidade:** [padrão (1-3) | completo (risco: dinheiro / auth / integridade de dados)]
+**Isolamento:** [git worktree | cópia em diretório temporário]
+**Resultado:** [N/N mortos]
+
+| # | Arquivo:linha | Mutação aplicada | Morto? |
+|---|---|---|---|
+| 1 | `src/servico.ext:42` | Condição `x > 0` invertida para `x >= 0` | ✅ Morto |
+| 2 | `src/handler.ext:15` | Chamada obrigatória a `notificar()` removida | ❌ Sobreviveu → R-01 |
+
+*Cada sobrevivente aponta o `R-XX` que gerou — mutante sobrevivente é `Bloqueante`, e o finding acusa a asserção fraca, não a mutação.*
+
+*Quando o sensor não rodou (sem suíte executável, suíte vermelha, repositório em rebase, ambiente sem execução de código), manter a seção e escrever a razão no lugar da tabela. Ausência declarada é informação; seção omitida é silêncio que passa por aprovação.*
 
 ---
 

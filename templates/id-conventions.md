@@ -55,7 +55,7 @@ O campo `**Status:**` de cada `T-XX` no plano aceita **exatamente quatro valores
 
 Transições válidas: `Pendente → Em andamento → Concluído`. De qualquer estado é possível ir para `Bloqueado`, e de `Bloqueado` se volta ao estado anterior quando o impedimento cai.
 
-**Este vocabulário é contrato, não estilo.** `/leanwork-next` e `/leanwork-trace` leem o campo literalmente para descobrir o estado de execução — escrever `Done`, `✅`, `Feito` ou `OK` torna a tarefa invisível para os dois comandos. O plano é a fonte de verdade do estado; um estado que o plano não declara não existe para o pipeline.
+**Este vocabulário é contrato, não estilo.** `/leanwork-next` e `/leanwork-trace` leem o campo literalmente para descobrir o estado de execução — escrever `Done`, `✅`, `Feito` ou `OK` torna a tarefa invisível para os dois comandos. Desde a v1.10.0 o contrato tem gate: `scripts/validate_plan.py` reprova o plano com status fora dos quatro valores, antes de o planner apresentá-lo. O plano é a fonte de verdade do estado; um estado que o plano não declara não existe para o pipeline.
 
 ### Três eixos de status — não confundir
 
@@ -144,4 +144,6 @@ describe('CA-01 — Cliente compra produto em flash sale com sucesso', () => {
 
 Para a versão com xUnit/C# real, ver `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/task-examples.md`, seção "Convenção de nomenclatura de testes".
 
-Isso permite ao `/leanwork-trace` rodar um grep simples (`grep -r "CA-01" tests/`) e confirmar que o cenário tem cobertura de teste real, não apenas referência teórica no plano.
+Isso permite ao `/leanwork-trace` rodar um grep simples (`grep -r "CA-01" tests/`) e localizar rapidamente onde o cenário é tratado.
+
+**O que o grep prova, e o que não prova.** Ele prova que o ID é **mencionado** em algum teste. Não prova que o teste verifica o cenário: o nome declara intenção, a asserção declara o que foi verificado, e as duas divergem com frequência — um `CA_04_Compra_decrementa_estoque` cujo corpo só confere `status == 200` passa no grep e não cobre nada. Por isso o eixo 4 do `reviewer-leanwork` exige `arquivo:linha` **e** a asserção reproduzida antes de marcar um `CA-XX` como coberto, e o gate `validate_review.py` reprova o relatório que marca sem os dois. A convenção de nome serve à navegação; a evidência de cobertura é a asserção.
