@@ -96,11 +96,11 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
    - Para entender a decisão arquitetural base: `docs/architecture/proposta-arquitetural.md` (procure `ADR-XX`)
 5. Implemente respeitando os pontos de validação humana marcados no plano
 6. Atualize o campo `Status:` da tarefa ao concluir (ou `Bloqueado` com `Bloqueio:`)
-7. Uma tarefa por ciclo, com review antes da próxima
+7. Uma tarefa por ciclo, na branch `task/PLAN-XXX-T-XX`, integrada na base só depois de review sem `Bloqueante`
 
-Padrão de nomeação de testes: `CA_XX_descricao_do_cenario` (ver `templates/id-conventions.md` do plugin).
+Padrão de nomeação de testes: `CA_XX_descricao_do_cenario`; de branch: `task/PLAN-XXX-T-XX` (ver `templates/id-conventions.md` do plugin).
 
-Com o plugin instalado, `/leanwork-execute` executa esses passos e `/leanwork-review T-XX` revisa.
+Com o plugin instalado, `/leanwork-execute` executa esses passos, encadeia a review e integra; `/leanwork-review T-XX` revisa de novo depois de uma correção.
 ```
 
 ## Múltiplos sistemas / mono-repo

@@ -105,9 +105,9 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
 5. Respeite os pontos de validação humana marcados no plano
 6. Nomeie os testes conforme a convenção `CA_XX_*` para preservar rastreabilidade
 7. Atualize o estado ao terminar: campo `Status:` da tarefa (`Pendente` → `Em andamento` → `Concluído`, ou `Bloqueado` com o motivo em `Bloqueio:`). O plano é a fonte de verdade do estado — tarefa concluída que continua `Pendente` fica invisível para quem retomar o trabalho
-8. Execute **uma tarefa por vez** e peça review antes de seguir para a próxima
+8. Execute **uma tarefa por vez**, cada uma na sua branch `task/PLAN-XXX-T-XX` aberta a partir da branch base do projeto, e só integre na base depois de review sem `Bloqueante`
 
-> Com o plugin Leanwork SDD instalado, `/leanwork-execute` faz os passos 1 a 8 e `/leanwork-review T-XX` faz a revisão. Sem o plugin, seguir os passos manualmente — eles não dependem de ferramenta.
+> Com o plugin Leanwork SDD instalado, `/leanwork-execute` faz os passos 1 a 8: abre a branch, implementa, entrega a review a um sub-agente e integra. `/leanwork-review T-XX` revisa de novo depois de uma correção. Sem o plugin, seguir os passos manualmente — eles não dependem de ferramenta.
 
 <!-- leanwork-context:end -->
 

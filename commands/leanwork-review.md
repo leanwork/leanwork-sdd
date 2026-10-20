@@ -1,12 +1,14 @@
 ---
-description: Revisa implementação contra plano + PRD + arquitetura. Gera relatório REVIEW-{T-XX} com findings R-XX categorizados.
+description: Revisa implementação contra plano + PRD + arquitetura num sub-agente. Gera relatório REVIEW-{T-XX} com findings R-XX e, sem Bloqueante, integra a branch da tarefa na base.
 argument-hint: [T-XX e/ou path do diff/PR, opcional]
-allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**), Bash(python:*), Agent
+allowed-tools: Read, Glob, Grep, Edit(docs/reviews/**), Bash(python:*), Bash(git status:*), Bash(git branch:*), Bash(git switch:*), Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref:*), Bash(git add:*), Agent
 ---
 
 # Review de Implementação SDD
 
 Você acaba de invocar o reviewer do pipeline SDD Leanwork. O objetivo é validar que a implementação entrega o que `T-XX` prometeu, cruzando código com plano, PRD e arquitetura.
+
+O `/leanwork-execute` encadeia esta review sozinho ao concluir uma tarefa. Chamado diretamente, este comando serve ao round seguinte de uma review bloqueada, a PR de terceiro e a tarefa executada fora do pipeline.
 
 Input do usuário: $ARGUMENTS
 
@@ -19,6 +21,8 @@ Se o usuário forneceu `T-XX`, branch ou PR, use. Caso contrário, descobrir em 
 1. **Branch atual** (`git branch --show-current`) — procurar padrão `T-\d+`
 2. **Último commit** (`git log -1 --pretty=%B`) — procurar padrão `T-\d+`
 3. **Pergunta direta**: "Qual tarefa do plano essa implementação entrega? (ex.: T-04). E como acesso o código? (paste do diff, branch para comparar, ou caminho dos arquivos)"
+
+**Com branch de tarefa** (`task/PLAN-XXX-T-XX`, aberta pelo `/leanwork-execute` — convenção em `templates/id-conventions.md`, seção "Branch de tarefa"), o diff sob review é `git diff <base>...task/PLAN-XXX-T-XX`, e nada além dele. Mudança fora da branch — na árvore, sem commit — não é da tarefa: se `git status` mostrar arquivo rastreado modificado, avisar e pedir que o usuário commite na branch ou descarte antes de revisar. Sem branch de tarefa (PR de terceiro, projeto que não adotou a convenção), o diff é o que o usuário indicar, e o Passo 7 não se aplica.
 
 Identificada a tarefa, **procurar reviews anteriores dela**: `docs/reviews/REVIEW-{T-XX}-*.md`. Se existir algum, esta review é o round N+1 — ver "Review de segundo round" nos casos especiais e conduzir por lá. Essa verificação é parte do fluxo normal, não exceção: revisar de novo sem comparar com o round anterior perde exatamente a informação que justifica o re-review.
 
@@ -56,7 +60,7 @@ A única escrita permitida ao verificador é o **scratch isolado do sensor de di
 
 1. A tarefa `T-XX` **copiada na íntegra** do plano — campos, critérios de aceite e testes a escrever, não o resumo dela
 2. O **texto integral** de cada `RN-XX`, `CA-XX`, `ADR-XX` e `UI-XX` que a tarefa declara, copiado do artefato de origem. Referência por código não serve: o sub-agente não tem o PRD em contexto
-3. O diff ou os arquivos sob review
+3. O diff sob review — com branch de tarefa, a saída de `git diff <base>...task/PLAN-XXX-T-XX` e o nome da branch, para o verificador ler os arquivos inteiros nela
 4. A stack detectada **e a fonte dela** (Passo 3)
 5. Os padrões lidos do `CLAUDE.md` da raiz e do módulo afetado
 6. Quando for round N+1, o relatório do round anterior
@@ -79,7 +83,7 @@ O sensor exige capacidade de executar comandos (git e o runner de testes da stac
 
 Esses três itens transformam a review em avaliação da explicação, não do código. Um verificador que recebe a justificativa julga se ela é convincente; um verificador que recebe só o spec e o código julga se o código cumpre o spec — que é a pergunta do review. Incluir o raciocínio reintroduz exatamente o viés que o sub-agente existe para eliminar, e de quebra reintroduz o vazamento de contexto: payload largo demais é o mesmo contexto com outro nome.
 
-O sub-agente devolve os findings `R-XX` com severidade. **Quem escreve o relatório, salva o arquivo e edita o plano é o orquestrador** — Passos 5 e 6 seguem aqui, não lá.
+O sub-agente devolve os findings `R-XX` com severidade. **Quem escreve o relatório, salva o arquivo, edita o plano e integra a branch é o orquestrador** — Passos 5 a 7 seguem aqui, não lá. O orquestrador transcreve: severidade e recomendação são as que o verificador devolveu, e discordância vai para o chat, nunca para o relatório.
 
 **Fallback — modo degradado.** Se não houver capacidade de sub-agente disponível no ambiente, rodar a review inline **e avisar no chat que autor e verificador são o mesmo contexto nesta execução**. O aviso não é opcional: é a única coisa que impede uma review degradada de passar por verificação independente.
 
@@ -112,6 +116,18 @@ Confirmar com o usuário antes de editar o plano, e avisar se a tarefa estava ma
 Sem findings bloqueantes, **não** mexer no plano — `Aprovado com ressalvas` não muda o estado da tarefa, e findings Importantes viram tarefa nova via `planner-leanwork` quando justificarem.
 
 O plano é a fonte de verdade do estado: um review bloqueante que não aparece nele é invisível para `/leanwork-pipeline`, e a tarefa segue sendo sugerida como pronta.
+
+### Passo 7 — Integrar a branch da tarefa
+
+Só com branch de tarefa (Passo 1). Primeiro, commitar na branch o relatório e, se o Passo 6 mexeu nele, o plano — `git add` desses arquivos, mensagem com o trailer `Refs: T-XX`, conferida pelo `check_commit.py` como no `/leanwork-execute`.
+
+- **Com `Bloqueante`:** a branch fica como está e o trabalho continua nela. Avisar que a correção é commitada na própria `task/PLAN-XXX-T-XX` e que o próximo `/leanwork-review T-XX` é o round seguinte. Não integrar
+- **Sem `Bloqueante`** (`Aprovado` ou `Aprovado com ressalvas`): `git switch <base>` e `git merge --no-ff task/PLAN-XXX-T-XX`, com a mensagem `Integra T-XX: <título da tarefa>` e o trailer `Refs: T-XX`. Merge sem conflito → `git branch -d task/PLAN-XXX-T-XX`; o `-d` minúsculo recusa apagar o que não foi integrado, e é essa recusa que se quer
+- **Conflito:** `git merge --abort`, voltar para a branch da tarefa e listar os arquivos em conflito. Não resolver por conta própria — resolução de conflito é código novo que nenhuma review leu
+
+`git merge` e `git commit` ficam fora do `allowed-tools` de propósito: a confirmação de permissão é o último ponto em que o usuário vê o veredicto antes de a tarefa entrar na base. Sem push: publicar é decisão do usuário.
+
+Com a integração feita, a base tem a tarefa `Concluído` e o relatório que a aprovou, e `/leanwork-pipeline` passa a sugerir a próxima.
 
 ## Casos especiais
 

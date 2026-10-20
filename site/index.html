@@ -40,7 +40,7 @@
 
   <section class="hero">
     <div class="wrap">
-      <span class="rotulo">Leanwork SDD · v2.0.0</span>
+      <span class="rotulo">Leanwork SDD · v2.1.0</span>
       <h1 class="hero__titulo">Do briefing ao review, sem perder o fio.</h1>
       <p class="hero__texto">
         Um pipeline <strong>Spec-Driven Development</strong> em seis skills coordenadas: arquitetura,
@@ -232,28 +232,29 @@
         <div class="ciclo__passo">
           <p class="ciclo__cmd">/leanwork-execute T-04</p>
           <ol class="ciclo__lista">
+            <li>Abre a branch <span class="mono">task/PLAN-001-T-04</span> a partir da base</li>
             <li>Confere com <span class="mono">validate_ids.py</span> que cada ID citado existe — senão, para e reporta</li>
             <li>Carrega o PRD, a arquitetura e a SPEC-UI nos IDs que a tarefa declara</li>
             <li>Escreve o teste na costura antes do código de produção</li>
             <li>Roda typecheck e build antes da suíte</li>
-            <li>Fecha o estado, sugere o commit com <span class="mono">Refs: T-04, CA-01</span> e sugere o review</li>
+            <li>Fecha o estado, commita na branch com <span class="mono">Refs: T-04, CA-01</span> e encadeia o review</li>
           </ol>
         </div>
         <div class="ciclo__passo">
-          <p class="ciclo__cmd">/leanwork-review T-04</p>
+          <p class="ciclo__cmd">review encadeado · /leanwork-review T-04 no round seguinte</p>
           <ol class="ciclo__lista">
-            <li>Despacha um sub-agente sem o raciocínio de quem implementou</li>
+            <li>Despacha um sub-agente sem o raciocínio de quem implementou, com só o diff da branch</li>
             <li>Avalia os seis eixos com evidência de arquivo e linha</li>
             <li>Injeta defeitos no código novo para ver se os testes pegam</li>
             <li>Emite <span class="mono">R-01..R-XX</span>; o hook valida o relatório ao gravar</li>
-            <li>Finding bloqueante devolve a tarefa para <span class="mono">Bloqueado</span>, com o motivo em <span class="mono">Bloqueio:</span></li>
+            <li>Finding bloqueante devolve a tarefa para <span class="mono">Bloqueado</span>, com o motivo em <span class="mono">Bloqueio:</span>; sem ele, a branch entra na base com <span class="mono">merge --no-ff</span></li>
           </ol>
         </div>
       </div>
 
       <p class="nota">
         Quem implementou não decide se a implementação passou: o <span class="mono">/leanwork-execute</span>
-        sugere o review, mas nunca o roda por conta própria.
+        encadeia o review num sub-agente que não viu a implementação, e só transcreve o veredicto que volta.
       </p>
     </div>
   </section>
@@ -452,8 +453,8 @@
           </thead>
           <tbody>
             <tr><td class="mono">/leanwork-pipeline</td><td>Ponto de entrada: conduz o início (fluxo completo ou trilha rápida) ou lê o estado e sugere a próxima ação</td></tr>
-            <tr><td class="mono">/leanwork-execute</td><td>Executa uma tarefa carregando o contexto declarado e atualiza o <span class="mono">Status</span> ao final</td></tr>
-            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa num sub-agente de contexto limpo. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
+            <tr><td class="mono">/leanwork-execute</td><td>Executa uma tarefa na sua branch, carregando o contexto declarado, encadeia o review e integra na base sem finding bloqueante</td></tr>
+            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa num sub-agente de contexto limpo, sobre o diff da branch. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span>; usado direto no round seguinte</td></tr>
             <tr><td class="mono">/leanwork-trace</td><td>Gera a matriz <span class="mono">ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R</span> e aponta os gaps</td></tr>
             <tr><td class="mono">/leanwork-sdd:&lt;skill&gt;</td><td>Chama uma skill direto — ex.: <span class="mono">prototype-leanwork</span>, <span class="mono">context-leanwork</span></td></tr>
           </tbody>
