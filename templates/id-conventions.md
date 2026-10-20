@@ -112,6 +112,20 @@ Refs: T-04, CA-01, CA-03
 
 `scripts/check_commit.py --message "<msg>"` verifica o trailer e, com `--plan`, que a `T-XX` existe no plano. Também funciona como hook `commit-msg` do git, sem depender de agente.
 
+### Branch de tarefa
+
+Cada `T-XX` é implementada numa branch própria, aberta a partir da branch base e integrada de volta só depois da review sem `Bloqueante`. A branch é o que delimita o diff que o verificador lê: sem ela, a review de uma tarefa enxerga tudo o que estiver pendente na árvore.
+
+```
+task/PLAN-002-T-04
+```
+
+- **O plano entra no nome** porque a numeração de `T-XX` recomeça a cada plano: `T-04` sozinho colide entre o PLAN-001 e o PLAN-002
+- **IDs em maiúsculas**, como nos artefatos: a review identifica a tarefa procurando `T-\d+` no nome da branch
+- **Branch base:** a que o `CLAUDE.md` da raiz declarar como branch de integração; sem declaração, a branch padrão do remoto (`git symbolic-ref --short refs/remotes/origin/HEAD`); sem remoto, `main` ou `master`, a que existir
+- **Diff da tarefa:** `git diff <base>...task/PLAN-XXX-T-XX` — três pontos, a partir do ancestral comum, para que o que entrou na base depois não apareça como mudança da tarefa
+- **Integração:** `git merge --no-ff`, para que cada tarefa fique como um merge identificável no `git log` da base. Push é do usuário
+
 ### Direção das setas
 
 A rastreabilidade flui do macro ao micro:

@@ -1,7 +1,7 @@
 ---
 description: Ponto de entrada do pipeline SDD Leanwork. Sem artefatos, conduz a entrada (fluxo completo, trilha rápida ou ponto de partida); com artefatos, lê o estado e sugere uma próxima ação.
 argument-hint: [descrição curta da demanda, opcional]
-allowed-tools: Read, Glob, Grep, Bash(python:*), Edit(docs/architecture/**), Edit(docs/prds/**), Edit(docs/prototype/**), Edit(docs/plans/**)
+allowed-tools: Read, Glob, Grep, Bash(python:*), Bash(git branch:*), Edit(docs/architecture/**), Edit(docs/prds/**), Edit(docs/prototype/**), Edit(docs/plans/**)
 ---
 
 # Pipeline SDD Leanwork
@@ -19,6 +19,8 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/status.py" --json
 ```
 
 A saída lista os artefatos presentes e, por plano, as tarefas por status, `Em andamento`, `Bloqueado` com o motivo, `Concluído` sem review, review `Bloqueado` sem round seguinte, status fora do vocabulário e a próxima tarefa elegível. É relatório, não gate: exit 0 com pendências é o normal. Interpretar a saída — não reler os artefatos para refazer a contagem.
+
+O script lê a branch atual. Tarefa em andamento ou com review bloqueada vive na sua branch `task/PLAN-XXX-T-XX` (`templates/id-conventions.md`, seção "Branch de tarefa") e não aparece na base até ser integrada. Por isso, na base, listar também as branches de tarefa abertas: `git branch --list "task/*" --no-merged`. Cada uma é trabalho em curso, e entra na prioridade 1 ou 3 abaixo conforme o estado dela.
 
 **Fallback — modo degradado.** Sem ferramenta de execução, ler `docs/plans/`, `docs/reviews/` e os demais artefatos à mão, aplicando as mesmas categorias, e **dizer no chat que o estado foi reconstruído sem o script**.
 
@@ -44,9 +46,9 @@ Estrutura de pastas para projeto novo: `templates/folder-conventions.md`. Sugeri
 
 **Com artefatos:** sugerir **uma** próxima ação, na ordem de prioridade abaixo. Não listar opções.
 
-1. **Resolver bloqueios** — review `Bloqueado` sem round seguinte (citar `R-XX` com o nome do relatório: a numeração recomeça a cada arquivo); tarefa `Bloqueado`, a partir do motivo em `Bloqueio:`
+1. **Resolver bloqueios** — review `Bloqueado` sem round seguinte (citar `R-XX` com o nome do relatório: a numeração recomeça a cada arquivo); tarefa `Bloqueado`, a partir do motivo em `Bloqueio:`. A correção é feita na branch da tarefa e fecha com `/leanwork-review T-XX`
 2. **Validar entregas** — tarefa `Concluído` sem review: sugerir `/leanwork-review T-XX`
-3. **Avançar execução** — tarefa `Em andamento` primeiro (é trabalho interrompido); depois a próxima elegível: `/leanwork-execute T-XX`
+3. **Avançar execução** — tarefa `Em andamento` primeiro (é trabalho interrompido, e `/leanwork-execute T-XX` retoma a branch dela); depois a próxima elegível: `/leanwork-execute T-XX`, que implementa, revisa e integra
 4. **Avançar o pipeline** — PRD com interface sem SPEC-UI e sem plano: oferecer `prototype-leanwork` ou ir direto ao `planner-leanwork`, sem bloquear; PRD sem plano: `planner-leanwork`; arquitetura sem PRD: `prd-leanwork`
 
 Antes da sugestão, apontar o que o script marcou como inconsistência: tarefa `Concluído` com review `Bloqueado` em aberto (grave), `Bloqueado` sem motivo, status fora do vocabulário. Referência quebrada entre artefatos é do `validate_ids.py` e da matriz do `/leanwork-trace`.

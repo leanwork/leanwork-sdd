@@ -2,6 +2,20 @@
 
 Histórico de versões do plugin `leanwork-sdd`. Formato: versão, data quando registrada, e o que mudou com o motivo.
 
+## 2.1.0 — 2026-10-20
+
+Execução e review encadeados, cada tarefa na sua branch.
+
+- **`/leanwork-execute` encadeia a review.** Antes, terminava sugerindo `/leanwork-review` e proibia rodá-lo. Agora implementa no contexto principal e, com a tarefa `Concluído`, entrega a review ao sub-agente verificador, que já existia. A regra "quem implementou não decide se passou" continua de pé por construção: quem decide é o sub-agente, e o contexto principal transcreve o veredicto sem rebaixar severidade.
+- **Uma branch por tarefa: `task/PLAN-XXX-T-XX`.** O verificador lia o diff da árvore inteira; com execuções seguidas sem commit, a review de uma tarefa enxergava as anteriores. Agora o diff é `git diff <base>...task/PLAN-XXX-T-XX`. O plano entra no nome porque a numeração de `T-XX` recomeça a cada plano. Convenção em `templates/id-conventions.md`, seção "Branch de tarefa".
+- **O execute commita na branch da tarefa.** Antes, só sugeria a mensagem. O commit é local, numa branch que só a tarefa usa, com o trailer conferido por `check_commit.py`. `git commit` fica fora do `allowed-tools`, então a confirmação de permissão continua mostrando a mensagem ao usuário.
+- **Sem `Bloqueante`, a review integra a branch na base** com `merge --no-ff` e apaga a branch com `-d`. Com `Bloqueante`, a branch fica aberta, a correção é commitada nela e o próximo `/leanwork-review T-XX` é o round seguinte. Conflito aborta o merge e volta para o usuário. Nunca há push.
+- **`/leanwork-pipeline` lista as branches de tarefa abertas** (`git branch --list "task/*" --no-merged`), porque o estado `Em andamento` ou `Bloqueado` de uma tarefa vive na branch dela até a integração.
+
+Quebra de contrato: nenhuma nos artefatos. Muda o comportamento — o execute agora cria branch, commita e faz merge local. Projeto que não quer esse fluxo continua com `/leanwork-review` chamado direto sobre o diff que indicar; fora de um repositório git, o execute segue sem branch e avisa que o diff não está isolado.
+
+Não testado em projeto real ainda: o fluxo foi escrito e revisado, mas não rodou de ponta a ponta. Validar no primeiro uso.
+
 ## 2.0.0 — 2026-10-19
 
 Enxugamento do pipeline, executado pelo `docs/plans/PLAN-002-enxugamento-pipeline.md`. A premissa: os modelos atuais seguem instrução concisa e inferem contexto do repositório, mas continuam declarando conclusão sem prova e escrevendo teste raso. Por isso o corte é assimétrico — **sai a coreografia, fica a verificação**. Gates, sub-agente verificador, sensor de discriminação e "evidência ou zero" não mudaram.

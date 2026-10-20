@@ -1,14 +1,14 @@
 ---
-description: Executa uma tarefa do plano SDD carregando o contexto declarado (RN/CA/ADR/UI), implementando só o escopo da tarefa e atualizando o Status ao final.
+description: Executa uma tarefa do plano SDD numa branch própria, carregando o contexto declarado (RN/CA/ADR/UI), e encadeia a review num sub-agente; sem Bloqueante, integra a branch na base.
 argument-hint: [T-XX — opcional; se omitido, pega a próxima tarefa elegível]
-allowed-tools: Read, Glob, Grep, Bash(python:*)
+allowed-tools: Read, Glob, Grep, Bash(python:*), Bash(git status:*), Bash(git branch:*), Bash(git switch:*), Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref:*), Bash(git add:*), Edit(docs/reviews/**), Agent
 ---
 
 # Executar tarefa do plano SDD
 
 Tarefa alvo: $ARGUMENTS
 
-Este comando executa **uma** tarefa do plano. Ele existe para que a implementação carregue o mesmo contexto que o planejamento produziu — em vez de o agente reconstruir a intenção a partir do título da tarefa.
+Este comando executa **uma** tarefa do plano, de ponta a ponta: abre a branch da tarefa, implementa neste contexto, entrega a review a um sub-agente de contexto limpo e, sem `Bloqueante`, integra a branch na base. Ele existe para que a implementação carregue o mesmo contexto que o planejamento produziu — em vez de o agente reconstruir a intenção a partir do título da tarefa.
 
 ## O que fazer
 
@@ -39,9 +39,17 @@ Ler também o `CLAUDE.md` da raiz e o do módulo afetado, se existirem — é on
 
 Conferir se a tarefa aparece na seção "Pontos de validação humana" do plano. Se aparecer, pedir confirmação explícita **antes de escrever qualquer código** e aguardar resposta.
 
-### Passo 4 — Marcar início
+### Passo 4 — Abrir a branch e marcar início
 
-Atualizar o campo `**Status:**` da tarefa para `Em andamento` antes de começar. Isso torna a sessão recuperável: se o trabalho for interrompido, o próximo `/leanwork-pipeline` mostra onde parou em vez de sugerir a tarefa como se nada tivesse acontecido.
+A tarefa vive em `task/PLAN-XXX-T-XX`, aberta a partir da branch base — nome, base e diff em `templates/id-conventions.md`, seção "Branch de tarefa".
+
+1. **Árvore limpa.** `git status --porcelain` sem arquivo rastreado modificado ou em stage. Se houver, parar e perguntar ao usuário se commita ou guarda as mudanças — não fazer `stash` nem descartar por conta própria: mudança alheia levada para a branch da tarefa entra no diff que o verificador lê. Arquivo não rastreado não bloqueia, mas não entra nos commits da tarefa
+2. **Branch já existe** (`git branch --list task/PLAN-XXX-T-XX`): é retomada — trabalho interrompido ou review bloqueada. `git switch` para ela e seguir de onde o `Status:` e o último relatório em `docs/reviews/` indicam, sem recriar
+3. **Branch nova:** `git switch -c task/PLAN-XXX-T-XX <base>`. Com a base atrás do remoto, avisar — atualizar a base é decisão do usuário
+
+Já na branch, atualizar o campo `**Status:**` da tarefa para `Em andamento`. Isso torna a sessão recuperável: se o trabalho for interrompido, o próximo `/leanwork-pipeline` mostra onde parou em vez de sugerir a tarefa como se nada tivesse acontecido.
+
+**Fallback — sem git.** Fora de um repositório git, seguir sem branch e avisar no chat que o diff da review não está isolado: o verificador vai ler a árvore inteira.
 
 ### Passo 5 — Implementar
 
@@ -61,24 +69,32 @@ Se os critérios de aceite estão todos atendidos e os testes passam:
 
 1. Conferir cada item de `Critério de aceite (testável)` contra a implementação e a Definition of Done do `CLAUDE.md`, quando houver
 2. Atualizar o campo `**Status:**` para `Concluído`
-
-Não commitar por conta própria. Sugerir a mensagem de commit já com o trailer `Refs:` — a `T-XX` e os `CA-XX` de `Valida:` (convenção em `templates/id-conventions.md`, seção "Trailer de commit") — e deixar a decisão com o usuário. Conferir a mensagem sugerida antes de apresentá-la:
+3. Commitar na branch da tarefa o código, os testes e o plano. `git add` arquivo por arquivo, só o que a tarefa tocou — nunca `git add -A` ou `git add .`, que levam para o diff qualquer não rastreado que estava na árvore. A mensagem termina com o trailer `Refs:` — a `T-XX` e os `CA-XX` de `Valida:` (convenção em `templates/id-conventions.md`, seção "Trailer de commit") — e passa pelo gate antes do commit:
 
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/check_commit.py" --message "<mensagem>" --plan docs/plans/PLAN-XXX-nome.md
 ```
 
-O plano não guarda data nem hash: a trilha de quando e onde a tarefa mudou é o `git log`.
+O comando não pergunta antes de commitar, porque o commit é local e fica numa branch que só esta tarefa usa. Mas `git commit` fica de fora do `allowed-tools` de propósito: a confirmação de permissão do Claude Code é o ponto em que o usuário vê a mensagem. O plano não guarda data nem hash: a trilha de quando e onde a tarefa mudou é o `git log`.
 
-Se **não** for possível concluir, usar `Status: Bloqueado`, registrar o motivo no campo `**Bloqueio:**` da tarefa e parar. Tarefa parcialmente feita marcada como `Concluído` é a inconsistência que o `/leanwork-trace` foi feito para achar — não criar uma de propósito.
+Se **não** for possível concluir, usar `Status: Bloqueado`, registrar o motivo no campo `**Bloqueio:**` da tarefa, commitar o estado na branch e parar — sem review. Tarefa parcialmente feita marcada como `Concluído` é a inconsistência que o `/leanwork-trace` foi feito para achar — não criar uma de propósito.
 
-### Passo 8 — Sugerir o próximo passo
+### Passo 8 — Encadear a review
 
-Sugerir `/leanwork-review T-XX`. **Não rodar automaticamente** — quem implementou não decide se a implementação passou.
+Com a tarefa `Concluído` e commitada, seguir direto para a review: Passos 1 a 7 de `${CLAUDE_PLUGIN_ROOT}/commands/leanwork-review.md`, com a `T-XX` e a branch já conhecidas. Lá estão o sub-agente verificador, o payload, o relatório, o veredicto e a integração na base — este comando não repete nada disso.
+
+Quem implementou não decide se a implementação passou: o verificador é um contexto que não viu esta conversa. Duas regras seguram essa separação daqui:
+
+- **O payload não leva o raciocínio da implementação.** Este contexto tem tudo em memória e vai querer explicar as escolhas; a lista do que não entra está no Passo 4 da review
+- **O veredicto é o do verificador.** Transcrever os `R-XX` com a severidade que ele devolveu. Rebaixar um `Bloqueante` porque "o código está certo" é o autor revisando a si mesmo pela porta dos fundos — discordância vai para o chat, ao lado do relatório, e a decisão é do usuário
+
+Não encadear a review quando a tarefa terminou `Bloqueado` ou quando a execução parou esperando confirmação do usuário.
 
 ## O que NÃO fazer
 
-- **Executar mais de uma tarefa por invocação.** Uma tarefa, um ciclo, uma revisão. Se a próxima parecer trivial, ela ainda assim tem critério de aceite próprio e review próprio.
+- **Executar mais de uma tarefa por invocação.** Uma tarefa, uma branch, uma revisão. Se a próxima parecer trivial, ela ainda assim tem critério de aceite próprio e review próprio.
+- **Implementar fora da branch da tarefa**, ou levar para ela mudança que a tarefa não fez. O diff da branch é o que o verificador lê.
+- **Fazer push.** A integração é local; publicar é decisão do usuário.
 - **Implementar regra de negócio que não está em nenhuma `RN-XX` da tarefa.** Se a implementação exigir uma decisão que o PRD não cobre, parar e apontar a lacuna — o PRD é que precisa mudar, não o código que precisa adivinhar.
 - **Marcar `Concluído` com critério de aceite parcialmente atendido.** Usar `Bloqueado` com o motivo em `**Bloqueio:**`.
 - **Reescrever o plano durante a execução.** Se a tarefa está mal dimensionada, apontar e sugerir revisar o plano via `planner-leanwork`. Executar uma tarefa diferente da planejada quebra a rastreabilidade silenciosamente.

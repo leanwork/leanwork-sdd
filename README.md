@@ -10,7 +10,7 @@ Trilha rápida:  plano de uma tarefa (cenários na própria tarefa)  →  Execu�
 context-leanwork — transversal, sempre opt-in          * opcional — só para PRDs com interface
 ```
 
-A execução é uma fase do pipeline, não um intervalo entre fases. `/leanwork-execute` pega uma tarefa por vez, carrega o contexto que o plano declarou (`RN` / `CA` / `ADR` / `UI`), devolve o estado ao plano e sugere o commit com o trailer; `/leanwork-review` valida num sub-agente de contexto limpo e, se bloquear, devolve o bloqueio ao plano também. O campo `**Status:**` da tarefa é o único lugar onde o estado vive; a trilha de auditoria vem do `git log`, pelo trailer `Refs: T-XX, CA-XX` de cada commit.
+A execução é uma fase do pipeline, não um intervalo entre fases. `/leanwork-execute` pega uma tarefa por vez, numa branch própria (`task/PLAN-XXX-T-XX`), carrega o contexto que o plano declarou (`RN` / `CA` / `ADR` / `UI`), commita com o trailer e entrega a review a um sub-agente de contexto limpo, que lê só o diff da branch. Sem `Bloqueante`, a branch é integrada na base; com, o bloqueio volta ao plano e a correção segue na branch. O campo `**Status:**` da tarefa é o único lugar onde o estado vive; a trilha de auditoria vem do `git log`, pelo trailer `Refs: T-XX, CA-XX` de cada commit.
 
 O que separa este pipeline de um conjunto de prompts é a camada de verificação: gates com exit code, autor diferente do verificador, sensor de discriminação nos testes e a regra "evidência ou zero" na cobertura. A coreografia em volta foi enxugada na 2.0.0 ([`CHANGELOG.md`](CHANGELOG.md)); a verificação não.
 
@@ -19,8 +19,8 @@ O que separa este pipeline de um conjunto de prompts é a camada de verificaçã
 | Comando | O que faz |
 |---------|-----------|
 | `/leanwork-pipeline` | Ponto de entrada. Sem artefatos, conduz a entrada — fluxo completo, trilha rápida ou ponto de partida. Com artefatos, lê o estado via `status.py` e sugere a próxima ação |
-| `/leanwork-execute` | Executa uma tarefa carregando o contexto declarado e atualiza o `Status`. Antes de implementar, `validate_ids.py` barra ID citado que não existe na origem |
-| `/leanwork-review` | Roda `reviewer-leanwork` num sub-agente de contexto limpo. Finding `Bloqueante` volta como `Status: Bloqueado` no plano |
+| `/leanwork-execute` | Executa uma tarefa na branch `task/PLAN-XXX-T-XX`, carregando o contexto declarado, e encadeia a review; sem `Bloqueante`, integra na base. Antes de implementar, `validate_ids.py` barra ID citado que não existe na origem |
+| `/leanwork-review` | Roda `reviewer-leanwork` num sub-agente de contexto limpo, sobre o diff da branch da tarefa. Finding `Bloqueante` volta como `Status: Bloqueado` no plano. Chamado direto, serve ao round seguinte e a PR de terceiro |
 | `/leanwork-trace` | Matriz `ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R` e lacunas, gerada pelo `trace.py` |
 
 As skills também são invocáveis direto pelo namespace do plugin: `/leanwork-sdd:prd-leanwork`, `/leanwork-sdd:prototype-leanwork`, `/leanwork-sdd:context-leanwork` e assim por diante.
@@ -99,7 +99,7 @@ Cada artefato declara seus elos: ADRs numerados sem reúso na proposta; `Cenári
 
 ## O review
 
-- **Autor ≠ verificador.** `/leanwork-review` despacha um sub-agente de contexto limpo, com payload autossuficiente. O raciocínio da implementação fica de fora de propósito: quem recebe a justificativa julga se ela convence, não se o código cumpre o spec.
+- **Autor ≠ verificador.** Ao fim de cada tarefa, a review roda num sub-agente de contexto limpo, com payload autossuficiente e só o diff da branch da tarefa. O contexto que implementou transcreve o veredicto, não o reescreve. O raciocínio da implementação fica de fora de propósito: quem recebe a justificativa julga se ela convence, não se o código cumpre o spec.
 - **Seis eixos.** Aderência ao plano, rastreabilidade, aderência ao spec, cobertura de teste, qualidade do código calibrada pelo `CLAUDE.md` do projeto e, quando há SPEC-UI, conformidade de interface — estrutura, estados e comportamento, nunca estética.
 - **Evidência ou zero.** `CA-XX` só conta como coberto com `arquivo:linha` e a asserção reproduzida; nome de método de teste não é evidência.
 - **Sensor de discriminação.** O eixo 4 injeta um defeito no código novo, em scratch fora da árvore do usuário, e observa se a suíte quebra. Mutante sobrevivente é `Bloqueante`.
@@ -153,19 +153,22 @@ Em todos os casos a sugestão é convite: se o usuário ignorar, o pipeline segu
   → planner → T-01..T-09 (fatias por CA)          (hook valida o plano a cada gravação)
 
 /leanwork-execute T-04
+  → branch task/PLAN-001-T-04 a partir da main
   → validate_ids.py; carrega RN-03, CA-01, CA-03, ADR-002, UI-02 (default, esgotado)
-  → teste na costura, implementação, suíte verde
-  → sugere o commit "Refs: T-04, CA-01, CA-03" (check_commit.py); T-04: Status Concluído
+  → teste na costura, implementação, suíte verde; T-04: Status Concluído
+  → commit "Refs: T-04, CA-01, CA-03" na branch (check_commit.py)
+  → sub-agente lê git diff main...task/PLAN-001-T-04 → REVIEW-T-04-2026-06-15.md (R-01..R-03, 1 Bloqueante)
+  → T-04 volta para Status: Bloqueado, com Bloqueio: R-01 (REVIEW-T-04-2026-06-15); branch não integrada
 
+(correção commitada em task/PLAN-001-T-04)
 /leanwork-review T-04
-  → sub-agente → REVIEW-T-04-2026-06-15.md (R-01..R-03, 1 Bloqueante)
-  → T-04 volta para Status: Bloqueado, com Bloqueio: R-01 (REVIEW-T-04-2026-06-15)
+  → round 2, sem Bloqueante → merge --no-ff na main; branch apagada
 
 /leanwork-pipeline            (retomar)
-  → status.py: T-04 Bloqueado; próxima elegível T-05
+  → status.py: próxima elegível T-05
 ```
 
-Mudança pequena entra por `/leanwork-pipeline` → trilha rápida → `/leanwork-execute T-01` → `/leanwork-review T-01`. O exemplo completo, com os cinco artefatos preenchidos e IDs cruzados, está em `stacks/dotnet/pipeline-example.md`.
+Mudança pequena entra por `/leanwork-pipeline` → trilha rápida → `/leanwork-execute T-01`, que já encadeia a review. O exemplo completo, com os cinco artefatos preenchidos e IDs cruzados, está em `stacks/dotnet/pipeline-example.md`.
 
 ## Filosofia
 
