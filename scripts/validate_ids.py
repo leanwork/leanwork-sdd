@@ -9,6 +9,9 @@ conferencia manual que o Passo 2 de `/leanwork-execute` descreve em prosa.
     ADR-XX         -> docs/architecture/proposta-arquitetural.md + adrs/
     UI-XX[.estado] -> docs/prototype/SPEC-UI-*.md
 
+No plano de trilha rapida nao ha PRD: `CA-XX` resolve contra o proprio plano,
+no bloco `**Cenarios:**` da tarefa.
+
 Artefato de origem ausente nao reprova: a verificacao daquela classe de ID e
 pulada e declarada em WARN. Projeto sem SPEC-UI e sem campo `Telas:` e o estado
 correto e nao gera diagnostico.
@@ -37,7 +40,7 @@ from _common import (
     resolve_target,
     unwrap_envelope,
 )
-from validate_plan import load_document, parse_tasks
+from _common import is_quick_track, load_document, parse_tasks
 
 SCRIPT = "validate_ids"
 
@@ -64,9 +67,10 @@ UI_DEFINITION = re.compile(r"^\s*#{1,6}\s*\**(UI-\d{2,})\**\s*[:—–-]", re.MU
 class Source:
     """Um artefato de origem: o texto concatenado e se ele existe."""
 
-    def __init__(self, label, paths):
+    def __init__(self, label, paths, origin="PRD"):
         self.label = label
         self.paths = paths
+        self.origin = origin
         self.text = ""
         for path in paths:
             self.text += "\n".join(unwrap_envelope(read_lines(path))) + "\n"
@@ -90,14 +94,20 @@ def gather(root, relative_dir, patterns):
     return found
 
 
-def load_sources(root):
+def load_sources(root, plan_path=None):
+    """Artefatos de origem por classe. Com `plan_path`, o plano e de trilha
+    rapida e e ele a origem dos `CA-XX`."""
     prd = gather(root, "docs/prds", ["PRD-*.md"])
     architecture = gather(root, "docs/architecture", ["proposta-arquitetural.md"])
     architecture += gather(root, "docs/architecture/adrs", ["*.md"])
     spec_ui = gather(root, "docs/prototype", ["SPEC-UI-*.md"])
     return {
         "RN": Source("docs/prds/PRD-*.md", prd),
-        "CA": Source("docs/prds/PRD-*.md", prd),
+        "CA": (
+            Source(Path(plan_path).name, [Path(plan_path)], origin="plano")
+            if plan_path is not None
+            else Source("docs/prds/PRD-*.md", prd)
+        ),
         "ADR": Source(
             "docs/architecture/proposta-arquitetural.md + adrs/", architecture
         ),
@@ -242,8 +252,8 @@ def check_coverage_gaps(references, sources, diagnostics):
         missing = [identifier for identifier in defined if identifier not in cited]
         if missing:
             diagnostics.warn(
-                "{} definido(s) no PRD que nenhuma tarefa do plano cita: {}".format(
-                    kind, ", ".join(missing)
+                "{} definido(s) no {} que nenhuma tarefa do plano cita: {}".format(
+                    kind, source.origin, ", ".join(missing)
                 )
             )
 
@@ -256,7 +266,7 @@ def validate(plan_path, root, diagnostics):
         return
 
     references, states = collect_references(tasks, diagnostics)
-    sources = load_sources(root)
+    sources = load_sources(root, plan_path if is_quick_track(lines, mask) else None)
     check_references(references, states, sources, diagnostics)
     check_coverage_gaps(references, sources, diagnostics)
 

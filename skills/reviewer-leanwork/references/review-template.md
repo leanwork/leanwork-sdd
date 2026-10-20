@@ -62,7 +62,7 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 
 *Se o projeto não tem padrões declarados em CLAUDE.md, indicar:*
 
-> ⚠️ Padrões específicos da stack não estão documentados em `CLAUDE.md`. Foram aplicados apenas critérios universais de qualidade. Recomenda-se documentar convenções do time para futuros reviews.
+> ⚠️ Padrões específicos da stack não estão documentados em `CLAUDE.md`. Foi aplicado apenas o piso de segurança (PII em log, segredo hardcoded). Recomenda-se documentar convenções do time para futuros reviews.
 
 ### Escopo do diff
 
@@ -206,8 +206,8 @@ Pontos que não viraram R-XX mas merecem registro para evoluir o pipeline.
 - **Plano precisa de atualização:** [se aplicável — ex.: T-04 cobriu mais do que listado, sugerir extrair tarefa nova]
 - **PRD ambíguo:** [se aplicável — ex.: RN-08 permitiu interpretação dupla]
 - **ADR ausente:** [se aplicável — implementação tomou decisão arquitetural não documentada]
-- **Padrão emergente:** [se aplicável — o time estabeleceu um padrão que ainda não está no `CLAUDE.md`. Descrever o padrão observado e sugerir `/leanwork-context raiz` para documentá-lo]
-- **Contexto do agente desatualizado:** [se aplicável — ex.: `CLAUDE.md` declara stack ou convenção que o código já não segue. Sugerir `/leanwork-context auditar`]
+- **Padrão emergente:** [se aplicável — o time estabeleceu um padrão que ainda não está no `CLAUDE.md`. Descrever o padrão observado e sugerir `/leanwork-sdd:context-leanwork raiz` para documentá-lo]
+- **Contexto do agente desatualizado:** [se aplicável — ex.: `CLAUDE.md` declara stack ou convenção que o código já não segue. Sugerir `/leanwork-sdd:context-leanwork auditar`]
 
 ---
 

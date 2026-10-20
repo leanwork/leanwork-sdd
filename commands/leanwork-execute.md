@@ -25,23 +25,13 @@ O vocabulário de status é fixo (`Pendente` / `Em andamento` / `Concluído` / `
 Abrir e ler na íntegra o que a tarefa referencia. **Não deduzir pelo título:**
 
 - `Implementa:` → o PRD, cada `RN-XX` listado
-- `Valida:` → o PRD, cada `Cenário [CA-XX]:` listado
+- `Valida:` → o PRD, cada `Cenário [CA-XX]:` listado. No plano de trilha rápida (`PRD de referência: nenhum — trilha rápida`) não há PRD: os cenários estão no bloco `**Cenários:**` da própria tarefa
 - `Decisões base:` → a proposta arquitetural, cada `ADR-XX`
 - `Telas:` → a SPEC-UI, a tela e **cada estado** listado (campo ausente em projeto sem interface — não é lacuna)
 
-Antes de ler, rodar o gate de rastreabilidade na raiz do projeto. Ele confere de uma vez, para todas as tarefas do plano, que cada `RN-XX`, `CA-XX`, `ADR-XX` e `UI-XX` citado existe no artefato onde aquele ID nasce:
-
-```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_ids.py" docs/plans/PLAN-XXX-nome.md
-```
-
-**Exit diferente de zero é PARE.** Cada `ERROR` é um gap de rastreabilidade, não erro de execução: implementar assim mesmo produz código que ninguém consegue amarrar a um requisito. Reportar o gap e aguardar — não inventar o ID que falta, não seguir "assumindo que era o RN-03".
-
-Linha `WARN` não interrompe. Duas formas aparecem: artefato de origem ausente, e aí a verificação daquela classe de ID foi **pulada**, não aprovada; e regra do PRD que nenhuma tarefa cita, que é gap de cobertura — análise de `/leanwork-trace`, não bloqueio aqui.
-
-**Fallback — modo degradado.** Sem ferramenta de execução de código disponível, conferir à mão cada ID dos campos acima contra o artefato de origem e **avisar no chat que a rastreabilidade não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
-
-Se o `Bash` pedir confirmação apesar de `Bash(python:*)` no `allowed-tools` deste comando, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade (ver `permission-catalog.md`, seção "Sombra de prefixo entre baldes"). Confirmar ou ajustar as settings; nunca pular a validação.
+Antes de ler, rodar o gate de rastreabilidade — sem hook, porque não depende de edição: `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_ids.py" docs/plans/PLAN-XXX-nome.md`. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
+Exit diferente de zero é PARE: cada `ERROR` é um ID citado que não existe na origem — reportar o gap e aguardar, sem inventar o ID. `WARN` não interrompe (origem ausente = verificação pulada, não aprovada).
+Sem execução de código, conferir os IDs à mão e avisar no chat que a rastreabilidade não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 Ler também o `CLAUDE.md` da raiz e o do módulo afetado, se existirem — é onde estão as convenções que o review vai cobrar.
 
@@ -51,11 +41,11 @@ Conferir se a tarefa aparece na seção "Pontos de validação humana" do plano.
 
 ### Passo 4 — Marcar início
 
-Atualizar o campo `**Status:**` da tarefa para `Em andamento` antes de começar. Isso torna a sessão recuperável: se o trabalho for interrompido, o próximo `/leanwork-next` mostra onde parou em vez de sugerir a tarefa como se nada tivesse acontecido.
+Atualizar o campo `**Status:**` da tarefa para `Em andamento` antes de começar. Isso torna a sessão recuperável: se o trabalho for interrompido, o próximo `/leanwork-pipeline` mostra onde parou em vez de sugerir a tarefa como se nada tivesse acontecido.
 
 ### Passo 5 — Implementar
 
-Implementar apenas o escopo de `Camadas/arquivos afetados`. Tocar arquivo fora dessa lista exige justificativa explícita ao usuário antes — escopo expandido em silêncio é finding Importante no review, e o reviewer vai encontrar.
+Implementar o comportamento que a tarefa promete — os `CA-XX` de `Valida:` e os critérios de aceite. Onde o código mora segue as convenções do repositório e não precisa de justificativa. O que precisa é `**Portas de mão única:**`: tocar migration, contrato público, schema ou configuração de permissão que a tarefa não declara exige parar e confirmar com o usuário antes — porta de mão única não declarada é finding no review, e o reviewer vai encontrar.
 
 Respeitar as decisões de `Decisões base:` mesmo quando houver abordagem que pareça melhor. Se a decisão parecer errada, é caso de ADR novo via `architect-leanwork`, não de divergir na implementação.
 
@@ -69,13 +59,18 @@ Rodar o typecheck/build do projeto antes de rodar a suíte — erro de tipo não
 
 Se os critérios de aceite estão todos atendidos e os testes passam:
 
-1. Marcar os checkboxes de `Critério de aceite (testável)` da tarefa
+1. Conferir cada item de `Critério de aceite (testável)` contra a implementação e a Definition of Done do `CLAUDE.md`, quando houver
 2. Atualizar o campo `**Status:**` para `Concluído`
-3. Acrescentar linha na tabela de Histórico de execução (seção 11) com a data e, se já houver commit, o hash
 
-Não commitar por conta própria. Sugerir a mensagem de commit referenciando a `T-XX` e deixar a decisão com o usuário; registrar o hash no histórico depois que ele existir.
+Não commitar por conta própria. Sugerir a mensagem de commit já com o trailer `Refs:` — a `T-XX` e os `CA-XX` de `Valida:` (convenção em `templates/id-conventions.md`, seção "Trailer de commit") — e deixar a decisão com o usuário. Conferir a mensagem sugerida antes de apresentá-la:
 
-Se **não** for possível concluir, usar `Status: Bloqueado`, registrar o motivo na coluna Observação do histórico e parar. Tarefa parcialmente feita marcada como `Concluído` é a inconsistência que o `/leanwork-trace` foi feito para achar — não criar uma de propósito.
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/scripts/check_commit.py" --message "<mensagem>" --plan docs/plans/PLAN-XXX-nome.md
+```
+
+O plano não guarda data nem hash: a trilha de quando e onde a tarefa mudou é o `git log`.
+
+Se **não** for possível concluir, usar `Status: Bloqueado`, registrar o motivo no campo `**Bloqueio:**` da tarefa e parar. Tarefa parcialmente feita marcada como `Concluído` é a inconsistência que o `/leanwork-trace` foi feito para achar — não criar uma de propósito.
 
 ### Passo 8 — Sugerir o próximo passo
 
@@ -85,10 +80,10 @@ Sugerir `/leanwork-review T-XX`. **Não rodar automaticamente** — quem impleme
 
 - **Executar mais de uma tarefa por invocação.** Uma tarefa, um ciclo, uma revisão. Se a próxima parecer trivial, ela ainda assim tem critério de aceite próprio e review próprio.
 - **Implementar regra de negócio que não está em nenhuma `RN-XX` da tarefa.** Se a implementação exigir uma decisão que o PRD não cobre, parar e apontar a lacuna — o PRD é que precisa mudar, não o código que precisa adivinhar.
-- **Marcar `Concluído` com critério de aceite parcialmente atendido.** Usar `Bloqueado` com a observação no histórico.
+- **Marcar `Concluído` com critério de aceite parcialmente atendido.** Usar `Bloqueado` com o motivo em `**Bloqueio:**`.
 - **Reescrever o plano durante a execução.** Se a tarefa está mal dimensionada, apontar e sugerir revisar o plano via `planner-leanwork`. Executar uma tarefa diferente da planejada quebra a rastreabilidade silenciosamente.
 - **Pular os testes porque "a mudança é pequena".** O critério de conclusão é o que está escrito na tarefa.
 
 ## Regra de ouro
 
-O plano é a fonte de verdade do estado, e este comando é o único que o atualiza durante a execução. Um estado que o plano não declara não existe para o pipeline: `/leanwork-next` e `/leanwork-trace` leem esse arquivo e nada mais. Deixar o plano desatualizado é mais custoso que não ter plano, porque os dois comandos passam a descrever um projeto que não existe.
+O plano é a fonte de verdade do estado, e este comando é o único que o atualiza durante a execução. Um estado que o plano não declara não existe para o pipeline: `/leanwork-pipeline` e `/leanwork-trace` leem esse arquivo e nada mais. Deixar o plano desatualizado é mais custoso que não ter plano, porque os dois comandos passam a descrever um projeto que não existe.

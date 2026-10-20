@@ -1,6 +1,6 @@
 # Convenções de IDs — Pipeline SDD Leanwork
 
-Este documento é a referência única para os IDs usados pelo pipeline. Todas as seis skills (`architect-leanwork`, `prd-leanwork`, `prototype-leanwork`, `planner-leanwork`, `reviewer-leanwork`, `context-leanwork`) e os comandos que leem artefatos (`/leanwork-trace`, `/leanwork-next`, `/leanwork-execute`, `/leanwork-review`) dependem deste padrão.
+Este documento é a referência única para os IDs usados pelo pipeline. Todas as seis skills (`architect-leanwork`, `prd-leanwork`, `prototype-leanwork`, `planner-leanwork`, `reviewer-leanwork`, `context-leanwork`) e os comandos que leem artefatos (`/leanwork-pipeline`, `/leanwork-trace`, `/leanwork-execute`, `/leanwork-review`) e os scripts de `scripts/` dependem deste padrão.
 
 ## Os seis tipos de ID
 
@@ -8,9 +8,9 @@ Este documento é a referência única para os IDs usados pelo pipeline. Todas a
 |----|-------------|------------|---------------------|
 | `ADR-XX` | Architecture Decision Record | Proposta arquitetural (seção 5) | PRD (regras, citações inline), Plano (campo `Decisões base`), Review (verificação de conformidade) |
 | `RN-XX` | Regra de Negócio | PRD (seção 8) | PRD (passos Gherkin entre parênteses), Plano (campo `Implementa`), Review (cobertura por RN) |
-| `CA-XX` | Critério de Aceite (cenário Gherkin) | PRD (seção 9, no nome do cenário) | Plano (campo `Valida`), código de teste (nome do teste), Review (cobertura por CA) |
+| `CA-XX` | Critério de Aceite (cenário Gherkin) | PRD (seção 9, no nome do cenário) — na trilha rápida, o bloco `Cenários` da própria tarefa do plano | Plano (campo `Valida`), código de teste (nome do teste), Review (cobertura por CA) |
 | `UI-XX` | Tela de interface | SPEC-UI (seção 3) | Plano (campo `Telas`), Review (cobertura por UI). Estados usam sufixo: `UI-02.erro` |
-| `T-XX` | Tarefa de execução | Plano (cada tarefa numerada) | Outras tarefas (campo `Depende de`), histórico de execução, Review (cada relatório referencia 1 tarefa) |
+| `T-XX` | Tarefa de execução | Plano (cada tarefa numerada) | Outras tarefas (campo `Depende de`), mensagens de commit, Review (cada relatório referencia 1 tarefa) |
 | `R-XX` | Finding de review (Review-XX) | Relatório de review | Round subsequente de review (referência a findings anteriores), histórico de qualidade |
 
 ## Regras de numeração
@@ -30,11 +30,9 @@ O namespace de um ID é o documento onde ele nasce. Para cinco dos seis tipos is
 
 **RN-XX**: cada regra deve ser **verificável**. Se uma regra precisa de mais de um cenário Gherkin para ser provada, considere quebrar em duas regras.
 
-**CA-XX**: aparece dentro do bloco Gherkin como `Cenário [CA-01]: nome do cenário`. Os colchetes são parte da sintaxe — não omitir. Numeração é global ao PRD, não por funcionalidade.
+**CA-XX**: aparece dentro do bloco Gherkin como `Cenário [CA-01]: nome do cenário`. Os colchetes são parte da sintaxe — não omitir. Numeração é global ao PRD, não por funcionalidade. **Na trilha rápida não há PRD:** o `CA-XX` nasce no plano, dentro do bloco `**Cenários:**` da tarefa, com a mesma sintaxe, e a numeração é local àquele plano.
 
-**T-XX**: granularidade calibrada em **30 minutos a 4 horas** de execução — 1 commit ou 1 PR pequeno. Acima de 4 horas, quebrar; abaixo de ~10 minutos, embutir na tarefa vizinha. Tarefa que precisa de mais de 3 critérios de aceite provavelmente é grande demais.
-
-**Este é o teto canônico do pipeline.** `planner-leanwork/SKILL.md` e `planner-leanwork/references/task-examples.md` calibram por ele; nenhum outro número de tamanho de tarefa prevalece sobre este. A faixa é heurística mental para dimensionar a quebra — **não é estimativa e nunca vai escrita no plano**, que registra `Complexidade` qualitativa (`Baixa` / `Média` / `Alta`) e não horas.
+**T-XX**: o padrão é a **fatia vertical** — a tarefa fecha um ou mais `CA-XX` ponta a ponta e cabe num ciclo de `/leanwork-execute` + `/leanwork-review` com a suíte verde ao final. Fatia horizontal, por camada, só para fundação, migrations e expandir → migrar → contrair. O tamanho se mede por comportamento — mais de um caminho feliz ou `CA-XX` de features distintas é sinal de tarefa grande demais —, não por tempo: o plano registra `Complexidade` qualitativa (`Baixa` / `Média` / `Alta`), nunca horas. Calibragem completa em `planner-leanwork/SKILL.md` e `planner-leanwork/references/task-examples.md`.
 
 **UI-XX**: numeração sequencial global ao documento SPEC-UI. **Estados usam sufixo com ponto** (`UI-02.erro`, `UI-02.vazio`, `UI-02.carregando`), permitindo que o plano declare `Telas: UI-02 (default, erro)` e que o review verifique estado a estado. Tela removida mantém o ID marcado como removido — não reciclar.
 
@@ -51,11 +49,11 @@ O campo `**Status:**` de cada `T-XX` no plano aceita **exatamente quatro valores
 | `Pendente` | Ainda não iniciada. Estado inicial de toda tarefa recém-planejada. |
 | `Em andamento` | Iniciada e não concluída. |
 | `Concluído` | Critérios de aceite atendidos e testes passando. |
-| `Bloqueado` | Impedida por dependência, decisão em aberto ou finding Bloqueante de review. |
+| `Bloqueado` | Impedida por dependência, decisão em aberto ou finding Bloqueante de review. Exige o campo `**Bloqueio:**` com o motivo — e, se vier de review, `R-XX (REVIEW-...)`. |
 
 Transições válidas: `Pendente → Em andamento → Concluído`. De qualquer estado é possível ir para `Bloqueado`, e de `Bloqueado` se volta ao estado anterior quando o impedimento cai.
 
-**Este vocabulário é contrato, não estilo.** `/leanwork-next` e `/leanwork-trace` leem o campo literalmente para descobrir o estado de execução — escrever `Done`, `✅`, `Feito` ou `OK` torna a tarefa invisível para os dois comandos. Desde a v1.10.0 o contrato tem gate: `scripts/validate_plan.py` reprova o plano com status fora dos quatro valores, antes de o planner apresentá-lo. O plano é a fonte de verdade do estado; um estado que o plano não declara não existe para o pipeline.
+**Este vocabulário é contrato, não estilo.** `/leanwork-pipeline` e `/leanwork-trace` leem o campo literalmente para descobrir o estado de execução — escrever `Done`, `✅`, `Feito` ou `OK` torna a tarefa invisível para os dois comandos e para `status.py` e `trace.py`. Desde a v1.10.0 o contrato tem gate: `scripts/validate_plan.py` reprova o plano com status fora dos quatro valores, antes de o planner apresentá-lo. O plano é a fonte de verdade do estado; um estado que o plano não declara não existe para o pipeline.
 
 ### Três eixos de status — não confundir
 
@@ -97,6 +95,22 @@ Sempre que um documento citar um ID de outro documento, use **parênteses inline
   - `Valida: CA-01, CA-03` — após essa tarefa, esses cenários ficam verdes
   - `Decisões base: ADR-002` — esta tarefa materializa essa decisão arquitetural
   - `Telas: UI-02 (default, limiteExcedido)` — telas e estados que a tarefa implementa
+
+### Trailer de commit
+
+O elo código → requisito vem do `git log`, não do plano. Todo commit de tarefa termina com o trailer `Refs:`, listando a `T-XX` e os IDs que ele fecha:
+
+```
+Implementa o saque dentro do saldo
+
+Refs: T-04, CA-01, CA-03
+```
+
+- Pelo menos uma `T-XX` é obrigatória; `RN-XX`, `CA-XX`, `ADR-XX` e `UI-XX` (com sufixo de estado) são opcionais
+- `R-XX` não entra no trailer: a numeração é local ao relatório e não identifica nada sem o nome do arquivo
+- Várias linhas `Refs:` são somadas; IDs separados por vírgula
+
+`scripts/check_commit.py --message "<msg>"` verifica o trailer e, com `--plan`, que a `T-XX` existe no plano. Também funciona como hook `commit-msg` do git, sem depender de agente.
 
 ### Direção das setas
 

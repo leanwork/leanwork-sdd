@@ -8,21 +8,22 @@ Os exemplos abaixo usam pseudocódigo e nomes de camada genéricos — nenhum fr
 
 ## Princípio de granularidade
 
-Boa tarefa cabe em **1 commit ou 1 PR pequeno**, executável em **30 minutos a 4 horas** — teto canônico declarado em `templates/id-conventions.md` (regra de `T-XX`). Acima disso, quebrar. Abaixo disso (10 min), provavelmente é um detalhe que deveria estar embutido em outra tarefa.
+Boa tarefa é uma **fatia que fecha um ou mais `CA-XX` ponta a ponta** e cabe num ciclo de `/leanwork-execute` + `/leanwork-review` com a suíte verde ao final — regra de `T-XX` em `templates/id-conventions.md`. Não há teto em horas: os sinais de tamanho são de comportamento.
 
-A faixa calibra a quebra na cabeça de quem planeja; ela não vira campo da tarefa. O plano registra `Complexidade` qualitativa, nunca horas.
+O plano registra `Complexidade` qualitativa, nunca horas.
 
 | Sinal de "está grande demais" | Resposta |
 |-------------------------------|----------|
-| Mais de 3 critérios de aceite | Quebrar em 2 tarefas |
-| `Implementa:` lista 4+ RNs | Provavelmente 2 tarefas disfarçadas |
+| Mais de um caminho feliz na mesma tarefa | Uma fatia por caminho |
+| `Valida:` junta `CA-XX` de features distintas | Separar por feature |
+| Mais de 5 critérios de aceite | Provavelmente 2 fatias disfarçadas |
 | Descrição precisa de "e também", "além disso" | Sintoma claro de tarefa dupla |
-| Mais de 4 horas estimadas mentalmente | Quebrar |
-| Mexe em mais de 3 camadas diferentes | Verificar se não dá pra separar por camada — **exceto** em fatia vertical deliberada (Exemplo 6), onde atravessar camadas é o objetivo e o corte certo é por comportamento, não por camada |
+| Não cabe num ciclo com a suíte verde ao final | Cortar por comportamento: caminho feliz primeiro, erro e borda depois |
 
 | Sinal de "está pequena demais" | Resposta |
 |--------------------------------|----------|
 | Trivial sem critério de aceite real | Fundir com a tarefa anterior |
+| Sem nenhum `CA-XX` e fora das três exceções horizontais | Parte da fatia vizinha — embutir nela |
 | "Criar pasta X" | Embutir na tarefa de criação do arquivo |
 | "Renomear variável Y" | Não é tarefa de plano, é refactoring inline |
 
@@ -41,10 +42,7 @@ Tarefas estruturais geralmente **não preenchem `Implementa:` nem `Valida:`** po
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-001 *(estrutura modular monolith)*
-- **Camadas/arquivos afetados:**
-  - `dominio/entidades/flash-sale` *(novo)*
-  - `dominio/entidades/flash-sale-item` *(novo)*
-  - `infraestrutura/persistencia/mapeamento-flash-sale` *(novo)*
+- **Portas de mão única:** schema — tabela `FlashSale` com índice composto e constraint; a migration sai deste mapeamento
 
 **Descrição:**
 Criar a entidade `FlashSale` com propriedades: `id`, `produtoId`, `preco`, `estoque`,
@@ -79,11 +77,7 @@ Tarefas de lógica de negócio **sempre preenchem `Implementa:`** (regras do PRD
 - **Implementa:** RN-03, RN-05
 - **Valida:** CA-04, CA-06
 - **Decisões base:** ADR-002 *(lock pessimista para evitar overselling)*
-- **Camadas/arquivos afetados:**
-  - `aplicacao/flash-sale/comandos/comprar-oferta/comando` *(novo)*
-  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(novo)*
-  - `aplicacao/flash-sale/comandos/comprar-oferta/resultado` *(novo)*
-  - `infraestrutura/persistencia/repositorios/flash-sale-repositorio` *(editado)*
+- **Portas de mão única:** nenhuma
 
 **Descrição:**
 Handler que: (1) abre transação com isolamento serializável, (2) chama
@@ -131,9 +125,7 @@ Tarefas de controller/endpoint **preenchem `Valida:`** porque sua conclusão é 
 - **Implementa:** —
 - **Valida:** CA-04, CA-05, CA-06, CA-07 *(todos os cenários do funcional principal)*
 - **Decisões base:** ADR-003 *(REST + pipeline de handlers como padrão de entrada)*
-- **Camadas/arquivos afetados:**
-  - `api/controllers/flash-sales-controller` *(editado)*
-  - `api/dtos/comprar-oferta-request` *(novo)*
+- **Portas de mão única:** contrato público — rota `POST /api/flash-sales/{id}/comprar` e o DTO de request
 
 **Descrição:**
 Endpoint REST que recebe `ComprarOfertaRequest`, monta o comando `ComprarOferta`
@@ -175,9 +167,7 @@ Tarefas de observabilidade, métricas, logging tipicamente **não preenchem `Imp
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-008 *(observabilidade via ferramenta de APM)*
-- **Camadas/arquivos afetados:**
-  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(editado)*
-  - `infraestrutura/telemetria/flash-sale-metricas` *(novo)*
+- **Portas de mão única:** nenhuma
 
 **Descrição:**
 Adicionar: (1) log estruturado no handler com propriedades `flashSaleId`,
@@ -215,10 +205,7 @@ Quando uma tarefa **existe especificamente para implementar uma decisão arquite
 - **Implementa:** —
 - **Valida:** —
 - **Decisões base:** ADR-006 *(roll-out controlado via feature flag)*
-- **Camadas/arquivos afetados:**
-  - `api/controllers/flash-sales-controller` *(editado)*
-  - `web/paginas/home` *(editado)*
-  - `configuracao/app` *(editado)*
+- **Portas de mão única:** nenhuma — a própria flag é o mecanismo de reversão
 
 **Descrição:**
 Adicionar gate `FeatureFlag.FlashSales` no endpoint POST e no componente de UI.
@@ -242,11 +229,11 @@ Configurar flag no serviço de feature flag com targeting: `false` por padrão,
 
 ---
 
-## Exemplo 6 — Fatia vertical deliberada (entrega incremental ou risco de integração)
+## Exemplo 6 — Fatia vertical por `CA-XX` (padrão)
 
-Exceção ao padrão horizontal dos Exemplos 1-4. Só se aplica quando a entrevista (Bloco 2 ou Bloco 4 de `SKILL.md`) sinalizou entrega incremental real ou risco de integração concreto — ver `SKILL.md`, seção "Orientação da fatia". Fora desses gatilhos, a quebra continua por camada.
+É o formato padrão de tarefa do plano — ver `SKILL.md`, seção "Orientação da fatia". Os Exemplos 1-5 mostram como preencher os campos por tipo de trabalho; numa fatia vertical, esse trabalho aparece junto, dentro da mesma tarefa. Como tarefa isolada por camada, só nas três exceções horizontais: fundação, migrations e expandir → migrar → contrair.
 
-A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito o bastante (só o caminho feliz de um `CA-XX`) para caber no mesmo teto de 4h que os Exemplos 1-4 — o corte estreito aqui é por cenário, não por camada.
+A fatia atravessa as camadas de propósito, mas o comportamento coberto fica estreito (só o caminho feliz de um `CA-XX`) para caber num ciclo de execução + review com a suíte verde — o corte é por cenário, não por camada.
 
 ```markdown
 #### T-01 — Fatia: comprar oferta relâmpago, caminho feliz
@@ -257,11 +244,7 @@ A fatia atravessa as camadas de propósito, mas o comportamento coberto fica est
 - **Implementa:** RN-03
 - **Valida:** CA-04
 - **Decisões base:** ADR-002 *(lock pessimista — adiado para a próxima fatia)*, ADR-003 *(REST + pipeline de handlers)*
-- **Camadas/arquivos afetados:**
-  - `dominio/entidades/flash-sale` *(novo)*
-  - `aplicacao/flash-sale/comandos/comprar-oferta/handler` *(novo)*
-  - `infraestrutura/persistencia/mapeamento-flash-sale` *(novo)*
-  - `api/controllers/flash-sales-controller` *(novo)*
+- **Portas de mão única:** schema (tabela `FlashSale`) e contrato público (rota de compra)
 
 **Descrição:**
 Fatia mínima que atravessa as quatro camadas só para o caminho feliz: entidade
@@ -281,9 +264,9 @@ não cobrir a funcionalidade inteira nesta tarefa.
 **Riscos / pontos de atenção:**
 - Concorrência (CA-06) e limite por cliente (RN-05) ficam para a fatia
   seguinte — não implementar lock pessimista aqui, é escopo de outra tarefa
-- Fatia estreita gera **mais tarefas no total** que a quebra horizontal
-  equivalente (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a
-  mesma feature): o ganho é demonstrabilidade cedo, não menos tarefas
+- Cada fatia fecha um cenário verificável: o review tem comportamento para
+  atacar desde a primeira tarefa, em vez de tarefas de camada sem `CA-XX`
+  (compare com T-01/T-04/T-09 dos Exemplos 1 e 3, que cobrem a mesma feature)
 ```
 
 ---

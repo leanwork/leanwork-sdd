@@ -27,7 +27,7 @@ Identificada a tarefa, **procurar reviews anteriores dela**: `docs/reviews/REVIE
 Procure nos locais convencionais:
 
 - Plano: `docs/plans/PLAN-*.md` que contém a tarefa T-XX
-- PRD: referenciado no cabeçalho do plano (campo `**PRD de referência:**`)
+- PRD: referenciado no cabeçalho do plano (campo `**PRD de referência:**`). Plano de trilha rápida não tem PRD, e isso não é lacuna: os `CA-XX` estão no bloco `**Cenários:**` da tarefa
 - Arquitetura: `docs/architecture/proposta-arquitetural.md`
 - CLAUDE.md: raiz do repositório
 
@@ -60,7 +60,14 @@ A única escrita permitida ao verificador é o **scratch isolado do sensor de di
 4. A stack detectada **e a fonte dela** (Passo 3)
 5. Os padrões lidos do `CLAUDE.md` da raiz e do módulo afetado
 6. Quando for round N+1, o relatório do round anterior
-7. A instrução de **executar o sensor de discriminação** do eixo 4, com a profundidade derivada das `RN-XX` que a tarefa declara em `Implementa:` — é o verificador quem roda o sensor, porque é ele quem tem o código sob review em contexto
+7. A saída do `check_commit.py` para cada commit da tarefa — os que citam a `T-XX` (`git log --grep "T-XX" --format=%h`), um por um:
+
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/scripts/check_commit.py" --message "$(git log -1 --format=%B <hash>)" --plan docs/plans/PLAN-XXX-nome.md
+   ```
+
+   Sem commit ainda, enviar "sem commit — trailer não verificável" em vez da saída. É o insumo do eixo 2: o verificador interpreta, não reconfere à mão
+8. A instrução de **executar o sensor de discriminação** do eixo 4, com a profundidade derivada das `RN-XX` que a tarefa declara em `Implementa:` — é o verificador quem roda o sensor, porque é ele quem tem o código sob review em contexto
 
 O sensor exige capacidade de executar comandos (git e o runner de testes da stack). Se o sub-agente não tiver essa capacidade no ambiente, ele não improvisa: devolve a seção "Sensor de discriminação" registrando que não rodou e por quê, como manda `discrimination-sensor.md`. Ausência declarada é informação; seção omitida é silêncio que passa por aprovação.
 
@@ -82,19 +89,9 @@ A skill `reviewer-leanwork` continua sendo a fonte do método — os 5 eixos (ad
 
 Sugira salvar em `docs/reviews/REVIEW-{T-XX}-{data-iso}.md`. Se o projeto usa outra convenção (ex.: comentário direto no PR sem versionar), perguntar ao usuário.
 
-**Gate — validar o relatório antes de salvar.** Escrever o arquivo e, antes de apresentá-lo, rodar:
-
-```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md
-```
-
-**Exit diferente de zero é PARE — relatório reprovado não é entregue.** Os `ERROR` cobram o que o review promete e é fácil de não cumprir: finding sem `arquivo:linha`, item de cobertura marcado como coberto sem citar onde, `RN-XX`/`CA-XX` coberto sem a asserção reproduzida, recomendação fora do vocabulário (`Aprovado` / `Aprovado com ressalvas` / `Bloqueado`), e a incoerência mais cara — `Bloqueante` no corpo com recomendação diferente de `Bloqueado`. Corrigir o relatório e rodar de novo até sair 0.
-
-Linha `WARN` não reprova: relatório sem nenhum finding e relatório de round sem a seção do round anterior são sinais para conferir, não para bloquear.
-
-**Fallback — modo degradado.** Sem ferramenta de execução de código disponível, conferir à mão as regras acima e **dizer no chat que o relatório não passou pelo gate automático**. Degradação silenciosa é pior que gate nenhum, porque parece gate.
-
-Se o `Bash` pedir confirmação apesar de `Bash(python:*)` no `allowed-tools` deste comando, a causa é regra mais larga no `ask`/`deny` das settings do usuário — a precedência ignora especificidade (ver `permission-catalog.md`, seção "Sombra de prefixo entre baldes"). Confirmar ou ajustar as settings; nunca pular a validação.
+**Gate — validar o relatório antes de entregar.** O hook do plugin roda `validate_review.py` a cada gravação em `docs/reviews/` e devolve os `ERROR` (finding sem `arquivo:linha`, cobertura sem evidência, recomendação fora do vocabulário ou incoerente com `Bloqueante`): corrigir até passar; relatório reprovado não é entregue.
+Sem o hook, rodar `python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_review.py" docs/reviews/REVIEW-T-XX-AAAA-MM-DD.md` — exit diferente de zero é PARE; `WARN` não reprova. Se o `Bash` pedir confirmação apesar do `allowed-tools`, é regra mais larga nas settings do usuário (`permission-catalog.md`, "Sombra de prefixo entre baldes"): confirmar ou ajustar, nunca pular a validação.
+Sem execução de código, conferir à mão e dizer no chat que o relatório não passou pelo gate automático (ver README, "Degradação silenciosa").
 
 Após gerar o relatório, mostrar ao usuário:
 
@@ -108,13 +105,13 @@ Após gerar o relatório, mostrar ao usuário:
 O review só existe para o resto do pipeline se o plano souber dele. Se houver **pelo menos um finding `Bloqueante`**:
 
 1. Mudar o campo `**Status:**` da `T-XX` no plano para `Bloqueado`
-2. Registrar na tabela de Histórico de execução (seção 11) a referência ao relatório e aos findings que bloquearam — ex.: `Bloqueado por R-01, R-03 (REVIEW-T-04-2026-06-15)`
+2. Preencher o campo `**Bloqueio:**` da tarefa com a referência ao relatório e aos findings que bloquearam — ex.: `R-01, R-03 (REVIEW-T-04-2026-06-15)`
 
 Confirmar com o usuário antes de editar o plano, e avisar se a tarefa estava marcada como `Concluído`: essa é a inconsistência entre estado declarado e estado validado que o `/leanwork-trace` reporta como grave.
 
 Sem findings bloqueantes, **não** mexer no plano — `Aprovado com ressalvas` não muda o estado da tarefa, e findings Importantes viram tarefa nova via `planner-leanwork` quando justificarem.
 
-O plano é a fonte de verdade do estado: um review bloqueante que não aparece nele é invisível para `/leanwork-next`, e a tarefa segue sendo sugerida como pronta.
+O plano é a fonte de verdade do estado: um review bloqueante que não aparece nele é invisível para `/leanwork-pipeline`, e a tarefa segue sendo sugerida como pronta.
 
 ## Casos especiais
 
@@ -133,7 +130,7 @@ Se já existe `REVIEW-{T-XX}-*.md` para a mesma tarefa:
 
 ### Projeto sem artefatos SDD
 
-Se não há plano nem PRD, oferecer code review genérico mas **avisar que não há rastreabilidade** e sugerir rodar `/leanwork-start` para projetos futuros.
+Se não há plano nem PRD, oferecer code review genérico mas **avisar que não há rastreabilidade** e sugerir rodar `/leanwork-pipeline` para projetos futuros.
 
 ### Stack não detectada
 

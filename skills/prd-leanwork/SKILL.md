@@ -1,6 +1,6 @@
 ---
 name: prd-leanwork
-description: Levantamento estruturado de requisitos e geração de PRDs (Product Requirement Documents) detalhados em português, no padrão Leanwork. Use sempre que o usuário pedir explicitamente para "criar PRD", "levantar requisito", "documentar demanda", "detalhar feature", "escrever especificação" ou qualquer variação dessas expressões. Também use quando o usuário descrever uma demanda nova e indicar que precisa virar documento para os devs executarem. A skill conduz uma entrevista estruturada quando o contexto está incompleto, e produz markdown com hierarquia Epic→Feature→PBI, regras de negócio numeradas (RN-XX), critérios de aceite em Gherkin (PT-BR) com IDs (CA-XX) e diagramas Mermaid. Os IDs RN/CA são o ponto de costura com o plano de execução (planner-leanwork) e a arquitetura (architect-leanwork) — formam a matriz de rastreabilidade ADR ↔ RN ↔ CA ↔ UI ↔ T. NÃO inclui estimativa de esforço, t-shirt sizing ou complexidade — o foco é "o quê" e "por quê", não "quanto custa".
+description: Levanta requisitos e gera PRD em PT-BR com regras RN-XX, cenários Gherkin CA-XX e diagramas Mermaid. Use quando pedirem para criar PRD, levantar requisito, documentar demanda, detalhar feature ou escrever especificação, ou quando uma demanda nova precisar virar documento para os devs. Não inclui estimativa, complexidade nem cronograma.
 allowed-tools: Read, Glob, Grep, Edit(docs/prds/**)
 ---
 
@@ -9,6 +9,15 @@ allowed-tools: Read, Glob, Grep, Edit(docs/prds/**)
 Esta skill ajuda a transformar uma demanda (ideia, conversa com cliente, feature solicitada) em um Product Requirement Document detalhado o suficiente para que um desenvolvedor execute sem precisar adivinhar nada.
 
 O público-alvo do PRD são os devs do time. O documento precisa ser preciso o bastante para eliminar ambiguidade, mas não tão burocrático que ninguém leia. Estimativa, esforço e complexidade ficam **fora** deste documento — são tratados em outro momento (planning, refinamento). O PRD responde "o quê" e "por quê", não "quanto custa".
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Não inventar nem preencher com `[A DEFINIR]`: sem insumo, perguntar; com "gera assim mesmo", marcar `> ⚠️ **Premissa:**`.
+2. Regras `RN-XX` e cenários `CA-XX` sempre presentes, mesmo em PRD curto — são o que o plano e o review consomem.
+3. Gherkin em PT-BR (`Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`), sem mistura com inglês.
+4. Sem estimativa, complexidade ou cronograma.
 
 ## Fluxo geral
 
@@ -19,51 +28,48 @@ A skill opera em duas fases:
 
 ## Fase 1 — Entrevista estruturada
 
-Antes de escrever uma linha do PRD, garantir que as informações abaixo estão claras. Se faltar algo, perguntar antes de gerar. As perguntas devem ser feitas em blocos lógicos, não todas de uma vez — começar pelo "porquê" e ir descendo para o "como".
+**Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. O que a busca não respondeu vira pergunta, **um bloco de dimensões por rodada, inteiro** — perguntas concretas, com o detalhe que a resposta precisa trazer, e ao fim da rodada o anúncio dos blocos que vêm depois. Pergunta que pede decisão traz opções concretas e a recomendação marcada.
 
-### Bloco 1 — Contexto e problema
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Começar pelo "porquê" e descer para o "como".
 
-- Qual problema essa demanda resolve? Quem está sentindo essa dor hoje?
-- Qual cliente / produto / módulo é afetado? (Contoso, LeanOps, Projeto X, outro?)
-- Existe algum processo ou sistema atual que faz isso de outro jeito? Como funciona hoje?
-- Qual o impacto de **não** fazer essa demanda?
+### Dimensões a cobrir
 
-### Bloco 2 — Objetivo e escopo
+**Contexto e problema**
+- Problema e quem sente a dor hoje
+- Cliente, produto ou módulo afetado
+- Processo ou sistema atual que faz isso de outro jeito
+- Impacto de não fazer
 
-- Qual o resultado esperado quando essa demanda estiver pronta? (uma frase)
-- Quais usuários serão impactados? (perfis, papéis, personas)
-- O que está **dentro** do escopo desta entrega?
-- O que está **fora** do escopo? (tão importante quanto o que está dentro — evita scope creep)
-- Existe alguma demanda relacionada que NÃO faz parte desta, mas pode confundir? Listar para excluir explicitamente.
+**Objetivo e escopo**
+- Resultado esperado, em uma frase
+- Usuários impactados (perfis, papéis, personas)
+- Dentro do escopo
+- Fora do escopo — tão importante quanto o que entra
+- Demandas relacionadas que não fazem parte desta e podem confundir
 
-### Bloco 3 — Comportamento e regras
+**Comportamento e regras**
+- Regras de negócio: validações, limites, condições, exceções
+- Fluxos principais, alternativos e de erro
+- Permissionamento: quem vê e faz o quê
+- Restrições legais, regulatórias ou de compliance
 
-- Quais são as regras de negócio que regem essa funcionalidade? (validações, limites, condições, exceções)
-- Quais são os fluxos principais? E os fluxos alternativos / de erro?
-- Há regras de permissionamento? (quem pode ver/fazer o quê)
-- Há restrições legais, regulatórias ou de compliance? (LGPD, ANVISA, etc.)
+**Integrações e dados**
+- Sistemas externos ou módulos internos envolvidos
+- Dados consumidos e dados produzidos ou persistidos
+- Eventos disparados ou consumidos
 
-### Bloco 4 — Integrações e dados
+**Aceitação e riscos**
+- Como saberemos que está pronto (alto nível — vira Gherkin depois)
+- Riscos técnicos, de negócio, de prazo, de dependência
+- Dependências de outros times, fornecedores ou decisões pendentes
 
-- A demanda envolve integração com sistemas externos ou outros módulos internos?
-- Quais dados são consumidos? Quais são produzidos/persistidos?
-- Há eventos a serem disparados ou consumidos?
+### Quando parar
 
-### Bloco 5 — Aceitação e riscos
-
-- Como saberemos que está pronto? (critérios de aceite, em alto nível — depois transformamos em Gherkin)
-- Há riscos conhecidos? (técnicos, de negócio, de prazo, de dependência)
-- Existem dependências de outros times, fornecedores, decisões pendentes?
-
-### Quando parar de perguntar
-
-Material suficiente significa: dá para escrever cada seção do template sem inventar. Não é necessário ter resposta para 100% das perguntas — algumas (ex.: integrações) podem legitimamente não se aplicar. O sinal de "pode gerar" é: **não há nenhuma seção do template que ficaria vazia ou genérica por falta de insumo**.
-
-Se o usuário disser "gera assim mesmo, depois ajusto", respeitar — gerar com o que tem e marcar explicitamente as seções que ficaram com premissa, no formato `> ⚠️ **Premissa:** [descrição]`.
+Dá para escrever cada seção do template sem inventar: nenhuma seção ficaria vazia ou genérica por falta de insumo. Dimensão que não se aplica (ex.: integrações) fica `n/a — motivo`, não pergunta.
 
 ## Fase 2 — Geração do PRD
 
-Use o template completo em `references/prd-template.md`. Leia o arquivo antes de gerar o PRD; ele contém a estrutura exata com todas as seções obrigatórias (visão, problema, objetivo, escopo, hierarquia Epic→Feature→PBI, fluxos, regras de negócio com IDs `RN-XX`, critérios de aceite Gherkin com IDs `[CA-XX]`, riscos) e opcionais (personas, permissionamento, integrações, diagrama de estados, arquitetura técnica).
+Use o template completo em `references/prd-template.md`. Leia o arquivo antes de gerar o PRD; ele contém a estrutura exata com todas as seções obrigatórias (visão, problema, objetivo, escopo, regras de negócio com IDs `RN-XX`, critérios de aceite Gherkin com IDs `[CA-XX]`, riscos), as condicionais (personas e fluxo com UI, permissionamento, integrações) e as opcionais (hierarquia Epic→Feature→PBI, diagrama de estados, arquitetura técnica).
 
 Recursos auxiliares:
 
@@ -76,7 +82,7 @@ Manter a hierarquia de headings e a ordem das seções. Seções que não se apl
 
 Se o PRD descreve interface de usuário (tem personas, fluxos de interação, cenários com ator em tela), **sugerir** — sem executar — a fase de especificação de interface:
 
-> Este PRD tem interface. Antes do plano de execução, a skill `prototype-leanwork` pode indexar o protótipo (se você já tiver) ou gerar um, mapeando cada tela contra as regras e cenários daqui. Isso faz o plano dimensionar melhor as tarefas de UI e permite ao review verificar se todos os estados de tela foram implementados. Rode com `/leanwork-prototype` se fizer sentido.
+> Este PRD tem interface. Antes do plano de execução, a skill `prototype-leanwork` pode indexar o protótipo (se você já tiver) ou gerar um, mapeando cada tela contra as regras e cenários daqui. Isso faz o plano dimensionar melhor as tarefas de UI e permite ao review verificar se todos os estados de tela foram implementados. Rode com `/leanwork-sdd:prototype-leanwork` se fizer sentido.
 
 Se o PRD **não** tem interface (integração, job, processamento, API pura), não sugerir nada — seguir direto para o plano.
 
@@ -89,11 +95,11 @@ A sugestão é convite, não etapa obrigatória. Ignorá-la não bloqueia o pipe
 - **Idioma:** todo o PRD em português (Brasil), incluindo títulos das seções, regras de negócio e Gherkin. Termos técnicos consagrados (API, endpoint, queue, webhook) podem permanecer em inglês.
 - **Mermaid:** usar sempre que houver fluxo, máquina de estados ou arquitetura. Diagramas devem caber em uma tela — se ficar grande demais, quebrar em sub-fluxos.
 - **Gherkin em PT-BR:** `Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`, `E`, `Mas`. Não misturar com inglês.
-- **Hierarquia:** Epic → Feature → PBI, sempre. Mesmo que a demanda inteira caiba em uma única Feature, deixar a hierarquia explícita para facilitar o cadastro no Azure DevOps.
+- **Hierarquia Epic → Feature → PBI:** opcional, para quem cadastra o backlog no Azure DevOps. Quando pedida, segue a seção 6 do template; quando não, a seção sai e o PRD não perde nada — o comportamento está nas `RN-XX` e nos `CA-XX`.
 - **Numeração de regras e cenários:** `RN-01`, `RN-02` para regras de negócio; `CA-01`, `CA-02` para cenários Gherkin (critérios de aceite). Essa numeração é o ponto de costura com o plano de execução: o planner referencia esses IDs nas tarefas (`Implementa: RN-03`, `Valida: CA-01`), permitindo rastrear do código até a regra de negócio original.
 - **Referência cruzada com arquitetura:** quando uma regra ou cenário existe por causa de uma decisão arquitetural já tomada, citar o ADR correspondente entre parênteses (ex.: "RN-05: estoque decrementado atomicamente (ADR-002)").
 
-## O que NÃO incluir
+## O que não incluir
 
 - Estimativas (story points, horas, t-shirt sizing P/M/G).
 - Complexidade técnica subjetiva.
@@ -102,7 +108,7 @@ A sugestão é convite, não etapa obrigatória. Ignorá-la não bloqueia o pipe
 
 ## Padrões de comportamento
 
-**Quando o usuário cola uma conversa/transcrição como entrada:** extrair o que dá da conversa, identificar lacunas e fazer apenas as perguntas necessárias para completar. Não repetir perguntas cuja resposta já está na conversa.
+**Quando o usuário cola uma conversa/transcrição como entrada:** extrair o que dá da conversa, identificar lacunas e fazer apenas as perguntas necessárias para completar. A conversa é fonte da busca: o que está nela não vira pergunta.
 
 **Quando o usuário pede um PRD curto / leve:** ainda assim manter as seções obrigatórias, mas reduzir os opcionais. Nunca pular regras de negócio ou critérios de aceite — esses são o coração do PRD.
 

@@ -42,7 +42,9 @@ from _common import (
     fail_usage,
     fence_mask,
     find_placeholders,
+    RECOMMENDATION_VOCAB,
     finish,
+    find_recommendation,
     has_file_line,
     parse_field,
     read_lines,
@@ -52,8 +54,6 @@ from _common import (
 )
 
 SCRIPT = "validate_review"
-
-RECOMMENDATION_VOCAB = ("Aprovado", "Aprovado com ressalvas", "Bloqueado")
 
 SEVERITY_SECTIONS = (
     ("Bloqueante", ("bloqueante",)),
@@ -96,7 +96,6 @@ ASSERTION_FIELD = re.compile(r"\*\*Asser[çc][ãa]o:\*\*\s*\S")
 ASSERTION_REQUIRED = ("Cobertura por RN", "Cobertura por CA")
 COVERED = ("✅",)
 NOT_COVERED = ("❌", "⚠")
-RECOMMENDATION_LINE = re.compile(r"\*\*Recomendação final:\*\*\s*(?P<value>.*?)\s*$")
 SURVIVOR_ROW = re.compile(r"^\s*\|.*Sobreviveu", re.IGNORECASE)
 REFERENCED_FINDING = re.compile(r"R-\d{2,}")
 
@@ -254,13 +253,8 @@ def check_finding_evidence(findings, diagnostics):
 
 
 def read_recommendation(lines, mask, diagnostics):
-    for index, line in enumerate(lines):
-        if mask[index]:
-            continue
-        match = RECOMMENDATION_LINE.search(line)
-        if not match:
-            continue
-        value = strip_decoration(match.group("value"))
+    value, index = find_recommendation(lines, mask)
+    if index is not None:
         if "/" in value or not value:
             diagnostics.error(
                 "linha {}: recomendacao final ainda no placeholder - escolha um "

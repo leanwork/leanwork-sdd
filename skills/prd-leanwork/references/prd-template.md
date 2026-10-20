@@ -10,7 +10,7 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 # PRD: [Título da demanda]
 
 **Cliente/Produto:** [Contoso / LeanOps / Projeto X / ...]
-**Tipo:** [Epic / Feature / PBI]
+**Tipo:** [Epic / Feature / PBI] *(só quando a seção 6 for usada)*
 **Autor:** [nome]
 **Data:** [AAAA-MM-DD]
 **Status:** [Rascunho / Em revisão / Aprovado]
@@ -55,9 +55,9 @@ As cercas de quatro crases que delimitam o bloco abaixo são o envelope deste ar
 |---------|-------|----------------------------|
 | [nome]  | [perfil] | [resumo] |
 
-## 6. Hierarquia de entrega *(obrigatória)*
+## 6. Hierarquia de entrega *(opcional — para quem cadastra no Azure DevOps)*
 
-Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
+Sugestão de quebra em Epic → Feature → PBI. Sem Azure DevOps, omitir a seção: o comportamento já está nas seções 8 e 9.
 
 - **Epic:** [nome do épico — abrange a demanda inteira e tipicamente entrega valor de negócio mensurável]
   - **Feature:** [feature 1 — entregável funcional coerente]
@@ -68,7 +68,7 @@ Sugestão de quebra em Epic → Feature → PBI para o Azure DevOps:
 
 > Esta é uma sugestão de quebra. O Product Owner pode reorganizar conforme prioridade e capacidade do time.
 >
-> **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução tem teto de 4 horas (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
+> **PBI não é `T-XX`.** O PBI é unidade de backlog do Azure DevOps e costuma valer vários dias; a tarefa do plano de execução é uma fatia que fecha um ou mais `CA-XX` num ciclo de execução + review (`templates/id-conventions.md`). Um PBI vira várias `T-XX` quando o `planner-leanwork` decompõe.
 
 ## 7. Fluxos *(obrigatória se houver interação)*
 
@@ -85,9 +85,13 @@ flowchart TD
 
 [Descrição textual do fluxo, passo a passo.]
 
-### 7.2. Fluxos alternativos / de erro
+### 7.2. Outros fluxos *(quando houver)*
 
-[Cada um com seu próprio diagrama Mermaid se for complexo, ou descrição textual se for simples.]
+Processos distintos do principal — ex.: confirmação assíncrona, importação noturna, aprovação. Um diagrama Mermaid por fluxo, com o mesmo formato do 7.1.
+
+### 7.3. Desvios e erros
+
+Um item por desvio, em uma linha, citando a regra e o cenário que o especificam: `- **[desvio]:** [o que acontece] (RN-XX, CA-XX)`. O comportamento detalhado está no Gherkin da seção 9 — aqui é o mapa. Desvio operacional sem cenário (integração fora do ar, arquivo que não chegou) entra também, e a falta de `CA-XX` fica visível.
 
 ## 8. Regras de negócio *(obrigatória)*
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Leanwork SDD — pipeline Spec-Driven Development</title>
-<meta name="description" content="Documentação visual do pipeline Spec-Driven Development da Leanwork: seis skills coordenadas, execução e review em loop, e rastreabilidade cruzada de ADR a review.">
+<meta name="description" content="Documentação visual do pipeline Spec-Driven Development da Leanwork: seis skills coordenadas, fatias por cenário, gates por hook, review num sub-agente de contexto limpo e rastreabilidade cruzada de ADR ao commit.">
 <meta property="og:title" content="Leanwork SDD — pipeline Spec-Driven Development">
 <meta property="og:description" content="Arquitetura, requisitos, interface, plano, execução e review em seis skills coordenadas, com rastreabilidade cruzada por IDs.">
 <meta property="og:type" content="website">
@@ -27,6 +27,7 @@
       <a href="#video">Vídeo</a>
       <a href="#pipeline">Pipeline</a>
       <a href="#loop">Execução</a>
+      <a href="#verificacao">Verificação</a>
       <a href="#rastreabilidade">Rastreabilidade</a>
       <a href="#comandos">Comandos</a>
       <a href="#instalacao">Instalação</a>
@@ -39,12 +40,12 @@
 
   <section class="hero">
     <div class="wrap">
-      <span class="rotulo">Leanwork SDD · v1.10.0</span>
+      <span class="rotulo">Leanwork SDD · v2.0.0</span>
       <h1 class="hero__titulo">Do briefing ao review, sem perder o fio.</h1>
       <p class="hero__texto">
         Um pipeline <strong>Spec-Driven Development</strong> em seis skills coordenadas: arquitetura,
-        requisitos, interface, plano, execução e review. Cada artefato declara seus elos por ID,
-        e o <strong>/leanwork-trace</strong> percorre a cadeia inteira apontando onde ela se rompe.
+        requisitos, interface, plano, execução e review. Cada artefato declara seus elos por ID, cada
+        commit carrega o trailer <strong>Refs:</strong>, e a verificação não depende de o agente lembrar dela.
       </p>
       <div class="numeros">
         <div class="numero">
@@ -52,7 +53,7 @@
           <span class="numero__rotulo">skills coordenadas</span>
         </div>
         <div class="numero">
-          <span class="numero__valor">7</span>
+          <span class="numero__valor">4</span>
           <span class="numero__rotulo">comandos de orquestração</span>
         </div>
         <div class="numero">
@@ -94,7 +95,8 @@
 
       <p class="video__legenda">
         Assista também em
-        <a href="https://youtu.be/r9G2UOyMi5I">youtu.be/r9G2UOyMi5I</a>
+        <a href="https://youtu.be/r9G2UOyMi5I">youtu.be/r9G2UOyMi5I</a>.
+        Gravado na versão 1.x: a entrada agora é <span class="mono">/leanwork-pipeline</span>, e o plano fatia por cenário.
       </p>
     </div>
   </section>
@@ -108,8 +110,8 @@
         </div>
         <p class="apoio">
           A execução é uma <span class="destaque">fase do pipeline</span>, não um intervalo entre fases.
-          As fases 5 e 6 se alternam tarefa a tarefa até o plano fechar — e o plano é o único lugar
-          onde o estado de execução vive.
+          As fases 5 e 6 se alternam fatia a fatia até o plano fechar. O estado vive no plano;
+          a trilha de quando e em que commit, no git.
         </p>
       </div>
 
@@ -146,7 +148,7 @@
           <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="m17 12 4 4-4 4"/></svg>
           <h3 class="fase__nome">Plano</h3>
           <p class="fase__skill mono">planner-leanwork</p>
-          <p class="fase__texto">Tarefas executáveis de 30 min a 4 h, cada uma declarando o contexto que implementa e valida.</p>
+          <p class="fase__texto">Fatias por cenário: cada tarefa fecha um ou mais <span class="mono">CA-XX</span> ponta a ponta, da tela ao banco.</p>
           <div class="fase__saida"><span class="id">T-XX</span></div>
         </article>
 
@@ -155,8 +157,8 @@
           <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
           <h3 class="fase__nome">Execução</h3>
           <p class="fase__skill mono">/leanwork-execute</p>
-          <p class="fase__texto">Uma tarefa por ciclo: carrega o contexto declarado, escreve o teste na costura, implementa.</p>
-          <div class="fase__saida"><span class="id id--vazio">devolve estado ao plano</span></div>
+          <p class="fase__texto">Uma fatia por ciclo: carrega o contexto declarado, escreve o teste na costura, implementa.</p>
+          <div class="fase__saida"><span class="id id--vazio">Refs: T-XX, CA-XX</span></div>
         </article>
 
         <article class="fase">
@@ -164,14 +166,14 @@
           <svg class="fase__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           <h3 class="fase__nome">Review</h3>
           <p class="fase__skill mono">reviewer-leanwork</p>
-          <p class="fase__texto">Seis eixos de avaliação com evidência de arquivo e linha. Finding bloqueante volta ao plano.</p>
+          <p class="fase__texto">Num sub-agente de contexto limpo: seis eixos com evidência de arquivo e linha. Finding bloqueante volta ao plano.</p>
           <div class="fase__saida"><span class="id">R-XX</span></div>
         </article>
       </div>
 
       <div class="loop-faixa">
         <div class="loop-faixa__vazio" aria-hidden="true"></div>
-        <div class="loop-faixa__ativo">⇄ uma tarefa por ciclo, até o plano fechar</div>
+        <div class="loop-faixa__ativo">⇄ uma fatia por ciclo, até o plano fechar</div>
       </div>
 
       <div class="transversal">
@@ -182,6 +184,15 @@
           Nunca automático, nunca destrutivo.
         </p>
       </div>
+
+      <div class="transversal">
+        <svg class="transversal__icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <p class="transversal__texto">
+          <strong>Trilha rápida</strong> — mudança com menos de três arquivos e nenhuma porta de mão única
+          (migration, contrato público, schema, permissão) vira um plano de <strong>uma tarefa</strong>, com os cenários dentro dela.
+          Encurta o planejamento, não a verificação: execução, review e gates são os mesmos.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -190,11 +201,11 @@
       <div class="cabecalho">
         <div>
           <span class="rotulo">O loop de execução</span>
-          <h2 class="titulo-secao">O plano é a<br>fonte de verdade.</h2>
+          <h2 class="titulo-secao">Um estado,<br>uma fonte.</h2>
         </div>
         <p class="apoio">
-          Um estado que o plano não declara <span class="destaque">não existe para o pipeline</span>.
-          O vocabulário de status é fixo e funciona como contrato entre o plano e os comandos que o leem.
+          O campo <span class="mono">Status:</span> da tarefa é o único estado — <span class="destaque">o plano não guarda histórico</span>.
+          Quando e em que commit cada tarefa mudou vem do <span class="mono">git log</span>, pelo trailer <span class="mono">Refs:</span>.
         </p>
       </div>
 
@@ -209,11 +220,11 @@
         </div>
         <div class="status">
           <p class="status__nome">Concluído</p>
-          <p class="status__texto">Critérios de aceite marcados, typecheck limpo e suíte verde. Nunca com teste vermelho.</p>
+          <p class="status__texto">Critérios de aceite atendidos, typecheck limpo e suíte verde. Nunca com teste vermelho.</p>
         </div>
         <div class="status status--bloqueado">
           <p class="status__nome">Bloqueado</p>
-          <p class="status__texto">Motivo no histórico. É também para onde um finding bloqueante do review devolve a tarefa.</p>
+          <p class="status__texto">Motivo no campo <span class="mono">Bloqueio:</span>. É também para onde um finding bloqueante do review devolve a tarefa.</p>
         </div>
       </div>
 
@@ -221,21 +232,21 @@
         <div class="ciclo__passo">
           <p class="ciclo__cmd">/leanwork-execute T-04</p>
           <ol class="ciclo__lista">
+            <li>Confere com <span class="mono">validate_ids.py</span> que cada ID citado existe — senão, para e reporta</li>
             <li>Carrega o PRD, a arquitetura e a SPEC-UI nos IDs que a tarefa declara</li>
-            <li>Para e reporta se algum ID referenciado não existir</li>
             <li>Escreve o teste na costura antes do código de produção</li>
             <li>Roda typecheck e build antes da suíte</li>
-            <li>Fecha o estado no plano e sugere o review</li>
+            <li>Fecha o estado, sugere o commit com <span class="mono">Refs: T-04, CA-01</span> e sugere o review</li>
           </ol>
         </div>
         <div class="ciclo__passo">
           <p class="ciclo__cmd">/leanwork-review T-04</p>
           <ol class="ciclo__lista">
-            <li>Detecta a stack do projeto por cascata, sem presumir tecnologia</li>
+            <li>Despacha um sub-agente sem o raciocínio de quem implementou</li>
             <li>Avalia os seis eixos com evidência de arquivo e linha</li>
-            <li>Emite <span class="mono">R-01..R-XX</span> por severidade</li>
-            <li>Finding bloqueante devolve a tarefa para <span class="mono">Status: Bloqueado</span></li>
-            <li>Re-review de round N+1 entra no fluxo principal</li>
+            <li>Injeta defeitos no código novo para ver se os testes pegam</li>
+            <li>Emite <span class="mono">R-01..R-XX</span>; o hook valida o relatório ao gravar</li>
+            <li>Finding bloqueante devolve a tarefa para <span class="mono">Bloqueado</span>, com o motivo em <span class="mono">Bloqueio:</span></li>
           </ol>
         </div>
       </div>
@@ -244,6 +255,54 @@
         Quem implementou não decide se a implementação passou: o <span class="mono">/leanwork-execute</span>
         sugere o review, mas nunca o roda por conta própria.
       </p>
+    </div>
+  </section>
+
+  <section class="secao" id="verificacao">
+    <div class="wrap">
+      <div class="cabecalho">
+        <div>
+          <span class="rotulo">A verificação</span>
+          <h2 class="titulo-secao">Sai a coreografia,<br>fica a verificação.</h2>
+        </div>
+        <p class="apoio">
+          Modelos atuais seguem instrução concisa, mas continuam declarando conclusão sem prova e escrevendo teste raso.
+          A 2.0.0 cortou o que era cerimônia e <span class="destaque">manteve intacto o que pega erro</span>.
+        </p>
+      </div>
+
+      <div class="eixos">
+        <article class="eixo">
+          <p class="eixo__num">Gate</p>
+          <h3 class="eixo__nome">Disparado por hook</h3>
+          <p class="eixo__texto">Gravou em <span class="mono">docs/plans/</span> ou <span class="mono">docs/reviews/</span>, o validador roda. Reprovação volta ao modelo, que corrige antes de apresentar.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">Review</p>
+          <h3 class="eixo__nome">Autor ≠ verificador</h3>
+          <p class="eixo__texto">O review roda num sub-agente de contexto limpo. Quem recebe a justificativa julga se ela convence, não se o código cumpre o spec.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">Teste</p>
+          <h3 class="eixo__nome">Sensor de discriminação</h3>
+          <p class="eixo__texto">Um defeito é injetado no código novo, em scratch. Se a suíte continua verde, o teste não pega o bug — e isso é bloqueante.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">Cobertura</p>
+          <h3 class="eixo__nome">Evidência ou zero</h3>
+          <p class="eixo__texto">Cenário só conta como coberto com <span class="mono">arquivo:linha</span> e a asserção reproduzida. Nome de método de teste não é prova.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">Git</p>
+          <h3 class="eixo__nome">Trilha no commit</h3>
+          <p class="eixo__texto">Todo commit de tarefa termina com <span class="mono">Refs: T-XX, CA-XX</span>, conferido pelo <span class="mono">check_commit.py</span> — também como hook <span class="mono">commit-msg</span>.</p>
+        </article>
+        <article class="eixo">
+          <p class="eixo__num">Matriz</p>
+          <h3 class="eixo__nome">Gerada por script</h3>
+          <p class="eixo__texto"><span class="mono">status.py</span> e <span class="mono">trace.py</span> leem os artefatos e o git de forma determinística. O modelo só interpreta as lacunas.</p>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -287,7 +346,7 @@
         </div>
         <div class="elo">
           <p class="elo__id">T-07</p>
-          <p class="elo__desc">Handler de compra em flash sale</p>
+          <p class="elo__desc">Fatia que fecha CA-06 — commit com <span class="mono">Refs: T-07, CA-06</span></p>
           <p class="elo__origem">Plano</p>
           <p class="elo__verbo">↓ validado por</p>
         </div>
@@ -306,6 +365,7 @@
 
       <p class="nota">
         Projeto sem interface pula a fase 3 inteira, e as colunas de UI somem da matriz — ausência não vira gap.
+        O elo código → requisito vem do trailer de cada commit, e a matriz sai do <span class="mono">trace.py</span>.
         <strong>Lacuna declarada vale mais que lacuna preenchida:</strong> nenhuma skill inventa para fechar a matriz.
       </p>
     </div>
@@ -319,8 +379,8 @@
           <h2 class="titulo-secao">O que cada<br>fase produz.</h2>
         </div>
         <p class="apoio">
-          Todas <span class="destaque">stack-agnósticas</span>. A stack vem da decisão arquitetural e do
-          <code>CLAUDE.md</code> do projeto, nunca da skill.
+          Todas <span class="destaque">stack-agnósticas</span>, com regras pinadas no topo e entrevista que busca
+          no repositório antes de perguntar — um bloco por rodada, com recomendação em cada decisão.
         </p>
       </div>
 
@@ -350,8 +410,8 @@
             </tr>
             <tr>
               <td class="mono">planner-leanwork</td>
-              <td>PRD aprovado, mais a SPEC-UI se houver</td>
-              <td>Plano com tarefas executáveis</td>
+              <td>PRD aprovado (mais a SPEC-UI), ou mudança pequena pela trilha rápida</td>
+              <td>Plano com fatias por cenário e portas de mão única declaradas</td>
               <td><span class="id">T-XX</span></td>
             </tr>
             <tr>
@@ -377,11 +437,11 @@
       <div class="cabecalho">
         <div>
           <span class="rotulo">Os comandos</span>
-          <h2 class="titulo-secao">Sete pontos<br>de entrada.</h2>
+          <h2 class="titulo-secao">Quatro pontos<br>de entrada.</h2>
         </div>
         <p class="apoio">
           Cada comando pré-aprova leitura mais a pasta do artefato que ele mesmo produz.
-          <span class="destaque">Bash não é pré-autorizado em lugar nenhum.</span>
+          <span class="destaque">Bash só é pré-autorizado para rodar os gates em Python.</span>
         </p>
       </div>
 
@@ -391,13 +451,11 @@
             <tr><th>Comando</th><th>O que faz</th></tr>
           </thead>
           <tbody>
-            <tr><td class="mono">/leanwork-start</td><td>Inicia o pipeline e identifica em que fase começar</td></tr>
-            <tr><td class="mono">/leanwork-next</td><td>Inspeciona os artefatos existentes e sugere a próxima ação, incluindo reviews pendentes</td></tr>
-            <tr><td class="mono">/leanwork-prototype</td><td>Indexa um protótipo existente ou gera um, e produz a SPEC-UI</td></tr>
+            <tr><td class="mono">/leanwork-pipeline</td><td>Ponto de entrada: conduz o início (fluxo completo ou trilha rápida) ou lê o estado e sugere a próxima ação</td></tr>
             <tr><td class="mono">/leanwork-execute</td><td>Executa uma tarefa carregando o contexto declarado e atualiza o <span class="mono">Status</span> ao final</td></tr>
-            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa específica. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
+            <tr><td class="mono">/leanwork-review</td><td>Revisa uma tarefa num sub-agente de contexto limpo. Finding bloqueante volta como <span class="mono">Status: Bloqueado</span></td></tr>
             <tr><td class="mono">/leanwork-trace</td><td>Gera a matriz <span class="mono">ADR ↔ RN ↔ CA ↔ UI ↔ T ↔ R</span> e aponta os gaps</td></tr>
-            <tr><td class="mono">/leanwork-context</td><td>Gera ou atualiza <code>CLAUDE.md</code> e <code>.claude/settings.json</code></td></tr>
+            <tr><td class="mono">/leanwork-sdd:&lt;skill&gt;</td><td>Chama uma skill direto — ex.: <span class="mono">prototype-leanwork</span>, <span class="mono">context-leanwork</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -421,12 +479,12 @@
         <article class="eixo">
           <p class="eixo__num">01</p>
           <h3 class="eixo__nome">Aderência ao plano</h3>
-          <p class="eixo__texto">A tarefa T-XX foi entregue como prometida? Escopo expandido em silêncio é finding.</p>
+          <p class="eixo__texto">A tarefa T-XX foi entregue como prometida? Porta de mão única não declarada é bloqueante; arquivo extra não é finding.</p>
         </article>
         <article class="eixo">
           <p class="eixo__num">02</p>
           <h3 class="eixo__nome">Rastreabilidade</h3>
-          <p class="eixo__texto">Commits, testes e código preservam os IDs que amarram o trabalho ao requisito?</p>
+          <p class="eixo__texto">Os commits trazem o trailer <span class="mono">Refs:</span>? Testes e código preservam os IDs que amarram o trabalho ao requisito?</p>
         </article>
         <article class="eixo">
           <p class="eixo__num">03</p>
@@ -436,12 +494,12 @@
         <article class="eixo">
           <p class="eixo__num">04</p>
           <h3 class="eixo__nome">Cobertura de teste</h3>
-          <p class="eixo__texto">Os testes prometidos existem? Os casos de borda estão cobertos?</p>
+          <p class="eixo__texto">Os testes existem e pegariam o bug? Asserção rasa não cobre; mutante sobrevivente é bloqueante.</p>
         </article>
         <article class="eixo">
           <p class="eixo__num">05</p>
           <h3 class="eixo__nome">Qualidade do código</h3>
-          <p class="eixo__texto">Princípios universais mais os padrões específicos lidos do <code>CLAUDE.md</code> do projeto.</p>
+          <p class="eixo__texto">O que o <code>CLAUDE.md</code> do projeto declara, mais um piso de segurança: segredo no código e dado pessoal em log.</p>
         </article>
         <article class="eixo">
           <p class="eixo__num">06</p>
@@ -481,6 +539,14 @@
       </div>
 
       <div class="principios">
+        <div class="principio">
+          <h3 class="principio__nome">Sai a coreografia, fica a verificação</h3>
+          <p class="principio__texto">Estado em fonte única, menos comandos e menos prosa. Gates, review independente e sensor de discriminação ficam intactos.</p>
+        </div>
+        <div class="principio">
+          <h3 class="principio__nome">Granularidade não é qualidade</h3>
+          <p class="principio__texto">Quebrar em muitas tarefas compra ordem, não correção. A unidade é a fatia que fecha um cenário, medida por caber num ciclo.</p>
+        </div>
         <div class="principio">
           <h3 class="principio__nome">Lacuna declarada vale mais que lacuna preenchida</h3>
           <p class="principio__texto">Nenhuma skill inventa para fechar a matriz. Matriz honestamente incompleta é informação; matriz fechada com suposição é armadilha.</p>
@@ -529,6 +595,7 @@
             <p class="principio__texto">
               Para atualizar depois de um <code>git pull</code>, rodar
               <span class="mono">claude plugin marketplace update leanwork</span>.
+              Hooks e scripts chamam <span class="mono">python</span> (3.8+), que precisa estar no <code>PATH</code>.
             </p>
           </div>
           <div class="instalacao__bloco">
@@ -565,6 +632,7 @@
       <p class="rodape__texto">
         Pipeline desenhado por Mick Banagouro. Princípios SDD inspirados em GitHub Spec Kit e AWS Kiro.
         Filosofia arquitetural inspirada no <em>Manual do Arquiteto de Software</em> de Elemar Júnior.
+        Enxugamento da 2.0.0 adaptado de <em>tlc-spec-lean</em> (Tech Leads Club, CC-BY-4.0).
         As fontes de cada fase estão em
         <a href="https://github.com/leanwork/leanwork-sdd/blob/main/REFERENCES.md">REFERENCES.md</a>.
       </p>
@@ -573,6 +641,7 @@
       <a href="https://github.com/leanwork/leanwork-sdd">Repositório</a>
       <a href="https://github.com/leanwork/leanwork-sdd/blob/main/README.md">README</a>
       <a href="https://github.com/leanwork/leanwork-sdd/blob/main/REFERENCES.md">REFERENCES</a>
+      <a href="https://github.com/leanwork/leanwork-sdd/blob/main/CHANGELOG.md">CHANGELOG</a>
       <a href="https://github.com/leanwork/leanwork-sdd/blob/main/stacks/README.md">Exemplos por stack</a>
     </nav>
   </div>

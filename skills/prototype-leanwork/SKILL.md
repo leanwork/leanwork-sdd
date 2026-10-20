@@ -1,6 +1,6 @@
 ---
 name: prototype-leanwork
-description: Especificação de interface a partir de protótipo — ingestão de protótipo existente (HTML exportado, imagens, Figma via MCP, Lovable/v0 exportado) ou geração de protótipo navegável quando não houver. Produz o documento SPEC-UI com inventário de telas (UI-XX), estados por tela e mapeamento cruzado com regras de negócio (RN-XX) e cenários Gherkin (CA-XX) do PRD. Use quando o usuário pedir "especificar as telas", "documentar o protótipo", "criar protótipo", "mapear telas contra o PRD", "gerar SPEC-UI", "indexar o Figma", ou quando aceitar sugestão de especificar interface antes do plano de execução. Roda entre o PRD e o plano de execução, e é opcional — projetos sem interface (API, worker, CLI, biblioteca) pulam esta fase inteiramente. NÃO faz design visual próprio — delega o craft de tipografia, paleta e composição para skills de frontend disponíveis no ambiente. NÃO inventa telas ou estados não observados no protótipo — declara a lacuna e pergunta.
+description: Especifica a interface (SPEC-UI) a partir de protótipo existente — HTML, imagens, Figma, Lovable/v0 — ou gera um, mapeando telas UI-XX e estados contra RN-XX e CA-XX do PRD. Use quando pedirem para especificar telas, documentar ou criar protótipo, mapear telas contra o PRD ou gerar SPEC-UI. Projeto sem interface pula. Não faz design visual nem inventa tela.
 allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 ---
 
@@ -9,6 +9,15 @@ allowed-tools: Read, Glob, Grep, Edit(docs/prototype/**)
 Esta skill produz a **SPEC-UI**: o documento que transforma protótipo em especificação rastreável. É a ponte entre o PRD (que diz *o quê* e *por quê*) e o plano de execução (que diz *o que fazer*), respondendo *como isso aparece na tela*.
 
 O valor não está em desenhar bonito — está em **amarrar cada tela às regras de negócio que ela materializa**, para que o plano dimensione corretamente e o review consiga verificar conformidade.
+
+## Regras pinadas
+
+O que não se negocia nesta skill. O restante do texto é orientação; isto é regra.
+
+1. Não inventar tela nem estado: o que o protótipo não mostra vira lacuna declarada.
+2. Não gerar a tela faltante para fechar a matriz — a decisão fica com o usuário.
+3. Craft visual (tipografia, paleta, composição) é delegado; esta skill cuida de estrutura, estados e rastreabilidade.
+4. Opcional: ausência de SPEC-UI não bloqueia o pipeline.
 
 ## Princípios
 
@@ -37,9 +46,9 @@ Quando o PRD tem interface **parcial** (algumas features com tela, outras não),
 
 ## Fase 1 — Determinar o modo
 
-Perguntar uma vez, com opções claras:
+Antes de perguntar, buscar protótipo no repositório e nos anexos (HTML/React exportado, imagens, link de Figma, export de Lovable/v0). A pergunta vem uma vez, com a recomendação tirada do que a busca achou:
 
-> Como vamos trabalhar a interface?
+> Como vamos trabalhar a interface? *(recomendo **A**: achei `prototype/` com 6 telas)*
 >
 > **A.** Já tenho protótipo — quero indexar e mapear contra o PRD *(modo ingestão)*
 > **B.** Não tenho protótipo — quero gerar um *(modo geração)*
@@ -92,22 +101,24 @@ Se não houver skill de frontend disponível, gerar HTML simples e funcional, fo
 
 ### Entrevista
 
-Seis blocos, **pulando o que já foi respondido** pelas fontes anteriores. Com PRD e arquitetura bem-feitos, normalmente sobram 2-3 perguntas.
+**Busca antes de pergunta.** Fato se busca — no repositório, no `CLAUDE.md`, nos artefatos do pipeline e no que o usuário já colou. O que a busca não respondeu vira pergunta, **um bloco de dimensões por rodada, inteiro** — perguntas concretas, com o detalhe que a resposta precisa trazer, e ao fim da rodada o anúncio dos blocos que vêm depois. Pergunta que pede decisão traz opções concretas e a recomendação marcada.
 
-| Bloco | Pergunta | Pula quando |
+Cada dimensão abaixo termina **respondida** (pela busca ou pelo usuário) ou marcada `n/a — motivo`. Dimensão sem um dos dois é lacuna, e lacuna impede a geração. Com PRD e arquitetura bem-feitos, normalmente sobram 2-3 dimensões para perguntar.
+
+| Dimensão | O que cobrir | Fonte que dispensa a pergunta |
 |---|---|---|
-| Arquétipo | Admin/dashboard, site institucional, app de operação, e-commerce, portal, ferramenta interna? | PRD deixa óbvio |
-| Dispositivo | Desktop-first, mobile-first, mobile-only, responsivo pleno? | Arquitetura declara |
-| Fidelidade | Wireframe (estrutura e estados) ou alta fidelidade? | — sempre perguntar |
-| Identidade | Existe marca ou design system? | Repositório tem tokens, ou arquitetura declara biblioteca |
-| Densidade e tom | Denso tipo ERP ou espaçoso tipo consumer? Formal ou descontraído? | Arquétipo já implica fortemente |
-| Restrições | Acessibilidade, tema escuro, i18n, biblioteca obrigatória? | Arquitetura já lista |
+| Arquétipo | Admin/dashboard, site institucional, app de operação, e-commerce, portal, ferramenta interna | PRD deixa óbvio |
+| Dispositivo | Desktop-first, mobile-first, mobile-only, responsivo pleno | Arquitetura declara |
+| Fidelidade | Wireframe (estrutura e estados) ou alta fidelidade | Nenhuma — sempre é decisão do usuário |
+| Identidade | Marca ou design system existente | Repositório tem tokens, ou arquitetura declara biblioteca |
+| Densidade e tom | Denso tipo ERP ou espaçoso tipo consumer; formal ou descontraído | Arquétipo já implica fortemente |
+| Restrições | Acessibilidade, tema escuro, i18n, biblioteca obrigatória | Arquitetura já lista |
 
-**Sobre identidade visual:** nunca fazer pergunta aberta do tipo "que cores você quer". Pergunta aberta gera resposta ruim e protótipo genérico. Em vez disso:
+**Identidade visual** não vira pergunta aberta ("que cores você quer") — gera resposta ruim e protótipo genérico:
 
 - **Cliente tem marca** → pedir referência (site, manual, assets) e extrair
 - **Repositório tem design system** → detectar e seguir, sem perguntar
-- **Greenfield sem identidade** → propor 2-3 direções concretas e nomeadas para o usuário escolher
+- **Greenfield sem identidade** → propor 2-3 direções concretas e nomeadas, com a recomendada marcada
 
 ## Fase 4 — Mapear contra o PRD
 
@@ -128,7 +139,7 @@ Percorrer o PRD e verificar cobertura na direção inversa:
 | Tela sem `RN-XX` nem `CA-XX` | Tela que o PRD não pediu | Apontar — pode ser escopo extra ou lacuna do PRD |
 | Estado ausente | Cenário de erro do PRD sem tela correspondente | Apontar — a causa mais comum de bug de UI |
 
-**Nunca gerar a tela faltante silenciosamente para "fechar" a matriz.** Declarar a lacuna e deixar a decisão com o usuário: gerar a tela, ajustar o PRD, ou aceitar como fora de escopo.
+Declarar a lacuna e deixar a decisão com o usuário: gerar a tela, ajustar o PRD, ou aceitar como fora de escopo.
 
 ## Fase 5 — Produzir o documento
 
@@ -155,7 +166,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 **Para o trace:** `UI-XX` entra na cadeia `ADR → RN → CA → UI → T → R`.
 
-## O que NÃO incluir na SPEC-UI
+## O que não incluir na SPEC-UI
 
 - **Código de componente.** Isso é implementação, pertence às tarefas do plano.
 - **Regras de negócio redigidas de novo.** Referenciar `RN-XX`; não reescrever.
@@ -165,13 +176,7 @@ Ver `references/screen-states.md` para o catálogo de estados — a seção mais
 
 ## Quando sugerir esta skill
 
-Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem:
-
-| Momento | Quem sugere |
-|---|---|
-| PRD com interface aprovado, sem SPEC-UI | `prd-leanwork` ao concluir; `/leanwork-next` |
-| Plano prestes a ser gerado para PRD com UI | `planner-leanwork` |
-| Review encontrou tela sem especificação | `reviewer-leanwork` |
+Nenhuma skill ou comando do pipeline a invoca sem aceite explícito do usuário — as demais apenas sugerem. Os momentos e quem sugere estão na tabela "Quem sugere" do `${CLAUDE_PLUGIN_ROOT}/README.md` (seção "Contexto para o agente", subseção "Sempre opt-in").
 
 A sugestão é convite. Se o usuário pular, o pipeline segue sem fase de interface e o plano simplesmente não terá campo `Telas:`.
 

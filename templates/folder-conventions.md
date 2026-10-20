@@ -50,7 +50,8 @@ projeto-x/
 ### Planos
 
 - **Um plano por PRD**, na proporção 1:1. Nome: `PLAN-XXX-tema-em-kebab-case.md` — usar o **mesmo número** do PRD correspondente. Facilita encontrar o par.
-- Planos não são reescritos; são atualizados durante a execução (campo `Status` de cada tarefa, tabela de Histórico de execução).
+- **Plano de trilha rápida** (sem PRD, uma tarefa): mesmo prefixo `PLAN-XXX-`, com o próximo número livre entre PRDs e planos, para não colidir com o par de um PRD futuro. O cabeçalho `**PRD de referência:** nenhum — trilha rápida` é o que o identifica.
+- Planos não são reescritos; são atualizados durante a execução (campo `Status` de cada tarefa e, quando bloqueada, `Bloqueio`). Data e commit de cada mudança vêm do git.
 
 ### SPEC-UI (especificação de interface)
 
@@ -77,7 +78,7 @@ projeto-x/
 
 Recomenda-se que o projeto tenha um `CLAUDE.md` na raiz indicando ao agente como navegar o pipeline.
 
-> A skill `context-leanwork` gera e mantém esse arquivo (raiz e módulos), detectando stack e comandos reais do repositório. Rode com `/leanwork-context`. A skill nunca é automática nem sobrescreve conteúdo humano — as demais skills do pipeline apenas a sugerem quando faz sentido.
+> A skill `context-leanwork` gera e mantém esse arquivo (raiz e módulos), detectando stack e comandos reais do repositório. Rode com `/leanwork-sdd:context-leanwork`. A skill nunca é automática nem sobrescreve conteúdo humano — as demais skills do pipeline apenas a sugerem quando faz sentido.
 
 Estrutura mínima do arquivo (a skill produz uma versão mais completa, com Resumo, Stack, Comandos, Convenções e Restrições):
 
@@ -94,7 +95,7 @@ Este projeto usa o pipeline SDD Leanwork. Antes de implementar qualquer feature:
    - Para entender o critério de aceite: o mesmo PRD (procure `Cenário [CA-XX]:` listados em `Valida:`)
    - Para entender a decisão arquitetural base: `docs/architecture/proposta-arquitetural.md` (procure `ADR-XX`)
 5. Implemente respeitando os pontos de validação humana marcados no plano
-6. Atualize o campo `Status:` da tarefa e a tabela de Histórico de execução ao concluir
+6. Atualize o campo `Status:` da tarefa ao concluir (ou `Bloqueado` com `Bloqueio:`)
 7. Uma tarefa por ciclo, com review antes da próxima
 
 Padrão de nomeação de testes: `CA_XX_descricao_do_cenario` (ver `templates/id-conventions.md` do plugin).

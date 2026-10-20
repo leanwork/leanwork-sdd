@@ -69,7 +69,20 @@ O conteúdo validado é inteiramente do pipeline Leanwork — `T-XX`, `RN-XX`, `
 - **Gherkin PT-BR em vez de EARS.** O TLC usa EARS para requisitos. Aqui `CA-XX` é a costura de todo o pipeline — nome de teste, campo `Valida:` da tarefa, coluna da matriz de rastreabilidade, seção de cobertura do relatório. Trocar o formato do cenário significaria refazer os seis elos, e o ganho de precisão do EARS não paga isso.
 - **Seis skills em vez de uma.** O TLC concentra o pipeline numa skill só. O Leanwork mantém a segregação por fase, que é o que permite entrar no meio do pipeline (projeto que já tem arquitetura, projeto sem interface) sem carregar contexto das fases que não se aplicam.
 
-**Lacuna que permanece.** Três mecanismos do TLC foram avaliados e **não adotados**, e seguem fora do escopo: *auto-sizing* (o plano dimensionar as próprias tarefas por heurística executável, em vez do teto de 30min-4h como calibragem mental), a **camada de lições** (acumular aprendizados de execução entre tarefas) e a **reconciliação com git** (o estado declarado no plano ser conferido contra o histórico do repositório, não só contra o que o agente escreveu). Os três resolvem problemas reais que este pipeline ainda tem.
+**Lacuna que permanece.** Três mecanismos do TLC foram avaliados e **não adotados**, e seguem fora do escopo: *auto-sizing* (o plano dimensionar as próprias tarefas por heurística executável, em vez de sinais de comportamento lidos por quem planeja), a **camada de lições** (acumular aprendizados de execução entre tarefas) e a **reconciliação com git** (o estado declarado no plano ser conferido contra o histórico do repositório, não só contra o que o agente escreveu). Os três resolvem problemas reais que este pipeline ainda tem.
+
+### Enxugamento da 2.0.0 — `tlc-spec-lean`
+
+A 2.0.0 cortou a coreografia do pipeline e manteve a verificação. A comparação que orientou o corte foi com a skill **`tlc-spec-lean` v1.1.0**, da **Tech Leads Club** ([github.com/tech-leads-club](https://github.com/tech-leads-club), CC-BY-4.0), derivada de `tlc-spec-driven` 3.3.0 (Felipe Rodrigues), `tlc-plan` e `tlc-implement`. Quatro ideias vieram de lá, todas como **adaptação**:
+
+1. **Porta de mão única** (*one-way door*): o que é caro de reverter — migration, contrato público, schema, permissão — é declarado na tarefa; o resto é decidido construindo e revisto no diff. Aqui virou o campo `**Portas de mão única:**` e o critério do eixo 1 do review.
+2. **Trilha curta para mudança pequena**: o tlc dispensa plano para mudança com menos de três arquivos e nenhuma porta de mão única. Aqui o mesmo critério de entrada leva a um plano de **uma tarefa**, para que execute, review e gates funcionem sem fluxo paralelo.
+3. **"Granularidade não é qualidade"**: quebrar em muitas tarefas compra ordem, não correção. Aqui sustenta a fatia vertical por `CA-XX` (ver "Fatiamento vertical por `CA-XX`").
+4. **Pergunta com recomendação, busca antes de perguntar**: o tlc manda buscar fatos e perguntar decisões com opções e recomendação, no máximo duas por vez. Aqui a recomendação e a busca foram adotadas; o limite de duas por vez foi testado e **não adotado** — num teste A/B contra a 1.10.0 a entrevista ficou rasa por rodada, e vale um bloco de dimensões inteiro por rodada.
+
+**Contribuição própria, não do tlc:** o trailer `Refs: T-XX, CA-XX` como trilha código → requisito (o `check_commit.py` adapta do tlc só a leitura da mensagem e o uso como hook), a ênfase restrita a uma seção de regras pinadas por skill, os gates disparados por hook do plugin e a matriz gerada por script.
+
+**Divergências deliberadas:** o tlc não tem plano em tarefas, nem IDs `RN`/`CA`/`ADR`/`UI`, nem Gherkin — usa EARS e congela obrigações em vez do plano. O Leanwork mantém plano em tarefas e a matriz de rastreabilidade, que é o que a Leanwork entrega ao cliente. Nenhum texto foi copiado; a cópia local usada na comparação fica em `compare/`, fora do pacote.
 
 ### Ferramentas e formatos citados
 
@@ -112,7 +125,7 @@ O `stateDiagram-v2` incluído em `c4-mermaid-templates.md` **não pertence ao C4
 
 - **Dave Snowden e Mary Boone** — ["A Leader's Framework for Decision Making"](https://hbr.org/2007/11/a-leaders-framework-for-decision-making), Harvard Business Review, 2007.
 
-**Reprodução** dos quatro domínios (simples, complicado, complexo, caótico). O repositório omite *disorder*, o quinto domínio.
+**Adaptação.** Até a 1.10.0 a SKILL do architect reproduzia os quatro domínios (simples, complicado, complexo, caótico), omitindo *disorder*, o quinto. Na 2.0.0 a explicação saiu: fica só a consequência prática, sem o nome do framework. Problema em que causa e efeito só aparecem depois da ação pede proposta com MVP/PoC e marcos de revisão; sistema instável pede estabilizar antes de evoluir. A explicação dos domínios está na fonte.
 
 ### Catálogo de estilos arquiteturais
 
@@ -351,7 +364,7 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 - **Feature flags** — Pete Hodgson (2017).
 - **Parallel Change / Expand-Contract** — **[Fowler](https://martinfowler.com/bliki/ParallelChange.html)**. **Reprodução** das três fases (expandir, migrar, contrair) para sequenciar refactors de alto *blast radius* dentro do plano, mantendo CI verde tarefa a tarefa.
 
-**Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (30min-4h por tarefa, 3 critérios de aceite, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
+**Autoral:** os sinais de "tarefa grande demais / pequena demais", a tabela de campos legitimamente vazios, e todos os limiares de calibragem (5 critérios de aceite por fatia, > 5 tarefas → diagrama Mermaid). São números de praticante, sem fonte externa.
 
 ---
 
@@ -402,13 +415,18 @@ Os cinco arquétipos (Admin/Dashboard, Ferramenta interna, E-commerce/Consumer, 
 
 Pontos em que o pipeline se afasta do cânone. Todos são escolhas, não descuidos — mas quem adota o plugin precisa saber que está adotando o desvio junto.
 
-### Fatiamento horizontal por camada
+### Fatiamento vertical por `CA-XX` — reversão do padrão horizontal (v2.0.0)
 
-O `plan-template.md` organiza fases por camada técnica (domínio → persistência → API → UI). Isso contraria o **vertical slice** e o **walking skeleton** de **[Alistair Cockburn](https://alistair.cockburn.us/walking-skeleton/)**, e o **story mapping** de **[Jeff Patton](https://www.jpattonassociates.com/story-mapping/)**, que defendem entregar valor fim-a-fim desde a primeira fatia.
+Até a 1.10.0, o `plan-template.md` organizava fases por camada técnica (domínio → persistência → API → UI), contrariando o **vertical slice** e o **walking skeleton** de **[Alistair Cockburn](https://alistair.cockburn.us/walking-skeleton/)** e o **story mapping** de **[Jeff Patton](https://www.jpattonassociates.com/story-mapping/)**. A justificativa era que, com PRD e arquitetura fechados antes do plano, o risco de descoberta tardia ficava menor. O contra-argumento já estava registrado: o risco de integração continuava real, e a fatia horizontal o empurrava para o fim. A v1.8.0 abriu uma exceção seletiva — vertical só quando a entrevista sinalizasse entrega incremental real ou risco de integração concreto —, mantendo o horizontal como padrão.
 
-**Justificativa do pipeline:** com um PRD e uma arquitetura já fechados antes do plano, o risco de descoberta tardia — o principal argumento a favor do vertical slice — é menor. **Contra-argumento honesto:** o risco de integração continua real, e fatia horizontal o empurra para o fim.
+**A 2.0.0 inverte o padrão.** A fatia vertical por `CA-XX` passa a ser o default, e a horizontal vira exceção para três casos: fundação, migrations e expandir → migrar → contrair. O teto de 30min-4h por tarefa, calibrado para dev humano, sai; a medida passa a ser fechar comportamento e caber num ciclo de execução + review com a suíte verde. Dois motivos:
 
-**Exceção seletiva (v1.8.0):** quando a entrevista do planner sinaliza entrega incremental real (Bloco 2) ou risco de integração concreto (Bloco 4), a fatia vertical volta a valer — não para o plano inteiro, só para a parte afetada. `planner-leanwork/SKILL.md`, seção "Orientação da fatia", e `task-examples.md`, Exemplo 6. O horizontal continua sendo o default; a exceção é condicionada a sinal explícito da entrevista, não a preferência.
+- **Granularidade compra ordem, não correção.** Cada tarefa custa um ciclo inteiro de instrução (execute + review). Tarefa de camada não tem `CA-XX` a verificar, e o sensor de discriminação do eixo 4 não tem comportamento para atacar — o ciclo é pago sem o retorno da verificação.
+- **Integração cedo.** Erro de contrato entre camadas aparece na primeira fatia, não na última tarefa do plano.
+
+Com a inversão, o fatiamento deixa de ser divergência da literatura; a seção fica aqui como registro da reversão.
+
+**Adaptação** de `tlc-spec-lean` v1.1.0 (Tech Leads Club, CC-BY-4.0), que formula "granularidade não é qualidade" e trabalha por fatia de comportamento. O que é Leanwork: o recorte por `CA-XX` do PRD, as três exceções horizontais e o critério de tamanho pelo ciclo execute + review. Decisão aprovada no ponto de validação humana do PLAN-002, antes da T-07.
 
 ### Numeração sequencial global de tarefas
 
@@ -460,7 +478,7 @@ Contribuições para as quais não identificamos antecedente publicado. Reivindi
 8. **O mecanismo "Pula quando"** na entrevista — o agente suprime perguntas já respondidas por artefatos anteriores.
 9. **Os cinco arquétipos de interface** e a regra de nunca fazer pergunta aberta sobre estética.
 10. **A divisão de conteúdo raiz × módulo** no CLAUDE.md, e os critérios para *não* criar um arquivo de módulo.
-11. **Todos os limiares de calibragem** — 7-12 ADRs, 60-120 linhas, 30min-4h por tarefa, < 15 devs para microsserviços, ~15 linhas úteis mínimas por módulo. São opinião de praticante, sem fonte externa, e devem ser lidos assim.
+11. **Todos os limiares de calibragem** — 7-12 ADRs, 60-120 linhas, 5 critérios de aceite por fatia, < 15 devs para microsserviços, ~15 linhas úteis mínimas por módulo. São opinião de praticante, sem fonte externa, e devem ser lidos assim.
 
 ---
 
@@ -596,6 +614,7 @@ Conceitos que o pipeline tangencia sem cruzar. Registrados aqui como roadmap hon
 - [LGPD — Lei 13.709/2018](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
 - [GitHub Spec Kit](https://github.com/github/spec-kit) · [AWS Kiro](https://kiro.dev)
 - [`tlc-spec-driven` v3.3.0](https://agent-skills.techleads.club/tlc-spec-driven/) — Felipe Rodrigues, CC-BY-4.0. Fonte de design da camada de verificação da v1.10.0
+- `tlc-spec-lean` v1.1.0 — [Tech Leads Club](https://github.com/tech-leads-club), CC-BY-4.0. Comparação que orientou o enxugamento da 2.0.0
 - [Stryker](https://stryker-mutator.io) · [PIT](https://pitest.org) · [mutmut](https://github.com/boxed/mutmut) · [cargo-mutants](https://mutants.rs) — ferramentas de mutation testing citadas como opcionais no sensor de discriminação
 - [Anthropic — Claude Code Skills](https://docs.claude.com/en/docs/claude-code/skills) e [Settings](https://docs.claude.com/en/docs/claude-code/settings) · [Model Context Protocol](https://modelcontextprotocol.io)
 - [Mermaid](https://mermaid.js.org) · [xUnit Test Patterns](https://xunitpatterns.com) · [Testcontainers](https://testcontainers.com) · [Prometheus naming practices](https://prometheus.io/docs/practices/naming/) · [OpenTelemetry](https://opentelemetry.io)
