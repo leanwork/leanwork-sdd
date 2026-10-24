@@ -176,7 +176,7 @@ Mudança pequena entra por `/leanwork-pipeline` → trilha rápida → `/leanwor
 - **Sai a coreografia, fica a verificação.** Os modelos seguem instrução concisa e inferem contexto do repositório; continuam declarando conclusão sem prova e escrevendo teste raso. O pipeline aposta onde eles erram.
 - **Português é padrão.** Termos técnicos consagrados podem ficar em inglês.
 - **Sem cronograma, sem estimativa.** O pipeline produz "o quê", "por quê" e "em que ordem". "Quando" e "quanto" são do planejamento de sprint.
-- **Stack-agnóstico no núcleo.** Código real de uma stack fica isolado em `stacks/` (ver [`stacks/README.md`](stacks/README.md)).
+- **Stack-agnóstico no núcleo.** Código real de uma stack fica isolado em `stacks/` (ver [`stacks/README.md`](stacks/README.md)). Inclusive o catálogo de segurança e desempenho para .NET ([`stacks/dotnet/boas-praticas/`](stacks/dotnet/boas-praticas/README.md)), que só vira critério de review quando o projeto o adota no `CLAUDE.md`.
 - **Lacuna declarada vale mais que lacuna preenchida.** Matriz honestamente incompleta é informação; matriz fechada com suposição é armadilha.
 
 ## Instalação

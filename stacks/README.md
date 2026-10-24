@@ -13,6 +13,7 @@ Cada subpasta `stacks/<nome-da-stack>/` espelha, por nome de arquivo, o material
 | `skills/planner-leanwork/references/task-examples.md` | `stacks/dotnet/task-examples.md` |
 | `skills/architect-leanwork/references/c4-mermaid-templates.md` (Nível 3) | `stacks/dotnet/c4-component-example.md` |
 | pipeline completo (5 fases) | `stacks/dotnet/pipeline-example.md` |
+| `skills/reviewer-leanwork/references/review-checklist.md` (eixo 5, piso de segurança) | `stacks/dotnet/boas-praticas/` — catálogo de segurança e desempenho, adotável pelo `CLAUDE.md` |
 
 Um arquivo agnóstico que tem versão calibrada inclui um ponteiro explícito para ela (`${CLAUDE_PLUGIN_ROOT}/stacks/<nome>/...`). O inverso também vale: todo arquivo em `stacks/` referencia de volta o material agnóstico que ele exemplifica.
 

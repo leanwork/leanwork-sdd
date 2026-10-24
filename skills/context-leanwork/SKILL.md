@@ -25,7 +25,7 @@ O que não se negocia nesta skill. O restante do texto é orientação; isto é 
 - **Baseada em evidência do repositório.** Comandos de build/test vêm de inspeção real (`package.json`, `.csproj`, `Makefile`), não de suposição sobre a stack.
 - **Sem duplicação entre raiz e módulo.** Módulo nunca repete stack nem comandos globais. Duplicação vira divergência em poucas semanas.
 - **Enxuta.** `CLAUDE.md` é lido em toda sessão do agente — cada linha custa contexto. Se a informação vive melhor num doc referenciado, referencie em vez de copiar.
-- **Stack-agnóstica.** Como o resto do pipeline, não traz padrões pré-definidos. Lê do projeto.
+- **Stack-agnóstica.** Como o resto do pipeline, não traz padrões pré-definidos. Lê do projeto. A única exceção é oferecer o catálogo de `stacks/<stack>/boas-praticas/`, e ele só entra com aceite (seção 2.3).
 
 ## Fluxo geral
 
@@ -83,7 +83,19 @@ Resumo da abordagem:
 
 Para módulos, detectar a estrutura de pastas conforme o padrão arquitetural declarado. Em LMA, procurar as pastas de módulo conforme a proposta arquitetural define; não assumir convenção fixa.
 
-### 2.3 Lacunas
+### 2.3 Catálogo de segurança e desempenho
+
+Se a stack detectada tem catálogo no plugin — `${CLAUDE_PLUGIN_ROOT}/stacks/<stack>/boas-praticas/` (hoje só `dotnet`, detectado por `*.csproj`/`*.sln`) — e o `CLAUDE.md` ainda não tem a linha `Catálogo:` em `Segurança e desempenho`, perguntar **uma vez**, junto com as demais perguntas da execução:
+
+> Este projeto é .NET e o plugin tem um catálogo de segurança e desempenho (`stacks/dotnet/boas-praticas/`, 63 itens com fonte oficial). Adotado, o review passa a cobrar cada item no eixo 5.
+>
+> **A.** Adotar inteiro
+> **B.** Adotar com exceções — quais códigos ficam de fora?
+> **C.** Não adotar agora
+
+Ler o `README.md` do catálogo antes de perguntar, para responder dúvida sobre o conteúdo sem chutar. Em A ou B, gravar a linha no formato do template (`references/claude-md-root-template.md`, seção "Segurança e desempenho"). Em C, não gravar nada e não perguntar de novo na mesma execução. O catálogo é oferta, não padrão da skill: sem aceite, o `CLAUDE.md` fica sem ele.
+
+### 2.4 Lacunas
 
 Quando uma seção não tiver fonte:
 
@@ -142,6 +154,8 @@ Quando já existe um `CLAUDE.md`, comparar o conteúdo dele com a realidade cole
 | Permissão para comando inexistente | `allow` tem `Bash(npm run test:*)` mas o script foi removido | Baixa |
 | Stack nova sem permissões | Projeto ganhou frontend, `settings.json` só cobre backend | Média |
 | Segredo sem deny | Apareceu `terraform.tfstate` ou `.npmrc` no repo, sem regra de bloqueio | **Alta** |
+| Exceção de catálogo inexistente | Linha `Catálogo:` exclui `EF-31`, que o catálogo não tem | Média — o time acha que excluiu algo e não excluiu |
+| Catálogo disponível e não decidido | Projeto .NET sem linha `Catálogo:` | Baixa — oferecer pela seção 2.3 |
 
 Apresentar o drift ao usuário **antes** de propor a escrita. Em modo auditoria (opção E da Fase 1), o relatório de drift é o output final — não grava nada.
 
@@ -178,7 +192,7 @@ Regras de merge:
 
 ### Ordem das seções
 
-Manter a ordem canônica (Resumo, Stack, Comandos, Convenções, Restrições, Documentação) para consistência entre projetos. Se o arquivo existente usa outra ordem escrita por humano, **preservar a ordem dele** — consistência interna do projeto ganha da convenção do plugin.
+Manter a ordem canônica (Resumo, Stack, Comandos, Convenções, Restrições, Segurança e desempenho, Documentação) para consistência entre projetos. Se o arquivo existente usa outra ordem escrita por humano, **preservar a ordem dele** — consistência interna do projeto ganha da convenção do plugin.
 
 ## Fase 5 — Reportar
 
@@ -187,6 +201,7 @@ Ao final, mostrar ao usuário:
 - Arquivos criados / atualizados / inalterados (`CLAUDE.md` e/ou `settings.json`)
 - Drift detectado e resolvido
 - Lacunas que ficaram como TODO e por quê
+- Catálogo de segurança e desempenho: adotado (com as exceções), recusado ou não aplicável à stack
 - Módulos detectados que **não** receberam CLAUDE.md (com o motivo: usuário não selecionou)
 - Sugestão de próximo passo, quando aplicável
 
