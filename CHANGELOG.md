@@ -2,6 +2,20 @@
 
 Histórico de versões do plugin `leanwork-sdd`. Formato: versão, data quando registrada, e o que mudou com o motivo.
 
+## 2.2.0 — 2026-10-24
+
+Segurança e desempenho explícitos no pipeline, sem comando novo.
+
+- **Catálogo .NET em `stacks/dotnet/boas-praticas/`.** São 63 itens em cinco arquivos: segurança organizada pelo OWASP Top 10:2025 (`SEC-`), HttpClient (`HTTP-`), EF Core (`EF-`), async (`ASY-`) e pipeline HTTP do ASP.NET Core (`WEB-`). Cada item tem regra, sinal no diff, severidade sugerida, falso positivo conhecido e fonte oficial. Antes, o reviewer cobrava só o piso (segredo e PII em log) e recusava, de propósito, qualquer critério de segurança ou desempenho que o projeto não tivesse declarado. Na prática, N+1 e endpoint sem autorização passavam sem finding.
+- **O catálogo vale por adoção, não por padrão.** O `CLAUDE.md` ganha a seção opcional `Segurança e desempenho`, com a linha `Catálogo:` (caminho e exceções) e as regras próprias do projeto, em qualquer stack. Sem a linha, nada muda: "critério não declarado é preferência" continua de pé.
+- **`context-leanwork` oferece o catálogo** quando detecta um projeto .NET (seção 2.3), com uma pergunta só, e grava a linha se o time aceitar. Na auditoria de drift, aponta exceção que cita código inexistente.
+- **`/leanwork-execute` lê o catálogo adotado** no Passo 2, só os arquivos das áreas que a tarefa toca.
+- **`reviewer-leanwork` cobra o catálogo no eixo 5.** Usa o "Não é finding" de cada item para descartar o falso positivo e cita o código no finding. Item marcado "(com medição)" só vira finding com evidência de gargalo.
+
+Quebra de contrato: nenhuma. Projeto sem a linha `Catálogo:` tem o mesmo comportamento da 2.1.0.
+
+Não testado em projeto real ainda. Algumas âncoras de link do Microsoft Learn citadas no catálogo foram escritas sem abrir a página; conferir antes de divulgar.
+
 ## 2.1.0 — 2026-10-20
 
 Execução e review encadeados, cada tarefa na sua branch.

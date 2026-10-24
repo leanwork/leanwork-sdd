@@ -168,7 +168,9 @@ Aqui entra o conhecimento da stack descoberta na Fase 2 e dos padrões lidos do 
 
 **Piso de segurança (vale em qualquer stack):** segredo hardcoded e PII (CPF, e-mail, telefone) em log são `Bloqueante`. É a segurança básica que a skill promete — fora disso, nada de lista genérica de boas práticas.
 
-**Critérios específicos da stack:** lidos do `CLAUDE.md` do projeto. O eixo cobra **o que o projeto declarou**, não preferência do reviewer. Se o projeto não tem `CLAUDE.md` com padrões definidos, aplicar apenas o piso de segurança e registrar no relatório que padrões específicos da stack não foram avaliados por falta de declaração.
+**Critérios específicos da stack:** lidos do `CLAUDE.md` do projeto. O eixo cobra **o que o projeto declarou**, não preferência do reviewer.
+
+**Catálogo adotado:** se o `CLAUDE.md` tem a linha `Catálogo:` em `Segurança e desempenho`, os itens do catálogo em `${CLAUDE_PLUGIN_ROOT}/<caminho>/` são critério declarado, menos os listados em `exceto`. Ler o `README.md` do catálogo e os arquivos das áreas que o diff toca. Usar o "Sinal no diff" para achar o problema e o "Não é finding" para descartar o falso positivo antes de registrar. A severidade sugerida no item é o default, sujeita às regras de subir e descer severidade do checklist. O finding cita o código (`R-04 — viola EF-01: ...`). Item "(com medição)" só vira finding com a evidência que ele pede. Se o projeto não tem `CLAUDE.md` com padrões definidos, aplicar apenas o piso de segurança e registrar no relatório que padrões específicos da stack não foram avaliados por falta de declaração.
 
 Nesse caso, **sugerir ao usuário** (fora do relatório, na conversa) rodar a skill `context-leanwork` via `/leanwork-sdd:context-leanwork raiz` para que os próximos reviews sejam completos. É sugestão, não exigência — não bloquear o review por isso, nem gerar o arquivo por conta própria.
 
@@ -186,7 +188,7 @@ Aplicável somente a tarefas com o campo `Telas:` preenchido. Pular inteiramente
 
 **Não fazer:**
 - Code review de formatação (linter/formatter cobre)
-- Otimização de performance se performance não foi atributo prioritário no PRD/arquitetura
+- Otimização de performance se performance não foi atributo prioritário no PRD/arquitetura nem item adotado do catálogo
 - Reescrever a abordagem para "como eu faria" — review é sobre adequação ao plano e qualidade objetiva, não preferência
 - Rodar o sensor de discriminação com a suíte vermelha — sem baseline verde, mutante morto e suíte quebrada são indistinguíveis
 - Reportar resultado de run cujo isolamento divergiu do baseline — run inválida não diz nada sobre a qualidade dos testes, diz que o procedimento quebrou

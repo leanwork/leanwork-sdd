@@ -165,13 +165,15 @@ Lidos do `CLAUDE.md` do projeto. Exemplos do que pode estar declarado e virar cr
 - "Estado global via Zustand, evitar Context para estado mutável" → uso de Context é Importante
 - "Toda função pública tem teste unitário" → função sem teste é Importante
 
+Projeto .NET pode adotar o catálogo de segurança e desempenho em `${CLAUDE_PLUGIN_ROOT}/stacks/dotnet/boas-praticas/` com a linha `Catálogo:` na seção `Segurança e desempenho` do `CLAUDE.md`. Adotado, cada item não excluído vira critério deste eixo, e o finding cita o código do item (`SEC-02`, `EF-01`). Sem a linha, o catálogo não é critério. Regras próprias do projeto na mesma seção valem como qualquer convenção declarada.
+
 ### Não fazer
 
 - **Não comentar formatação** (linter/formatter cobre). Indentação, ponto-e-vírgula, aspas, quebras de linha = não é review.
 - **Não impor preferência pessoal** que não está no `CLAUDE.md`. Se o projeto não declara que prefere `for` a `forEach`, não criticar.
 - **Não rabiscar refactorings amplos** — abrir tarefa nova, não embutir no review.
-- **Não otimizar prematuramente**: performance só vira issue se foi atributo prioritário no PRD/arquitetura.
-- **Não inventar regras de segurança** que não fazem parte do contexto. Aplicar o piso de segurança (PII, segredos), não OWASP completo a menos que o projeto exija.
+- **Não otimizar prematuramente**: performance só vira issue se foi atributo prioritário no PRD/arquitetura ou item adotado do catálogo.
+- **Não inventar regras de segurança** que não fazem parte do contexto. Aplicar o piso de segurança (PII, segredos), não OWASP completo a menos que o projeto exija. Catálogo adotado no `CLAUDE.md` conta como exigência do projeto.
 
 ### Quando subir severidade
 

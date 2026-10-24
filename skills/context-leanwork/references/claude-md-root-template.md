@@ -68,6 +68,15 @@ Origem entre parênteses quando vier de ADR.]
 - [ex.: Cloud obrigatoriamente Azure (padrão corporativo do cliente)]
 - [ex.: Compatibilidade com o ERP legado via API REST — contrato não pode mudar]
 
+## Segurança e desempenho
+
+[Critérios que o review cobra além do piso (segredo e PII em log). Seção opcional:
+sem catálogo adotado e sem regra própria, omitir inteira.]
+
+- Catálogo: `stacks/dotnet/boas-praticas` (Leanwork SDD) — exceto [códigos, ou "nenhum"]
+- [ex.: Endpoint de exportação responde em streaming, nunca materializa a lista inteira (RN-12)]
+- [ex.: Dado de cartão nunca persiste fora do gateway de pagamento (restrição contratual)]
+
 ## Documentação
 
 [Índice dos artefatos do pipeline SDD. Caminhos relativos, sem duplicar conteúdo.]
@@ -147,6 +156,12 @@ Citar ADR entre parênteses sempre que a convenção vier de uma decisão arquit
 ### Restrições
 
 Diferença entre convenção e restrição: convenção é escolha do time (pode mudar por decisão interna); restrição é imposta de fora (cliente, regulação, contrato). Manter separado ajuda o agente a saber o que é negociável.
+
+### Segurança e desempenho
+
+A linha `Catálogo:` tem formato fixo porque o `/leanwork-execute` e o reviewer a procuram: caminho relativo à raiz do plugin, seguido de `exceto` com os códigos excluídos ou `nenhum`. Só existe catálogo para a stack que tem `stacks/<stack>/boas-praticas/` no plugin (hoje, `dotnet`). Item cuja área o projeto não usa (EF-XX num projeto com Dapper) não precisa de exceção: o reviewer só aplica o item quando o diff toca a área dele.
+
+As demais linhas são regras do projeto, para qualquer stack. Mesmo critério de `Convenções`: entra o que o agente erraria sem saber, com a origem entre parênteses (`RN-XX`, `ADR-XX`, contrato). Requisito mensurável de desempenho ("p95 < 500 ms") pertence ao PRD como `CA-XX`, não aqui: o `CLAUDE.md` não tem teste que o prove.
 
 ### Documentação
 

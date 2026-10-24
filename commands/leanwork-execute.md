@@ -35,6 +35,8 @@ Sem execução de código, conferir os IDs à mão e avisar no chat que a rastre
 
 Ler também o `CLAUDE.md` da raiz e o do módulo afetado, se existirem — é onde estão as convenções que o review vai cobrar.
 
+Se o `CLAUDE.md` tem a linha `Catálogo:` em `Segurança e desempenho`, o catálogo é critério da review. Ler `${CLAUDE_PLUGIN_ROOT}/<caminho do catálogo>/README.md` e os arquivos das áreas que a tarefa toca (endpoint, acesso a dados, chamada HTTP de saída, código assíncrono), pulando os códigos listados em `exceto`. Não ler o catálogo inteiro por padrão: tarefa que só mexe em consulta EF não precisa do arquivo de HttpClient.
+
 ### Passo 3 — Verificar pontos de validação humana
 
 Conferir se a tarefa aparece na seção "Pontos de validação humana" do plano. Se aparecer, pedir confirmação explícita **antes de escrever qualquer código** e aguardar resposta.
