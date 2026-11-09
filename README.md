@@ -181,7 +181,7 @@ Mudança pequena entra por `/leanwork-pipeline` → trilha rápida → `/leanwor
 
 ## Instalação
 
-O plugin é distribuído internamente: o próprio repositório é o marketplace, adicionado por caminho local.
+O plugin é público em [github.com/leanwork/leanwork-sdd](https://github.com/leanwork/leanwork-sdd). O próprio repositório é o marketplace, adicionado por caminho local depois do clone.
 
 ```bash
 git clone https://github.com/leanwork/leanwork-sdd.git
@@ -195,6 +195,6 @@ Para desenvolver o próprio plugin, `claude --plugin-dir /caminho/para/leanwork-
 
 ## Crédito e inspiração
 
-Pipeline desenhado por Mick Banagouro (Leanwork). Princípios SDD inspirados em [GitHub Spec Kit](https://github.com/github/spec-kit) e [AWS Kiro](https://kiro.dev); filosofia arquitetural no *Manual do Arquiteto de Software* de Elemar Júnior; trilha rápida e enxugamento da 2.0.0 adaptados de `tlc-spec-lean` (Tech Leads Club).
+Pipeline desenhado por Michel Banagouro (Leanwork). Princípios SDD inspirados em [GitHub Spec Kit](https://github.com/github/spec-kit) e [AWS Kiro](https://kiro.dev); filosofia arquitetural no *Manual do Arquiteto de Software* de Elemar Júnior; trilha rápida e enxugamento da 2.0.0 adaptados de `tlc-spec-lean` (Tech Leads Club).
 
 **[REFERENCES.md](REFERENCES.md)** documenta a base de engenharia por trás de cada fase, marcando o que é reprodução, adaptação ou contribuição própria, onde o pipeline **diverge** da literatura de propósito e onde ainda tem **lacunas**. O histórico de versões está em **[CHANGELOG.md](CHANGELOG.md)**.
